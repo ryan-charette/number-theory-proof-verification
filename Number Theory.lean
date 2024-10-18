@@ -101,3 +101,21 @@ Proof: 2 + 2 = 2 + 1++ = (2 + 1)++ = (2 + 0++)++ = ((2 + 0)++)++ = (2++)++ = 3++
 example : (2 : Nat) + 2 = 4 := by
   nth_rewrite 2 [two_eq_succ_one]
   rw [Nat.add_succ, one_eq_succ_zero, Nat.add_succ, Nat.add_zero, ← three_eq_succ_two, ← four_eq_succ_three]
+
+/-
+induction allows us to perform a proof by induction on n. This splits up into
+the base case "zero" corresponding to n = 0 and the "succ" case d → d + 1, in
+which we prove the inductive hypothesis ih.
+
+Theorem: For all n ∈ ℕ, 0 + n = n
+Proof: 0 + 0 = 0 is true by the identity property of addition. Now, assume that
+0 + d = d. We must show that 0 + d++ = d++. This is true because 0 + d++ =
+(0 + d)++ = d++.
+-/
+theorem zero_add (n : Nat) : 0 + n = n := by
+  induction n with
+  | zero =>
+    rw [Nat.add_zero]
+  | succ d ih =>
+    rw [Nat.add_succ, ih]
+
