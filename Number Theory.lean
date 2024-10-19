@@ -18,7 +18,7 @@ tool in this section will be `rw` and related rewrite commands.
 
 example (x q : Nat) : 37 * x + q = 37 * x + q := by
   /-
-  rfl proves goals of the form X = X.
+  `rfl` proves goals of the form X = X.
 
   Example: 37 * x + q = 37 * x + q
   Proof: This is true by the reflexive property of equality. QED
@@ -27,8 +27,8 @@ example (x q : Nat) : 37 * x + q = 37 * x + q := by
 
 example (x y : Nat) (h : y = x + 7) : 2 * y = 2 * (x + 7) := by
   /-
-  If h is a proof of an equality X = Y, then rw [h] will change all Xs in the
-  goal to Ys. It's the way to "substitute in".
+  If `h` is a proof of an equality X = Y, then `rw [h]` will change all X's in
+  the goal to Y's. It's the way to "substitute in".
 
   Example: If y = x + 7, then 2 * y = 2 * (x + 7)
   Proof: Substitute y for x + 7 and use the reflexivity of equality:
@@ -56,11 +56,11 @@ theorem four_eq_succ_three : 4 = Nat.succ 3 := by
 
 example : 2 = Nat.succ (Nat.succ 0) := by
   /-
-  We can use rw to rewrite multiple things in one line. We can also reference
+  We can use `rw` to rewrite multiple things in one line. We can also reference
   any theorems that we have previously proven.
 
-  Nat.succ n = n + 1, but we're going to pretend that addition isn't defined yet,
-  and that the successor function is given to us by the Peano Axioms.
+  `Nat.succ n` = n + 1, but we're going to pretend that addition isn't defined
+  yet, and that the successor function is given to us by the Peano Axioms.
 
   Example: 2 = S(S(0))
   Proof: This follows from our definitions of 1 and 2:
@@ -77,8 +77,8 @@ example : 2 = Nat.succ (Nat.succ 0) := by
 
 example : 2 = Nat.succ (Nat.succ 0) := by
   /-
-  If h is a proof of an equality X = Y, then rw [← h] will change all Ys in the
-  goal to Xs. Type \l to get ← .
+  If `h` is a proof of an equality X = Y, then `rw [← h]` will change all Y's
+  in the goal to X's. Type \l to get ←.
 
   Example: 2 = S(S(0))
   Proof: This follows from our definitions of 1 and 2. Note the difference
@@ -98,17 +98,18 @@ example (a b c : Nat) : a + (b + 0) + (c + 0) = a + b + c := by
   /-
   repeat will repeatedly apply a tactic until it no longer succeeds.
 
-  Nat.add_zero replaces n + 0 with n. Note that we do not have the commutative
-  property of addition; this function will not replace 0 + n with n.
+  `Nat.add_zero` replaces n + 0 with n. Note that we do not have the
+  commutative property of addition; it will not replace 0 + n with n.
+  This function represents Peano's first axiom of addition, which states that
+  for all n ∈ ℕ, n + 0 = n
 
   Example: a + (b + 0) + (c + 0) = a + b + c
-  Proof: Apply Peano's first axiom of addition, which states that for all n ∈ ℕ,
-  n + 0 = n, to both b + 0 and c + 0:
+  Proof: Apply Peano's first axiom of addition to both b + 0 and c + 0:
 
   a + (b + 0) + (c + 0) = a + b + c
 
   a + b + c = a + b + c    [Apply Peano's first axiom of addition twice.
-                           We rewrite b + 0 = b and c + 0 = c in a single step.]
+                           We rewrite b + 0 = b and c + 0 = c in one step.]
 
   QED
   -/
@@ -117,8 +118,8 @@ example (a b c : Nat) : a + (b + 0) + (c + 0) = a + b + c := by
 theorem succ_eq_add_one n : Nat.succ n = n + 1 := by
   /-
   Theorem: For all n ∈ ℕ, S(n) = n + 1.
-  Proof: We will need Peano's second axiom of addition, which states that for all
-  n ∈ ℕ, n + S(0) = S(n + 0):
+  Proof: We will need Peano's second axiom of addition, which states that for
+  all n ∈ ℕ, n + S(0) = S(n + 0):
 
   S(n) = n + 1
 
@@ -134,8 +135,8 @@ theorem succ_eq_add_one n : Nat.succ n = n + 1 := by
 
 example : (2 : Nat) + 2 = 4 := by
   /-
-  nth_rewrite i j will rewrite only the ith and jth occurrence of the expression
-  to be rewritten. Indexing starts at 1.
+  `nth_rewrite i j` will rewrite only the `i`th and `j`th occurrence of the
+  expression to be rewritten. Indexing starts at 1.
 
   Example: 2 + 2 = 4
   Proof: This follows directly from definitions and Peano's axioms of addition:
@@ -176,9 +177,9 @@ does not solve the goal. The main tool that we introduce in this section is
 
 theorem zero_add (n : Nat) : 0 + n = n := by
   /-
-  `induction` allows us to perform a proof by induction on n. This splits up into
-  the base case `zero` corresponding to n = 0 and the inductive case `succ`
-  corresponding to d → d + 1, in which we prove the inductive hypothesis ih.
+  `induction` allows us to perform a proof by induction on n. This splits up
+  into the base case `zero` for n = 0 and the inductive case `succ` for
+  d → d + 1, where we prove the inductive hypothesis `ih`.
 
   Theorem: For all n ∈ ℕ, 0 + n = n
   Proof: We perform induction on n.
