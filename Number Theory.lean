@@ -6,13 +6,14 @@ import Mathlib.Tactic.NthRewrite
 /-
 -- We will prove 2 + 2 = 4 using the Peano Axioms. Lean is powerful enough to
 recognize that this is true by basic arithmetic. These sorts of low-level
-equalities are automatically handled by rfl. That is,
+equalities are automatically handled by `rfl`. That is,
 
 example : (2 : Nat) + 2 = 4 := by
   rfl
 
 will solve the goal. For pedadagogical purposes, we will pretend that this is
-not the case, and will build up to this result from first principles.
+not the case, and will build up to this result from first principles. Our main
+tool in this section will be `rw` and related rewrite commands.
 -/
 
 example (x q : Nat) : 37 * x + q = 37 * x + q := by
@@ -160,10 +161,23 @@ example : (2 : Nat) + 2 = 4 := by
   nth_rewrite 2 [two_eq_succ_one]
   rw [Nat.add_succ, one_eq_succ_zero, Nat.add_succ, Nat.add_zero, ← three_eq_succ_two, ← four_eq_succ_three]
 
+/-
+Our next goal is to prove the commutativity of addition (i.e, a + b = b + a).
+We won't need to introduce any new definitions of axioms to prove this result,
+but several lemmas are necessary. Unlike our previous result, `rfl` is not
+powerful enough to solve this automatically. That is,
+
+theorem add_comm (a b : Nat) : a + b = b + a := by
+  rfl
+
+does not solve the goal. The main tool that we introduce in this section is
+`induction`.
+-/
+
 theorem zero_add (n : Nat) : 0 + n = n := by
   /-
-  induction allows us to perform a proof by induction on n. This splits up into
-  the base case "zero" corresponding to n = 0 and the inductive case "succ"
+  `induction` allows us to perform a proof by induction on n. This splits up into
+  the base case `zero` corresponding to n = 0 and the inductive case `succ`
   corresponding to d → d + 1, in which we prove the inductive hypothesis ih.
 
   Theorem: For all n ∈ ℕ, 0 + n = n
