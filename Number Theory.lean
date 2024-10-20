@@ -108,8 +108,8 @@ example (a b c : Nat) : a + (b + 0) + (c + 0) = a + b + c := by
 
   a + (b + 0) + (c + 0) = a + b + c
 
-  a + b + c = a + b + c    [Apply Peano's first axiom of addition twice.
-                           We rewrite b + 0 = b and c + 0 = c in one step.]
+  a + b + c = a + b + c    [Apply Peano's first axiom of addition twice:
+                           We rewrite b + 0 = b and c + 0 = c in one step]
 
   QED
   -/
@@ -160,7 +160,8 @@ example : (2 : Nat) + 2 = 4 := by
   QED
   -/
   nth_rewrite 2 [two_eq_succ_one]
-  rw [Nat.add_succ, one_eq_succ_zero, Nat.add_succ, Nat.add_zero, ← three_eq_succ_two, ← four_eq_succ_three]
+  rw [Nat.add_succ, one_eq_succ_zero, Nat.add_succ, Nat.add_zero,
+  ← three_eq_succ_two, ← four_eq_succ_three]
 
 /-
 Our next goal is to prove the commutativity of addition (i.e, a + b = b + a).
@@ -215,7 +216,7 @@ theorem succ_add (a b : Nat) : Nat.succ a + b = Nat.succ (a + b) := by
 
     S(a) + 0 = S(a + 0)
 
-    S(a) = S(a)    [Apply Peano's first axiom of addition twice.]
+    S(a) = S(a)    [Apply Peano's first axiom of addition on both sides]
 
   Inductive case: Assume that S(a) + d = S(a + d) for some d ∈ ℕ.
 
@@ -269,7 +270,41 @@ theorem add_comm (a b : Nat) : a + b = b + a := by
     rw [← Nat.succ_eq_add_one] is needed because Lean uses d + 1 rather than
     S(d) for the inductive case.
     -/
+    rw [← Nat.succ_eq_add_one, Nat.add_succ, Nat.succ_add, ih]
+
+theorem add_assoc (a b c : Nat) : (a + b) + c = a + (b + c) := by
+  /-
+  Theorem: Addition of natural numbers is associative. That is, for all
+  a, b, c ∈ ℕ, (a + b) + c = a + (b + c).
+  Proof: We perform induction on a.
+
+  Base case:
+
+    (0 + b) + c = 0 + (b + c)
+
+    b + c = b + c    [Apply the `zero_add` theorem to both sides]
+
+  Inductive case: Assume that (d + b) + c = d + (b + c) for some d ∈ ℕ.
+
+    (S(d) + b) + c = S(d) + (b + c)
+
+    S((d + b) + c) = S(d + (b + c))    [Apply Peano's second axiom of addition
+                                       to both sides]
+
+    S(d + (b + c)) = S(d + (b + c))    [The inductive hypothesis]
+
+  QED
+  -/
+  induction a with
+  | zero =>
+    repeat rw [Nat.zero_add]
+  | succ d ih =>
     rw [← Nat.succ_eq_add_one]
-    rw [Nat.add_succ]
-    rw [Nat.succ_add]
+    repeat rw [Nat.succ_add]
     rw [ih]
+
+theorem add_right_comm (a b c : Nat) : a + b + c = a + c + b := by
+  /-
+  TODO: Add documentation for this theorem.
+  -/
+  rw [Nat.add_assoc, Nat.add_comm b, Nat.add_assoc]
