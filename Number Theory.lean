@@ -305,6 +305,19 @@ theorem add_assoc (a b c : Nat) : (a + b) + c = a + (b + c) := by
 
 theorem add_right_comm (a b c : Nat) : a + b + c = a + c + b := by
   /-
-  TODO: Add documentation for this theorem.
+  If the goal is a + b + c = a + c + b then rw [add_comm b c] will not work
+  because there is no b + c term in the goal (a + b) + c = (a + c) + b.
+
+  Theorem: a + b + c = a + c + b
+  Proof:
+
+  a + b + c = a + c + b
+
+  a + (b + c) = a + (c + b)    [Associative property of addition (`add_comm`)]
+
+  a + (b + c) = a + (c + b)    [Commutative property of addition (`add_assoc`)]
+
+  QED
   -/
-  rw [Nat.add_assoc, Nat.add_comm b, Nat.add_assoc]
+  repeat rw [Nat.add_assoc]
+  rw [Nat.add_comm b]
