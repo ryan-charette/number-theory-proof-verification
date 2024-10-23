@@ -4,6 +4,10 @@ import «Number Theory».Basic
 import Mathlib.Tactic.NthRewrite
 
 /-
+PEANO ARITHMETIC
+-/
+
+/-
 -- We will prove 2 + 2 = 4 using the Peano Axioms. Lean is powerful enough to
 recognize that this is true by basic arithmetic. These sorts of low-level
 equalities are automatically handled by `rfl`. That is,
@@ -321,3 +325,30 @@ theorem add_right_comm (a b c : Nat) : a + b + c = a + c + b := by
   -/
   repeat rw [Nat.add_assoc]
   rw [Nat.add_comm b]
+
+
+/-
+DIVISIBILITY AND CONGRUENCE
+-/
+
+theorem dvd_add (a b c : Int) (h₀ : a ∣ b) (h₁ : a ∣ c) : a ∣ (b + c) := by
+  /-
+  Theorem: If a ∣ b and a ∣ c, then a ∣ (b + c)
+  Proof:
+
+  h₀ : a ∣ b             [True by hypothesis]
+  h₁ : a ∣ c
+
+  hₖ : ∃k : a * k = b    [Definition of divisible]
+  hₗ : ∃l : a * l = c
+
+  a ∣ (b + c)
+
+  a ∣ (a * k + a * l)    [Substitution via `hk` and `hl`]
+
+  a ∣ a * (k + l)        [Factor out the `a` term]
+  -/
+  rcases h₀ with ⟨k, hk⟩
+  rcases h₁ with ⟨l, hl⟩
+  rw [hk, hl, ← Int.mul_add]
+  exists (k + l)
