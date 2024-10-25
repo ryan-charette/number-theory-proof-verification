@@ -164,3 +164,22 @@ theorem modeq_refl (a n : Int) : a ≡ a [ZMOD n] := by
   rw [Int.modEq_iff_dvd, Int.sub_self]
   exists (0)
   rw [Int.mul_zero]
+
+theorem modeq_symm (a b n : Int) (h: a ≡ b [ZMOD n]) : b ≡ a [ZMOD n] := by
+  /-
+  Theorem: If a ≡ b (mod n), then b ≡ a (mod n)
+  Proof:
+
+  a ≡ b (mod n)
+
+  n ∣ a - b            [Definition of modular congruence]
+
+  ∃k: n * k = a - b    [Definition of divisible]
+
+  n * j = b - a        [Let j := -k]
+
+  n ∣ b - a            [Zero product property]
+
+  QED
+  -/
+  TODO: Implement proof
