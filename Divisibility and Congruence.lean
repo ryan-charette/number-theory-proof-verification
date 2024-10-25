@@ -172,14 +172,17 @@ theorem modeq_symm (a b n : Int) (h: a ≡ b [ZMOD n]) : b ≡ a [ZMOD n] := by
 
   a ≡ b (mod n)
 
-  n ∣ a - b            [Definition of modular congruence]
+  n ∣ a - b              [Definition of modular congruence]
 
-  ∃k: n * k = a - b    [Definition of divisible]
+  ∃k: n * k = a - b      [Definition of divisible]
 
-  n * j = b - a        [Let j := -k]
+  -(n * k) = -(a - b)    [Multiply both sides by -1]
 
-  n ∣ b - a            [Zero product property]
+  n * -k = b - a         [Associativity and distribution of multiplication]
+
+  n ∣ b - a              [Definition of divisible]
+
+  b ≡ a (mod n)          [Definition of modular congruence]
 
   QED
   -/
-  TODO: Implement proof
