@@ -174,11 +174,11 @@ theorem modeq_symm (a b n : Int) (h: a ≡ b [ZMOD n]) : b ≡ a [ZMOD n] := by
 
   n ∣ a - b              [Definition of modular congruence]
 
-  ∃k: n * k = a - b      [Definition of divisible]
+  n * k = a - b          [Definition of divisible]
 
-  -(n * k) = -(a - b)    [Multiply both sides by -1]
+  -(n * k) = -(a - b)    [Multiply each side by negative 1]
 
-  n * -k = b - a         [Associativity and distribution of multiplication]
+  n * (-k) = (b - a)     [Ring axioms]
 
   n ∣ b - a              [Definition of divisible]
 
@@ -186,3 +186,10 @@ theorem modeq_symm (a b n : Int) (h: a ≡ b [ZMOD n]) : b ≡ a [ZMOD n] := by
 
   QED
   -/
+  rw [Int.modEq_iff_dvd] at h
+  rw [Int.modEq_iff_dvd]
+  obtain ⟨k, hk⟩ := h
+  use -k
+  calc
+    a - b = -(b - a) := by ring
+    _ = n * -k       := by rw [hk, mul_neg]
