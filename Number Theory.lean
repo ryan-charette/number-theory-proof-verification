@@ -4,10 +4,6 @@ import «Number Theory».Basic
 import Mathlib.Tactic.NthRewrite
 
 /-
-PEANO ARITHMETIC
--/
-
-/-
 -- We will prove 2 + 2 = 4 using the Peano Axioms. Lean is powerful enough to
 recognize that this is true by basic arithmetic. These sorts of low-level
 equalities are automatically handled by `rfl`. That is,
@@ -325,3 +321,22 @@ theorem add_right_comm (a b c : Nat) : a + b + c = a + c + b := by
   -/
   repeat rw [Nat.add_assoc]
   rw [Nat.add_comm b]
+
+theorem mul_one (m : Nat) : m * 1 = m := by
+  /-
+  Theorem: m * 1 = m
+  Proof:
+
+  m * 1 = m
+
+  m * succ(0) = m    [Definition of 1]
+
+  m * 0 + m = m      [Definition of multiplication of successors]
+
+  0 + m = m          [Definition of multiplication by zero]
+
+  m = m              [Zero sum property (`zero_add`)]
+
+  QED
+  -/
+  rw [one_eq_succ_zero, Nat.mul_succ, Nat.mul_zero, Nat.zero_add]
