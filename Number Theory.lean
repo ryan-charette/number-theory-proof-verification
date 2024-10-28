@@ -340,3 +340,32 @@ theorem mul_one (m : Nat) : m * 1 = m := by
   QED
   -/
   rw [one_eq_succ_zero, Nat.mul_succ, Nat.mul_zero, Nat.zero_add]
+
+theorem zero_mul (m : Nat) : 0 * m = 0 := by
+  /-
+  Theorem: 0 * m = 0
+  Proof: We perform induction on m.
+
+  Base Case:
+
+    0 * 0 = 0
+
+    0 = 0    [Zero product property of right-multiplication (`mul_zero`)]
+
+  Inductive Case:
+
+    0 * succ(d) = 0
+
+    0 * d + 0 = 0    [Defintion of multiplication]
+
+    0 + 0 = 0        [Inductive hypothesis]
+
+    0 = 0            [Zero sum property (`add_zero`)]
+
+  QED
+  -/
+  induction m with
+  | zero =>
+    rw [Nat.mul_zero]
+  | succ d ih =>
+    rw [Nat.mul_succ, ih, Nat.add_zero]
