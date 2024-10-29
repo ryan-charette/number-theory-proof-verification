@@ -369,3 +369,5 @@ theorem zero_mul (m : Nat) : 0 * m = 0 := by
     rw [Nat.mul_zero]
   | succ d ih =>
     rw [Nat.mul_succ, ih, Nat.add_zero]
+
+theorem succ_mul (a b : Nat) : succ a * b = a * b + b := by
