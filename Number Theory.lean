@@ -370,4 +370,42 @@ theorem zero_mul (m : Nat) : 0 * m = 0 := by
   | succ d ih =>
     rw [Nat.mul_succ, ih, Nat.add_zero]
 
-theorem succ_mul (a b : Nat) : succ a * b = a * b + b := by
+theorem succ_mul (a b : Nat) : Nat.succ a * b = a * b + b := by
+  /-
+  Theorem: succ(a) * b = a * b + b
+  Proof: We perform induction on b.
+
+  Base Case:
+
+    succ(a) * 0 = a * 0 + 0
+
+    0 = 0 + 0    [Zero product property]
+
+    0 = 0        [Zero sum property]
+
+  Inductive Case:
+
+    succ(a) * succ(d) = a * succ(d) + succ(d)
+
+    succ(a) * d + succ(a) = a * d + a + succ(d)    [Definition of multiply]
+
+    succ(a) * d + (a + 1) = a * d + a + (d + 1)    [Definition of succ]
+
+    succ(a) * d + a + 1 = a * d + a + d + 1        [Associativity of addition]
+
+    a * d + d + a + 1 = a * d + a + d + 1          [Inductive hypothesis]
+
+    a * d + a + d + 1 = a * d + a + d + 1          [Commutativity of addition]
+
+  QED
+  -/
+  induction b with
+  | zero =>
+    rw [Nat.mul_zero, Nat.mul_zero, Nat.add_zero]
+  | succ d ih =>
+    repeat rw[Nat.mul_succ]
+    repeat nth_rewrite 2 [Nat.succ_eq_add_one]
+    repeat rw [← add_assoc]
+    rw [ih]
+    nth_rewrite 2 [Nat.add_right_comm]
+    rfl
