@@ -329,7 +329,7 @@ theorem mul_one (m : Nat) : m * 1 = m := by
 
   m * 1 = m
 
-  m * succ(0) = m    [Definition of 1]
+  m * S(0) = m       [Definition of 1]
 
   m * 0 + m = m      [Definition of multiplication of successors]
 
@@ -354,7 +354,7 @@ theorem zero_mul (m : Nat) : 0 * m = 0 := by
 
   Inductive Case:
 
-    0 * succ(d) = 0
+    0 * S(d) = 0
 
     0 * d + 0 = 0    [Defintion of multiplication]
 
@@ -372,12 +372,12 @@ theorem zero_mul (m : Nat) : 0 * m = 0 := by
 
 theorem succ_mul (a b : Nat) : Nat.succ a * b = a * b + b := by
   /-
-  Theorem: succ(a) * b = a * b + b
+  Theorem: S(a) * b = a * b + b
   Proof: We perform induction on b.
 
   Base Case:
 
-    succ(a) * 0 = a * 0 + 0
+    S(a) * 0 = a * 0 + 0
 
     0 = 0 + 0    [Zero product property]
 
@@ -385,17 +385,17 @@ theorem succ_mul (a b : Nat) : Nat.succ a * b = a * b + b := by
 
   Inductive Case:
 
-    succ(a) * succ(d) = a * succ(d) + succ(d)
+    S(a) * S(d) = a * S(d) + S(d)
 
-    succ(a) * d + succ(a) = a * d + a + succ(d)    [Definition of multiply]
+    S(a) * d + S(a) = a * d + a + S(d)          [Definition of multiplication]
 
-    succ(a) * d + (a + 1) = a * d + a + (d + 1)    [Definition of succ]
+    S(a) * d + (a + 1) = a * d + a + (d + 1)    [Definition of succ]
 
-    succ(a) * d + a + 1 = a * d + a + d + 1        [Associativity of addition]
+    S(a) * d + a + 1 = a * d + a + d + 1        [Associativity of addition]
 
-    a * d + d + a + 1 = a * d + a + d + 1          [Inductive hypothesis]
+    a * d + d + a + 1 = a * d + a + d + 1       [Inductive hypothesis]
 
-    a * d + a + d + 1 = a * d + a + d + 1          [Commutativity of addition]
+    a * d + a + d + 1 = a * d + a + d + 1       [Commutativity of addition]
 
   QED
   -/
