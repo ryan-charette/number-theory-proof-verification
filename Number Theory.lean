@@ -4,6 +4,10 @@ import «Number Theory».Basic
 import Mathlib.Tactic.NthRewrite
 
 /-
+PEANO ARITHMETIC
+-/
+
+/-
 -- We will prove 2 + 2 = 4 using the Peano Axioms. Lean is powerful enough to
 recognize that this is true by basic arithmetic. These sorts of low-level
 equalities are automatically handled by `rfl`. That is,
@@ -329,7 +333,7 @@ theorem mul_one (m : Nat) : m * 1 = m := by
 
   m * 1 = m
 
-  m * S(0) = m       [Definition of 1]
+  m * succ(0) = m    [Definition of 1]
 
   m * 0 + m = m      [Definition of multiplication of successors]
 
@@ -354,7 +358,7 @@ theorem zero_mul (m : Nat) : 0 * m = 0 := by
 
   Inductive Case:
 
-    0 * S(d) = 0
+    0 * succ(d) = 0
 
     0 * d + 0 = 0    [Defintion of multiplication]
 
@@ -409,3 +413,39 @@ theorem succ_mul (a b : Nat) : Nat.succ a * b = a * b + b := by
     rw [ih]
     nth_rewrite 2 [Nat.add_right_comm]
     rfl
+
+theorem mul_comm (a b : Nat) : a * b = b * a := by
+  /-
+  Theorem: Multplication of natural numbers is commutative. That is, for all
+  a, b ∈ ℕ, a * b = b * a.
+  Proof: We perform induction on a.
+
+  Base case:
+
+    0 * b = b * 0
+
+    0 * b = b    [Definition of multiplication]
+
+    b = b        [Apply the `zero_mul` theorem]
+
+  Inductive case: Assume that d * b = b * d for some d ∈ ℕ.
+
+    S(d) * b = b * S(d)
+
+    S(d) * b = S(b * d)    [Definition of multiplication]
+
+    S(d * b) = S(b * d)    [Apply the `succ_mul` theorem]
+
+    S(b * d) = S(b * d)    [The inductive hypothesis]
+
+  QED
+  -/
+  induction a with
+  | zero =>
+    rw [Nat.mul_zero, Nat.zero_mul]
+  | succ d ih =>
+    /-
+    rw [← Nat.succ_eq_add_one] is needed because Lean uses d + 1 rather than
+    S(d) for the inductive case.
+    -/
+    rw [← Nat.succ_eq_add_one, Nat.mul_succ, Nat.succ_mul, ih]
