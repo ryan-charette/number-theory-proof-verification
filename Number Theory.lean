@@ -4,10 +4,6 @@ import «Number Theory».Basic
 import Mathlib.Tactic.NthRewrite
 
 /-
-PEANO ARITHMETIC
--/
-
-/-
 -- We will prove 2 + 2 = 4 using the Peano Axioms. Lean is powerful enough to
 recognize that this is true by basic arithmetic. These sorts of low-level
 equalities are automatically handled by `rfl`. That is,
