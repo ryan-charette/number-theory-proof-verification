@@ -445,3 +445,5 @@ theorem mul_comm (a b : Nat) : a * b = b * a := by
     S(d) for the inductive case.
     -/
     rw [← Nat.succ_eq_add_one, Nat.mul_succ, Nat.succ_mul, ih]
+
+theorem one_mul (m : Nat): 1 * m = m := by
