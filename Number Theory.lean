@@ -447,3 +447,14 @@ theorem mul_comm (a b : Nat) : a * b = b * a := by
     rw [← Nat.succ_eq_add_one, Nat.mul_succ, Nat.succ_mul, ih]
 
 theorem one_mul (m : Nat): 1 * m = m := by
+  /-
+  Theorem: 1 * m = m
+  Proof:
+
+  1 * m = m
+
+  m * 1 = m    [Commutative property of multiplication (`mul_comm`)]
+
+  m = m        [Apply the `mul_one` theorem]
+  -/
+  rw [mul_comm, mul_one]
