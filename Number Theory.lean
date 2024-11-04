@@ -456,5 +456,24 @@ theorem one_mul (m : Nat): 1 * m = m := by
   m * 1 = m    [Commutative property of multiplication (`mul_comm`)]
 
   m = m        [Apply the `mul_one` theorem]
+
+  QED
   -/
   rw [mul_comm, mul_one]
+
+theorem two_mul (m : Nat): 2 * m = m + m := by
+  /-
+  Theorem: 2 * m = m + m
+  Proof:
+
+  2 * m = m + m
+
+  S(1) * m = m + m     [Definition of 2]
+
+  1 * m + m = m + m    [Definition of multiplication]
+
+  m + m = m + m        [Apply the `one_mul` theorem]
+
+  QED
+  -/
+  rw [two_eq_succ_one, Nat.succ_mul, Nat.one_mul]
