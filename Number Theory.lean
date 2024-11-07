@@ -477,3 +477,10 @@ theorem two_mul (m : Nat): 2 * m = m + m := by
   QED
   -/
   rw [two_eq_succ_one, Nat.succ_mul, Nat.one_mul]
+
+theorem mul_add(a b c : Nat): a * (b + c) = a * b + a * c := by
+  induction c with
+  | zero =>
+    rw [Nat.add_zero, Nat.mul_zero, Nat.add_zero]
+  | succ d ih =>
+    rw [Nat.add_succ, Nat.mul_succ, ih, Nat.mul_succ, Nat.add_assoc]
