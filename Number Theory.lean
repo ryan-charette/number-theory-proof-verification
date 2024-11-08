@@ -479,6 +479,36 @@ theorem two_mul (m : Nat): 2 * m = m + m := by
   rw [two_eq_succ_one, Nat.succ_mul, Nat.one_mul]
 
 theorem mul_add(a b c : Nat): a * (b + c) = a * b + a * c := by
+  /-
+  Theorem: a * (b + c) = a * b + a * c
+  Proof: We use induction on c.
+
+  Base Case:
+
+    a * (b + 0) = a * b + a * 0
+
+    a * b = a * b + a * 0    [1st Addition Axiom]
+
+    a * b = a * b + 0        [Definition of Multiplication]
+
+    a * b = a * b            [1st Addition Axiom]
+
+  Inductive Case:
+
+    a * (b + S(d)) = a * b + a * S(d)
+
+    a * (S(b + d)) = a * b + a * S(d)            [2nd Addition Axiom]
+
+    a * (b + d) + a = a * b + a * S(d)           [Definition of mulitiplication]
+
+    a * b + a * d + a = a * b + a * S(d)         [Inductive hypothesis]
+
+    a * b + a * d + a = a * b + (a * d + a)      [Definition of multiplication]
+
+    a * b + (a * d + a) = a * b + (a * d + a)    [Associativity of addition]
+
+  QED
+  -/
   induction c with
   | zero =>
     rw [Nat.add_zero, Nat.mul_zero, Nat.add_zero]
