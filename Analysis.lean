@@ -57,3 +57,13 @@ theorem add_cancel {a b c : Nat} (h : a + b = a + c) : b = c := by
     rw [← Nat.succ_eq_add_one, Nat.succ_add, Nat.succ_add, Nat.succ_inj'] at h
     apply ih
     exact h
+
+theorem add_pos {a b : Nat} (h: a ≠ 0) : (a + b) ≠ 0 := by
+  induction b with
+  | zero =>
+    rw [Nat.add_zero]
+    exact h
+  | succ d =>
+    rw [Nat.add_succ]
+    exact Nat.succ_ne_zero (a + d)
+
