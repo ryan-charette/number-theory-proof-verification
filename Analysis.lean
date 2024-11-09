@@ -47,3 +47,13 @@ theorem add_assoc (a b c : Nat) : (a + b) + c = a + (b + c) := by
     rw [← Nat.succ_eq_add_one]
     repeat rw [Nat.succ_add]
     rw [ih]
+
+theorem add_cancel {a b c : Nat} (h : a + b = a + c) : b = c := by
+  induction a with
+  | zero =>
+    repeat rw [Nat.zero_add] at h
+    exact h
+  | succ d ih =>
+    rw [← Nat.succ_eq_add_one, Nat.succ_add, Nat.succ_add, Nat.succ_inj'] at h
+    apply ih
+    exact h
