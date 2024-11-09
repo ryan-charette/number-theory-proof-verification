@@ -67,3 +67,12 @@ theorem add_pos {a b : Nat} (h: a ≠ 0) : (a + b) ≠ 0 := by
     rw [Nat.add_succ]
     exact Nat.succ_ne_zero (a + d)
 
+theorem pos_sum_ne_zero {a b : Nat} (h: a + b = 0) : (a = 0 ∧ b = 0) := by
+  have ha := a ≠ 0
+  -- add_pos implies (a + b) ≠ 0
+  -- contradiction to h
+  have hb := b ≠ 0
+  -- use add_comm to rewrite b + a = 0
+  -- add_pos implies (b + a) ≠ 0
+  -- add_comm implies (a + b) ≠ 0
+  -- contradiction to h
