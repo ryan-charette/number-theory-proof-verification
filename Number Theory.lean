@@ -516,3 +516,17 @@ theorem mul_add(a b c : Nat): a * (b + c) = a * b + a * c := by
     rw [Nat.add_succ, Nat.mul_succ, ih, Nat.mul_succ, Nat.add_assoc]
 
 theorem add_mul (a b c : Nat) : (a + b) * c = a * c + b * c := by
+  /-
+  Theorem: (a + b) * c = a * c + b * c
+  Proof:
+
+  (a + b) * c = a * c + b * c
+
+  c * (a + b) = a * c + b * c      [Commutativity of multiplicaiton]
+
+  c * a + c * b = a * c + b * c    [Left-distributivity of multiplication]
+
+  a * c + b * c = a * c + b * c    [Commutativity of multiplicaiton]
+  -/
+  rw [mul_comm, mul_add]
+  repeat rw [mul_comm c]
