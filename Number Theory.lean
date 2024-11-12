@@ -530,3 +530,5 @@ theorem add_mul (a b c : Nat) : (a + b) * c = a * c + b * c := by
   -/
   rw [mul_comm, mul_add]
   repeat rw [mul_comm c]
+
+theorem mul_assoc (a b c : Nat) : (a * b) * c = a * (b * c) := by
