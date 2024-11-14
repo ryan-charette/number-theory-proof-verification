@@ -532,3 +532,8 @@ theorem add_mul (a b c : Nat) : (a + b) * c = a * c + b * c := by
   repeat rw [mul_comm c]
 
 theorem mul_assoc (a b c : Nat) : (a * b) * c = a * (b * c) := by
+  induction a with
+  | zero =>
+    repeat rw [zero_mul]
+  | succ d ih =>
+    rw [succ_mul, succ_mul, add_mul, ih]
