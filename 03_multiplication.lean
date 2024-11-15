@@ -1,6 +1,13 @@
 import «Number Theory».Basic
 import Mathlib.Tactic.NthRewrite
 
+/-
+Now we move on to multiplication. The definitions, results, and proofs are
+overall very similar to our results on addition. The main result we are aiming
+to prove is the distributive law, which tells us how addition and
+multiplication interact.
+-/
+
 theorem mul_one (m : Nat) : m * 1 = m := by
   /-
   Theorem: m * 1 = m
