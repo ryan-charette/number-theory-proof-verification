@@ -3,15 +3,23 @@ import Mathlib.Tactic.NthRewrite
 
 /-
 Our next goal is to prove the commutativity of addition (i.e, a + b = b + a).
-We won't need to introduce any new definitions of axioms to prove this result,
-but several lemmas are necessary. Unlike our previous result, `rfl` is not
-powerful enough to solve this automatically. That is,
+We won't need to introduce any new axioms to prove this result, but several 
+lemmas are necessary. Unlike our previous result, `rfl` is not powerful enough
+to solve this automatically. That is,
 
 theorem add_comm (a b : Nat) : a + b = b + a := by
   rfl
 
 does not solve the goal. The main tool that we introduce in this section is
 `induction`.
+
+First, we need to define addiiton. This definition is recursive, i.e., we 
+define it only for 0 and S(n) for arbitrary n ∈ ℕ. Addition is defined by the
+`add_zero` and `add_succ` theorems:
+
+  `add_zero` (n : Nat) : n + 0 = n
+
+  `add_succ` (n m : Nat) : n + S(m) = S(n + m)
 -/
 
 theorem zero_add (n : Nat) : 0 + n = n := by
