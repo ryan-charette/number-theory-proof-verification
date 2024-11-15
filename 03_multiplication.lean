@@ -18,7 +18,7 @@ theorem mul_one (m : Nat) : m * 1 = m := by
 
   QED
   -/
-  rw [one_eq_succ_zero, Nat.mul_succ, Nat.mul_zero, Nat.zero_add]
+  rw [Nat.mul_succ, Nat.mul_zero, Nat.zero_add]
 
 theorem zero_mul (m : Nat) : 0 * m = 0 := by
   /-
@@ -84,10 +84,12 @@ theorem succ_mul (a b : Nat) : Nat.succ a * b = a * b + b := by
   | succ d ih =>
     repeat rw[Nat.mul_succ]
     repeat nth_rewrite 2 [Nat.succ_eq_add_one]
-    repeat rw [← add_assoc]
     rw [ih]
-    nth_rewrite 2 [Nat.add_right_comm]
-    rfl
+    rw [Nat.add_assoc (a * d) d (a + 1)]
+    rw [Nat.add_assoc (a * d) a (d + 1)]
+    rw [Nat.add_comm d (a + 1)]
+    rw [Nat.add_comm d 1]
+    repeat rw [Nat.add_assoc]
 
 theorem mul_comm (a b : Nat) : a * b = b * a := by
   /-
@@ -155,7 +157,7 @@ theorem two_mul (m : Nat): 2 * m = m + m := by
 
   QED
   -/
-  rw [two_eq_succ_one, Nat.succ_mul, Nat.one_mul]
+  rw [Nat.succ_mul, Nat.one_mul]
 
 theorem mul_add(a b c : Nat): a * (b + c) = a * b + a * c := by
   /-
