@@ -13,7 +13,7 @@ theorem add_comm (a b : Nat) : a + b = b + a := by
 does not solve the goal. The main tool that we introduce in this section is
 `induction`.
 
-First, we need to define addiiton. This definition is recursive, i.e., we
+First, we need to define addition. This definition is recursive, i.e., we
 define it only for 0 and S(n) for arbitrary n ∈ ℕ. Addition is defined by the
 `add_zero` and `add_succ` theorems:
 
