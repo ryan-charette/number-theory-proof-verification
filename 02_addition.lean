@@ -3,7 +3,7 @@ import Mathlib.Tactic.NthRewrite
 
 /-
 Our next goal is to prove the commutativity of addition (i.e, a + b = b + a).
-We won't need to introduce any new axioms to prove this result, but several 
+We won't need to introduce any new axioms to prove this result, but several
 lemmas are necessary. Unlike our previous result, `rfl` is not powerful enough
 to solve this automatically. That is,
 
@@ -13,7 +13,7 @@ theorem add_comm (a b : Nat) : a + b = b + a := by
 does not solve the goal. The main tool that we introduce in this section is
 `induction`.
 
-First, we need to define addiiton. This definition is recursive, i.e., we 
+First, we need to define addiiton. This definition is recursive, i.e., we
 define it only for 0 and S(n) for arbitrary n ∈ ℕ. Addition is defined by the
 `add_zero` and `add_succ` theorems:
 
@@ -35,13 +35,13 @@ theorem zero_add (n : Nat) : 0 + n = n := by
 
     0 + 0 = 0
 
-    0 = 0    [Peano's first axiom of addition]
+    0 = 0    [Definition of addition]
 
   Inductive case: Assume that 0 + d = d for some d ∈ ℕ.
 
     0 + S(d) = S(d)
 
-    S(0 + d) = S(d)    [Peano's second axiom of addition]
+    S(0 + d) = S(d)    [Defintiion of addition]
 
     S(d) = S(d)        [By the inductive hypothesis]
 
@@ -62,17 +62,17 @@ theorem succ_add (a b : Nat) : Nat.succ a + b = Nat.succ (a + b) := by
 
     S(a) + 0 = S(a + 0)
 
-    S(a) = S(a)    [Apply Peano's first axiom of addition on both sides]
+    S(a) = S(a)    [Apply the efintiion of addition on both sides]
 
   Inductive case: Assume that S(a) + d = S(a + d) for some d ∈ ℕ.
 
     S(a) + S(d) = S(a + S(d))
 
-    S(S(a) + d) = S(a + S(d))    [Peano's second axiom of addition]
+    S(S(a) + d) = S(a + S(d))    [Defintiion of addition]
 
     S(S(a + d)) = S(a + S(d))    [The inductive hypothesis]
 
-    S(S(a + d)) = S(S(a + d))    [Peano's second axiom of addition]
+    S(S(a + d)) = S(S(a + d))    [Defintiion of addition]
 
   QED
   -/
@@ -92,7 +92,7 @@ theorem add_comm (a b : Nat) : a + b = b + a := by
 
     0 + b = b + 0
 
-    0 + b = b    [Peano's first axiom of addition]
+    0 + b = b    [Defintiion of addition]
 
     b = b        [Apply the `zero_add` theorem]
 
@@ -100,7 +100,7 @@ theorem add_comm (a b : Nat) : a + b = b + a := by
 
     S(d) + b = b + S(d)
 
-    S(d) + b = S(b + d)    [Peano's second axiom of addition]
+    S(d) + b = S(b + d)    [Defintiion of addition]
 
     S(d + b) = S(b + d)    [Apply the `succ_add` theorem]
 
@@ -134,8 +134,7 @@ theorem add_assoc (a b c : Nat) : (a + b) + c = a + (b + c) := by
 
     (S(d) + b) + c = S(d) + (b + c)
 
-    S((d + b) + c) = S(d + (b + c))    [Apply Peano's second axiom of addition
-                                       to both sides]
+    S((d + b) + c) = S(d + (b + c))    [Defintiion of addition]
 
     S(d + (b + c)) = S(d + (b + c))    [The inductive hypothesis]
 
