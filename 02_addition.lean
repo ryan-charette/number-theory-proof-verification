@@ -1,3 +1,6 @@
+import «Number Theory».Basic
+import Mathlib.Tactic.NthRewrite
+
 /-
 Our next goal is to prove the commutativity of addition (i.e, a + b = b + a).
 We won't need to introduce any new definitions of axioms to prove this result,
