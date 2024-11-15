@@ -1,5 +1,5 @@
--- This module serves as the root of the `«Number Theory»` library.
--- Import modules here that should be built as part of the library.
+import «Number Theory».Basic
+import Mathlib.Tactic.NthRewrite
 
 theorem mul_one (m : Nat) : m * 1 = m := by
   /-
