@@ -213,6 +213,26 @@ theorem add_mul (a b c : Nat) : (a + b) * c = a * c + b * c := by
   repeat rw [mul_comm c]
 
 theorem mul_assoc (a b c : Nat) : (a * b) * c = a * (b * c) := by
+  /-
+  Theorem: (a * b) * c = a * (b * c)
+  Proof: We perform induction on a.
+
+  Base Case:
+
+    (0 * b) * c = 0 * (b * c)
+
+    0 = 0    [Zero product property]
+
+  Inductive Case:
+
+    (S(d) * b) * c = S(d) * (b * c)
+
+    (d * b + b) * c = d * (b * c) + (b * c)      [Defintion of multiplication]
+
+    d * b * c + b * c = d * (b * c) + b * c      [Distributive law]
+
+    d * (b * c) + b * c = d * (b * c) + b * c    [Inductive hypothesis]
+  -/
   induction a with
   | zero =>
     repeat rw [zero_mul]
