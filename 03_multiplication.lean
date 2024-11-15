@@ -6,6 +6,14 @@ Now we move on to multiplication. The definitions, results, and proofs are
 overall very similar to our results on addition. The main result we are aiming
 to prove is the distributive law, which tells us how addition and
 multiplication interact.
+
+First, we need to define multiplication. This definition is analagous to our
+definition for addition. Multiplication is defined by the
+`mul_zero` and `mul_succ` theorems:
+
+  `mul_zero` (n : Nat) : n * 0 = 0
+
+  `mul_succ` (n m : Nat) : n * S(m) = n * m + n
 -/
 
 theorem mul_one (m : Nat) : m * 1 = m := by
