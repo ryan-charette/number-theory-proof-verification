@@ -1,0 +1,7 @@
+name = "number-theory-proof-verification"
+version = "0.1.0"
+defaultTargets = ["NumberTheory"]
+
+[[lean_lib]]
+name = "NumberTheory"
+roots = ["«01_divisibility»"]
