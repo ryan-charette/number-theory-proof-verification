@@ -129,4 +129,21 @@ theorem division_unique (m n q r q' r' : Int) (hn : 0 < n)
   · rw [hq] at h
     omega
 
+theorem division_exists_unique (m n : Nat) (hn : 0 < n) :
+    ∃ q r : Int, (m : Int) = (n : Int) * q + r ∧ 0 ≤ r ∧ r < (n : Int) ∧
+      ∀ q' r' : Int, (m : Int) = (n : Int) * q' + r' →
+        0 ≤ r' → r' < (n : Int) → q' = q ∧ r' = r := by
+  /-
+  Theorem: Dividing a natural number by a positive natural number
+  gives exactly one quotient and remainder with 0 ≤ r < n.
+  Proof: The existence theorem supplies q and r with the equation
+  and bounds. If q' and r' also satisfy them, the uniqueness theorem
+  gives q' = q and r' = r. This proves both parts of the assertion. QED
+  -/
+  rcases division_exists m n hn with ⟨q, r, heq, hr, hrn⟩
+  exists q, r
+  refine ⟨heq, hr, hrn, ?_⟩
+  intro q' r' heq' hr' hrn'
+  exact division_unique m n q' r' q r (by omega) heq' heq hr' hrn' hr hrn
+
 end NumberTheory.Remainders
