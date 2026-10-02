@@ -146,4 +146,52 @@ theorem division_exists_unique (m n : Nat) (hn : 0 < n) :
   intro q' r' heq' hr' hrn'
   exact division_unique m n q' r' q r (by omega) heq' heq hr' hrn' hr hrn
 
+/-
+For a positive modulus n, congruence means divisibility of a - b by n.
+We give the definition here so this file can be used on its own.
+-/
+def Congruent (a b n : Int) : Prop := 0 < n ∧ n ∣ a - b
+
+theorem congruent_iff_equal_remainders (a b n qa ra qb rb : Int)
+    (hn : 0 < n) (ha : a = n * qa + ra) (hb : b = n * qb + rb)
+    (hra : 0 ≤ ra) (hran : ra < n) (hrb : 0 ≤ rb) (hrbn : rb < n) :
+    Congruent a b n ↔ ra = rb := by
+  /-
+  Theorem: Given quotient-and-remainder decompositions of integers
+  a and b with positive divisor n, they are congruent modulo n if
+  and only if their remainders are equal. The supplied decompositions
+  allow the statement to cover negative integers as well.
+
+  Proof: We prove the two implications separately.
+
+  Forward implication: Suppose a and b are congruent. Then
+  a - b = n * k for some integer k. Using b = n * qb + rb gives
+
+    a = b + n * k = n * (qb + k) + rb.
+
+  Thus a has two valid decompositions: the given one with remainder
+  ra, and this one with remainder rb. Uniqueness gives ra = rb.
+
+  Reverse implication: Suppose ra = rb. Subtracting the equations,
+
+    a - b = (n * qa + ra) - (n * qb + ra) = n * (qa - qb).
+
+  The integer qa - qb is a witness that n divides a - b. Since n
+  is positive, this says precisely that a and b are congruent. QED
+  -/
+  constructor
+  · intro h
+    rcases h.2 with ⟨k, hk⟩
+    have ha' : a = n * (qb + k) + rb := by
+      rw [Int.mul_add]
+      omega
+    exact (division_unique a n qa ra (qb + k) rb hn ha ha'
+      hra hran hrb hrbn).2
+  · intro heq
+    constructor
+    · exact hn
+    · exists qa - qb
+      rw [Int.mul_sub]
+      omega
+
 end NumberTheory.Remainders
