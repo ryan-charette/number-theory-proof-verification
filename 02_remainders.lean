@@ -88,4 +88,45 @@ theorem division_exists (m n : Nat) (hn : 0 < n) :
   exists q, (r : Int)
   exact ⟨hq, by omega, by omega⟩
 
+theorem division_unique (m n q r q' r' : Int) (hn : 0 < n)
+    (h : m = n * q + r) (h' : m = n * q' + r')
+    (hr : 0 ≤ r) (hrn : r < n) (hr' : 0 ≤ r') (hrn' : r' < n) :
+    q = q' ∧ r = r' := by
+  /-
+  Theorem: Two decompositions with the same positive divisor and
+  remainders between zero and n - 1 have equal quotients and remainders.
+  We allow any integer m, which also covers natural-number dividends.
+
+  Proof: Suppose m = n * q + r = n * q' + r'. If q < q', the
+  quotients are integers, so q + 1 ≤ q'. Multiplying by positive n,
+
+    n * q + n ≤ n * q'.
+
+  But r < n and r' ≥ 0 give
+
+    m = n * q + r < n * q + n ≤ n * q' ≤ n * q' + r' = m.
+
+  This is impossible. Interchanging the two decompositions rules out
+  q' < q in exactly the same way. Therefore q = q'. Substituting into
+  the original equations and cancelling n * q gives r = r'. QED
+  -/
+  have hnot : ¬ q < q' := by
+    intro hlt
+    have hstep : q + 1 ≤ q' := by omega
+    have hmul := Int.mul_le_mul_of_nonneg_left hstep (Int.le_of_lt hn)
+    rw [Int.mul_add, Int.mul_one] at hmul
+    -- The remainder bounds would force m < m.
+    omega
+  have hnot' : ¬ q' < q := by
+    intro hlt
+    have hstep : q' + 1 ≤ q := by omega
+    have hmul := Int.mul_le_mul_of_nonneg_left hstep (Int.le_of_lt hn)
+    rw [Int.mul_add, Int.mul_one] at hmul
+    omega
+  have hq : q = q' := by omega
+  constructor
+  · exact hq
+  · rw [hq] at h
+    omega
+
 end NumberTheory.Remainders
