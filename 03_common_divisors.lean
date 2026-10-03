@@ -641,4 +641,29 @@ theorem gcd_scale (a b : Int) (k : Nat) (hk : 0 < k) (hne : a ≠ 0 ∨ b ≠ 0)
     exists x, y
     rw [Int.mul_assoc, Int.mul_assoc, ← Int.mul_add, hxy]
 
+/-
+For positive inputs, a least common multiple is a positive integer
+that both inputs divide and that is no larger than any other positive
+common multiple. The expression below will be proved to have exactly
+these properties; it does not use a library least-common-multiple theorem.
+-/
+noncomputable def lcm (a b : Int) : Int := a * (b / gcd a b)
+
+theorem lcm_common (a b : Int) : a ∣ lcm a b ∧ b ∣ lcm a b := by
+  /-
+  Theorem: The proposed least common multiple is a multiple of both
+  inputs. Proof: Write a=g*A and b=g*B. The expression is a*B,
+  visibly a multiple of a, and a*B=g*A*B=b*A, a multiple of b. QED
+  -/
+  have hf := gcd_quotients a b
+  constructor
+  · exists b / gcd a b
+  · exists a / gcd a b
+    unfold lcm
+    calc
+      a * (b / gcd a b) = (gcd a b * (a / gcd a b)) * (b / gcd a b) :=
+        congrArg (fun t => t * (b / gcd a b)) hf.1
+      _ = (gcd a b * (b / gcd a b)) * (a / gcd a b) := by rw [Int.mul_right_comm]
+      _ = b * (a / gcd a b) := by rw [← hf.2]
+
 end NumberTheory.CommonDivisors
