@@ -285,4 +285,17 @@ theorem divisor_le_positive (e d : Int) (hd : 0 < d) (he : e ∣ d) : e ≤ d :=
     exact hm
   · omega
 
+theorem gcd_greatest (a b : Int) (h : a ≠ 0 ∨ b ≠ 0)
+    (e : Int) (ha : e ∣ a) (hb : e ∣ b) : e ≤ gcd a b := by
+  /-
+  Theorem: Every common divisor is at most the constructed gcd.
+  Proof: A common divisor divides every integer linear combination,
+  hence divides the gcd by its Euclidean representation. Since the
+  gcd is positive, the preceding bound gives the result. QED
+  -/
+  rcases (gcd_data a b).2.2.2 with ⟨x, y, hxy⟩
+  have hd := dvd_linear e a b x y ha hb
+  rw [hxy] at hd
+  exact divisor_le_positive e (gcd a b) (gcd_positive a b h) hd
+
 end NumberTheory.CommonDivisors
