@@ -156,4 +156,47 @@ theorem division_exists (m n : Nat) (hn : 0 < n) :
   exact ⟨hq, by omega, by omega⟩
 
 
+theorem euclid_natural (a b : Nat) :
+    ∃ d : Nat, (d : Int) ∣ (a : Int) ∧ (d : Int) ∣ (b : Int) ∧
+      ∃ x y : Int, (a : Int) * x + (b : Int) * y = (d : Int) := by
+  /-
+  Theorem: The Euclidean procedure produces a nonnegative common divisor
+  that is an integer linear combination of the two natural numbers.
+  Proof: Use strong induction on the second number b.
+
+  If b = 0, take d = a and coefficients 1 and 0.
+  If b > 0, write a = b * q + r with 0 ≤ r < b. Apply the induction
+  hypothesis to b and r. It supplies a common divisor d and integers
+  x and y with b * x + r * y = d. The preceding common-divisor theorem
+  shows that d also divides a. Back-substitution gives
+
+    d = b * x + (a - b * q) * y = a * y + b * (x - q * y).
+
+  These are the required new coefficients. The smaller nonnegative
+  remainder ensures that the procedure terminates. QED
+  -/
+  induction b using Nat.strongRecOn generalizing a with
+  | ind b ih =>
+    by_cases hb : b = 0
+    · subst b
+      exists a
+      refine ⟨dvd_refl a, dvd_zero a, ?_⟩
+      exists 1, 0
+      rw [Int.mul_one, Int.mul_zero, Int.add_zero]
+    · have hbpos : 0 < b := by omega
+      rcases division_exists a b hbpos with ⟨q, r, heq, hr, hrb⟩
+      have hrnat : (r.toNat : Int) = r := Int.toNat_of_nonneg hr
+      rcases ih r.toNat (by omega) b with ⟨d, hdb, hdr, x, y, hxy⟩
+      rw [hrnat] at hdr hxy
+      have hda := ((common_divisors_step a b q r d
+        (by rw [Int.mul_comm]; exact heq)).mpr ⟨hdb, hdr⟩).1
+      exists d
+      refine ⟨hda, hdb, ?_⟩
+      exists y, x - q * y
+      have htimes := congrArg (fun t : Int => t * y) heq
+      change (a : Int) * y = ((b : Int) * q + r) * y at htimes
+      rw [Int.add_mul, Int.mul_assoc] at htimes
+      rw [Int.mul_sub]
+      omega
+
 end NumberTheory.CommonDivisors
