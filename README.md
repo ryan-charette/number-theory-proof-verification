@@ -35,9 +35,3 @@ lean 03_common_divisors.lean
 ```
 
 Each file can also be copied into another Lean 4.12.0 project without copying any other source files from this repository. Import a file with its quoted filename, such as `import «03_common_divisors»`. The namespaces are `NumberTheory`, `NumberTheory.Remainders`, and `NumberTheory.CommonDivisors`, respectively. In the common-divisor file, positive integer hypotheses express the textbook convention that natural-number factors and lcm inputs are positive; solution formulas use exact integer quotients by the gcd.
-
-## Completed daily work
-
-- 2026-10-01 (America/Phoenix): `02_remainders.lean` — least-member principle, quotient-and-remainder existence and uniqueness, and congruence characterized by equal remainders.
-
-- 2026-10-02 (America/Phoenix): `03_common_divisors.lean` — Euclidean construction, gcd and Bezout identities, coprimality, complete integer linear solutions, scaling, and least common multiples.
