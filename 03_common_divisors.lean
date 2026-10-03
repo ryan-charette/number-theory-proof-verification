@@ -407,4 +407,17 @@ theorem coprime_dvd_cancel (a b c : Int) (hdiv : a ∣ b * c)
   rw [heq] at hd
   exact hd
 
+theorem coprime_product_dvd (a b n : Int) (ha : a ∣ n) (hb : b ∣ n)
+    (hcop : gcd a b = 1) : a * b ∣ n := by
+  /-
+  Theorem: If relatively prime a and b both divide n, then a * b divides n.
+  Proof: Write n = a * k. Since b divides a * k and is relatively prime
+  to a, it divides k. Writing k = b * t gives n = (a * b) * t. QED
+  -/
+  rcases ha with ⟨k, hk⟩
+  have hbk : b ∣ a * k := by rw [← hk]; exact hb
+  rcases coprime_dvd_cancel b a k hbk (coprime_swap a b hcop) with ⟨t, ht⟩
+  exists t
+  rw [hk, ht, Int.mul_assoc]
+
 end NumberTheory.CommonDivisors
