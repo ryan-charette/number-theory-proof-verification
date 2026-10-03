@@ -683,4 +683,30 @@ theorem lcm_positive (a b : Int) (ha : 0 < a) (hb : 0 < b) : 0 < lcm a b := by
     · omega
   exact Int.mul_pos ha hB
 
+theorem lcm_dvd_common (a b m : Int) (hne : a ≠ 0 ∨ b ≠ 0)
+    (ha : a ∣ m) (hb : b ∣ m) : lcm a b ∣ m := by
+  /-
+  Theorem: The proposed least common multiple divides every common
+  multiple. Proof: Write a=g*A, b=g*B and m=a*t=b*u. Cancel positive
+  g from g*A*t=g*B*u to obtain A*t=B*u. The reduced integers A and B
+  are relatively prime, so B divides t. Write t=B*v. Then
+
+    m = a*t = (a*B)*v = lcm(a,b)*v.
+
+  This gives the required divisibility witness. QED
+  -/
+  rcases ha with ⟨t, ht⟩
+  rcases hb with ⟨u, hu⟩
+  have hg := gcd_positive a b hne
+  have hf := gcd_quotients a b
+  have heq : (a / gcd a b) * t = (b / gcd a b) * u := by
+    apply Int.eq_of_mul_eq_mul_left (a := gcd a b) (by omega)
+    rw [← Int.mul_assoc, ← hf.1, ← Int.mul_assoc, ← hf.2, ← ht, ← hu]
+  have hdiv : b / gcd a b ∣ (a / gcd a b) * t := ⟨u, heq⟩
+  rcases coprime_dvd_cancel (b / gcd a b) (a / gcd a b) t hdiv
+    (coprime_swap _ _ (reduced_coprime a b hne)) with ⟨v, hv⟩
+  exists v
+  unfold lcm
+  rw [ht, hv, Int.mul_assoc]
+
 end NumberTheory.CommonDivisors
