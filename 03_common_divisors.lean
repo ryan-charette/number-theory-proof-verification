@@ -113,4 +113,47 @@ theorem least_natural (P : Nat → Prop) (h : ∃ b, P b) :
   exact least_below b hb
 
 
+theorem division_exists (m n : Nat) (hn : 0 < n) :
+    ∃ q r : Int, (m : Int) = (n : Int) * q + r ∧ 0 ≤ r ∧ r < (n : Int) := by
+  /-
+  Theorem: For a natural number m and a positive natural number n,
+  there are integers q and r with m = n * q + r and 0 ≤ r < n.
+  Lean includes zero among the natural numbers, so we explicitly require
+  n > 0. The conclusion also holds when m = 0.
+
+  Proof: Consider all nonnegative integers r for which m = n * q + r
+  for some integer q. This collection is nonempty: q = 0 and r = m
+  satisfy the equation. Choose its least member r by well-ordering,
+  and choose an integer q giving the equation.
+
+  If r ≥ n, then r - n is nonnegative and
+
+    m = n * q + r = n * (q + 1) + (r - n).
+
+  Thus r - n is another member of the collection. Since n > 0,
+  it is smaller than r, contradicting the choice of r. Hence r < n.
+  The chosen q and r have all the required properties. QED
+  -/
+  let P : Nat → Prop := fun r => ∃ q : Int, (m : Int) = (n : Int) * q + r
+  have hnonempty : ∃ r, P r := by
+    exists m
+    exists (0 : Int)
+    rw [Int.mul_zero, Int.zero_add]
+  rcases least_natural P hnonempty with ⟨r, hr, hleast⟩
+  rcases hr with ⟨q, hq⟩
+  have hsmall : r < n := by
+    apply Nat.lt_of_not_ge
+    intro hlarge
+    have hnext : P (r - n) := by
+      exists q + 1
+      rw [Int.mul_add, Int.mul_one]
+      -- Since n ≤ r, natural subtraction agrees with integer subtraction.
+      omega
+    have hminimal := hleast (r - n) hnext
+    -- Subtracting positive n gives a strictly smaller natural number.
+    omega
+  exists q, (r : Int)
+  exact ⟨hq, by omega, by omega⟩
+
+
 end NumberTheory.CommonDivisors
