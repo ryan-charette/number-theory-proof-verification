@@ -440,4 +440,22 @@ theorem coprime_product (a b n : Int) (ha : gcd a n = 1)
       omega
     _ = 1 := by rw [hxy, huv]; rfl
 
+def Congruent (a b n : Int) : Prop := 0 < n ∧ n ∣ a - b
+
+theorem congruence_cancel (a b c n : Int) (h : Congruent (a * c) (b * c) n)
+    (hc : gcd c n = 1) : Congruent a b n := by
+  /-
+  Theorem: A factor relatively prime to the modulus can be cancelled
+  from a congruence. Proof: The hypothesis says n divides
+  a*c-b*c = c*(a-b). Since n is relatively prime to c, the divisibility
+  cancellation theorem shows n divides a-b. The modulus stays positive.
+  QED
+  -/
+  constructor
+  · exact h.1
+  · have hd : n ∣ c * (a - b) := by
+      rw [Int.mul_sub, Int.mul_comm c a, Int.mul_comm c b]
+      exact h.2
+    exact coprime_dvd_cancel n c (a - b) hd (coprime_swap c n hc)
+
 end NumberTheory.CommonDivisors
