@@ -724,4 +724,17 @@ theorem lcm_least (a b : Int) (ha : 0 < a) (hb : 0 < b) :
   exact divisor_le_positive (lcm a b) m hm
     (lcm_dvd_common a b m (Or.inl (by omega)) ham hbm)
 
+theorem gcd_mul_lcm (a b : Int) : gcd a b * lcm a b = a * b := by
+  /-
+  Theorem: For positive integers, the product of gcd and lcm is the
+  product of the inputs. The identity also holds for our signed formulas.
+  Proof: Set g=gcd(a,b). Since b=g*(b/g), we have
+
+    g*lcm(a,b) = g*(a*(b/g)) = a*(g*(b/g)) = a*b.
+
+  Only rearrangement of factors and exact division are needed. QED
+  -/
+  unfold lcm
+  rw [Int.mul_left_comm, ← (gcd_quotients a b).2]
+
 end NumberTheory.CommonDivisors
