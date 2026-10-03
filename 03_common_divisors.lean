@@ -41,4 +41,28 @@ theorem dvd_zero (a : Int) : a ∣ 0 := by
   exists 0
   rw [Int.mul_zero]
 
+theorem dvd_trans (a b c : Int) (hab : a ∣ b) (hbc : b ∣ c) : a ∣ c := by
+  /-
+  Theorem: Divisibility is transitive.
+  Proof: If b = a * u and c = b * v, then c = a * (u * v).
+  The integer u * v supplies the required witness. QED
+  -/
+  rcases hab with ⟨u, hu⟩
+  rcases hbc with ⟨v, hv⟩
+  exists u * v
+  rw [hv, hu, Int.mul_assoc]
+
+theorem common_divisor_remainder (a b n r k : Int)
+    (h : a = n * b + r) (ha : k ∣ a) (hb : k ∣ b) : k ∣ r := by
+  /-
+  Theorem: If a = n * b + r, a common divisor of a and b divides r.
+  Proof: Subtract n * b from a. A common divisor divides this integer
+  linear combination, and a - n * b = r. QED
+  -/
+  have hd := dvd_linear k a b 1 (-n) ha hb
+  rw [Int.mul_one, Int.mul_neg, Int.mul_comm b n] at hd
+  have heq : a + -(n * b) = r := by omega
+  rw [heq] at hd
+  exact hd
+
 end NumberTheory.CommonDivisors
