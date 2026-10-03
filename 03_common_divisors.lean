@@ -736,4 +736,26 @@ theorem gcd_mul_lcm (a b : Int) : gcd a b * lcm a b = a * b := by
   unfold lcm
   rw [Int.mul_left_comm, ← (gcd_quotients a b).2]
 
+theorem lcm_eq_product_iff (a b : Int) (ha : 0 < a) (hb : 0 < b) :
+    lcm a b = a * b ↔ gcd a b = 1 := by
+  /-
+  Corollary: For positive integers, the lcm equals their product exactly
+  when the inputs are relatively prime.
+  Proof: The product identity says g*lcm(a,b)=a*b. If lcm(a,b)=a*b,
+  then g*(a*b)=1*(a*b). Since a*b is nonzero, cancellation gives g=1.
+  Conversely, substituting g=1 into the product identity gives
+  lcm(a,b)=a*b. This proves both implications. QED
+  -/
+  have hid := gcd_mul_lcm a b
+  constructor
+  · intro h
+    rw [h] at hid
+    apply Int.eq_of_mul_eq_mul_right (a := a * b)
+      (Int.mul_ne_zero (by omega) (by omega))
+    rw [Int.one_mul]
+    exact hid
+  · intro h
+    rw [h, Int.one_mul] at hid
+    exact hid
+
 end NumberTheory.CommonDivisors
