@@ -355,7 +355,6 @@ theorem coprime_of_bezout (a b x y : Int) (h : a * x + b * y = 1) :
     rcases hd with ⟨k, hk⟩
     rw [hz, Int.zero_mul] at hk
     omega
-  have hn := hg.1
   omega
 
 theorem coprime_iff_bezout (a b : Int) :
