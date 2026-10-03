@@ -617,4 +617,28 @@ theorem gcd_eq_of_combination (a b d : Int) (hd : 0 < d)
   have hge := divisor_le_positive (gcd a b) d hd hdiv
   omega
 
+theorem gcd_scale (a b : Int) (k : Nat) (hk : 0 < k) (hne : a ≠ 0 ∨ b ≠ 0) :
+    gcd ((k : Int) * a) ((k : Int) * b) = (k : Int) * gcd a b := by
+  /-
+  Theorem: Multiplying both inputs by a positive natural number k
+  multiplies the gcd by k. Proof: Write g=gcd(a,b). The number k*g
+  is positive and divides both k*a and k*b. If a*x+b*y=g, then
+
+    (k*a)*x + (k*b)*y = k*g.
+
+  The preceding characterization identifies k*g as the new gcd. QED
+  -/
+  have hg := gcd_data a b
+  apply gcd_eq_of_combination ((k : Int) * a) ((k : Int) * b) ((k : Int) * gcd a b)
+  · exact Int.mul_pos (by omega) (gcd_positive a b hne)
+  · rcases hg.2.1 with ⟨u, hu⟩
+    exists u
+    exact (congrArg (fun t : Int => (k : Int) * t) hu).trans (Int.mul_assoc _ _ _).symm
+  · rcases hg.2.2.1 with ⟨v, hv⟩
+    exists v
+    exact (congrArg (fun t : Int => (k : Int) * t) hv).trans (Int.mul_assoc _ _ _).symm
+  · rcases bezout a b with ⟨x, y, hxy⟩
+    exists x, y
+    rw [Int.mul_assoc, Int.mul_assoc, ← Int.mul_add, hxy]
+
 end NumberTheory.CommonDivisors
