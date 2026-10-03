@@ -298,4 +298,30 @@ theorem gcd_greatest (a b : Int) (h : a ≠ 0 ∨ b ≠ 0)
   rw [hxy] at hd
   exact divisor_le_positive e (gcd a b) (gcd_positive a b h) hd
 
+theorem gcd_step (a b n r : Int) (h : a = n * b + r)
+    (hne : a ≠ 0 ∨ b ≠ 0) : gcd a b = gcd b r := by
+  /-
+  Theorem: A Euclidean step leaves the gcd unchanged.
+  Proof: Both pairs have exactly the same common divisors. Each gcd
+  is therefore a common divisor of the other pair, so each is at most
+  the other. Equality follows. The new pair cannot be (0,0), since
+  then a = n * 0 + 0 = 0 as well. QED
+  -/
+  have hbr : b ≠ 0 ∨ r ≠ 0 := by
+    by_cases hb : b = 0
+    · right
+      intro hr
+      rw [hb, hr, Int.mul_zero, Int.add_zero] at h
+      rcases hne with ha | hb'
+      · exact ha h
+      · exact hb' hb
+    · exact Or.inl hb
+  have hab := (gcd_data a b).2
+  have hbrd := (gcd_data b r).2
+  have h₁ := (common_divisors_step a b n r (gcd a b) h).mp ⟨hab.1, hab.2.1⟩
+  have h₂ := (common_divisors_step a b n r (gcd b r) h).mpr ⟨hbrd.1, hbrd.2.1⟩
+  have hl := gcd_greatest b r hbr (gcd a b) h₁.1 h₁.2
+  have hr := gcd_greatest a b hne (gcd b r) h₂.1 h₂.2
+  omega
+
 end NumberTheory.CommonDivisors
