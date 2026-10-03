@@ -709,4 +709,19 @@ theorem lcm_dvd_common (a b m : Int) (hne : a ≠ 0 ∨ b ≠ 0)
   unfold lcm
   rw [ht, hv, Int.mul_assoc]
 
+theorem lcm_least (a b : Int) (ha : 0 < a) (hb : 0 < b) :
+    0 < lcm a b ∧ a ∣ lcm a b ∧ b ∣ lcm a b ∧
+      ∀ m : Int, 0 < m → a ∣ m → b ∣ m → lcm a b ≤ m := by
+  /-
+  Theorem: The expression lcm(a,b) is the least positive common multiple
+  of positive integers a and b. Proof: We have proved that it is a
+  positive common multiple. Any other positive common multiple m is
+  divisible by it, so the positive-divisor bound gives lcm(a,b)≤m.
+  This verifies precisely the definition of least common multiple. QED
+  -/
+  refine ⟨lcm_positive a b ha hb, (lcm_common a b).1, (lcm_common a b).2, ?_⟩
+  intro m hm ham hbm
+  exact divisor_le_positive (lcm a b) m hm
+    (lcm_dvd_common a b m (Or.inl (by omega)) ham hbm)
+
 end NumberTheory.CommonDivisors
