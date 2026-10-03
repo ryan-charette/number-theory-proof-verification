@@ -508,4 +508,25 @@ theorem reduced_coprime (a b : Int) (hne : a ≠ 0 ∨ b ≠ 0) :
   rw [Int.mul_add, ← Int.mul_assoc, ← hf.1, ← Int.mul_assoc, ← hf.2, Int.mul_one]
   exact hxy
 
+theorem solution_shift (a b c x₀ y₀ k : Int)
+    (h : a * x₀ + b * y₀ = c) :
+    a * (x₀ + k * (b / gcd a b)) + b * (y₀ - k * (a / gcd a b)) = c := by
+  /-
+  Theorem: From one solution, adding k times b/g to x and subtracting
+  k times a/g from y gives another solution, where g is the gcd.
+  Proof: Write a=g*A and b=g*B. Then a*B=b*A, since both equal
+  g*A*B. The change in a*x+b*y is k*(a*B-b*A)=0. QED
+  -/
+  have hf := gcd_quotients a b
+  have heq : a * (b / gcd a b) = b * (a / gcd a b) := by
+    calc
+      a * (b / gcd a b) = (gcd a b * (a / gcd a b)) * (b / gcd a b) := by
+        exact congrArg (fun t => t * (b / gcd a b)) hf.1
+      _ = (gcd a b * (b / gcd a b)) * (a / gcd a b) := by
+        rw [Int.mul_right_comm]
+      _ = b * (a / gcd a b) := by rw [← hf.2]
+  have hk := congrArg (fun t : Int => t * k) heq
+  simp only [Int.mul_add, Int.mul_sub, Int.mul_assoc, Int.mul_left_comm, Int.mul_comm] at hk ⊢
+  omega
+
 end NumberTheory.CommonDivisors
