@@ -1,5 +1,6 @@
 import Init.Data.Int.Lemmas
 import Init.Data.Int.Order
+import Init.Data.Int.DivModLemmas
 import Lean.Elab.Tactic.Omega
 
 /-
@@ -478,5 +479,17 @@ theorem linear_solvable_iff (a b c : Int) :
     rcases bezout a b with ⟨u, v, huv⟩
     exists u * t, v * t
     rw [← Int.mul_assoc, ← Int.mul_assoc, ← Int.add_mul, huv, ← ht]
+
+theorem gcd_quotients (a b : Int) :
+    a = gcd a b * (a / gcd a b) ∧ b = gcd a b * (b / gcd a b) := by
+  /-
+  Theorem: Dividing either input by its gcd gives an exact integer factor.
+  Proof: The gcd divides both numbers. Exact division of an integer
+  multiple recovers its factor, so multiplication by the gcd recovers
+  the original number. Only this basic exact-division identity is used.
+  QED
+  -/
+  exact ⟨(Int.mul_ediv_cancel' (gcd_data a b).2.1).symm,
+    (Int.mul_ediv_cancel' (gcd_data a b).2.2.1).symm⟩
 
 end NumberTheory.CommonDivisors
