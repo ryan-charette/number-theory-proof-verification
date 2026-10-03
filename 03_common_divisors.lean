@@ -41,4 +41,15 @@ theorem dvd_zero (a : Int) : a ∣ 0 := by
   exists 0
   rw [Int.mul_zero]
 
+theorem dvd_trans (a b c : Int) (hab : a ∣ b) (hbc : b ∣ c) : a ∣ c := by
+  /-
+  Theorem: Divisibility is transitive.
+  Proof: If b = a * u and c = b * v, then c = a * (u * v).
+  The integer u * v supplies the required witness. QED
+  -/
+  rcases hab with ⟨u, hu⟩
+  rcases hbc with ⟨v, hv⟩
+  exists u * v
+  rw [hv, hu, Int.mul_assoc]
+
 end NumberTheory.CommonDivisors
