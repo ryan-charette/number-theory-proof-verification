@@ -666,4 +666,21 @@ theorem lcm_common (a b : Int) : a ∣ lcm a b ∧ b ∣ lcm a b := by
       _ = (gcd a b * (b / gcd a b)) * (a / gcd a b) := by rw [Int.mul_right_comm]
       _ = b * (a / gcd a b) := by rw [← hf.2]
 
+theorem lcm_positive (a b : Int) (ha : 0 < a) (hb : 0 < b) : 0 < lcm a b := by
+  /-
+  Theorem: The proposed least common multiple is positive for positive
+  inputs. Proof: The gcd g is positive. In b=g*B, the quotient B
+  must be positive, since B≤0 would give b≤0. Thus a*B is positive.
+  QED
+  -/
+  have hg := gcd_positive a b (Or.inl (by omega))
+  have hf := (gcd_quotients a b).2
+  have hB : 0 < b / gcd a b := by
+    by_cases hn : b / gcd a b ≤ 0
+    · have hm := Int.mul_le_mul_of_nonneg_left hn (Int.le_of_lt hg)
+      rw [Int.mul_zero, ← hf] at hm
+      omega
+    · omega
+  exact Int.mul_pos ha hB
+
 end NumberTheory.CommonDivisors
