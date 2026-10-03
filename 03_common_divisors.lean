@@ -565,4 +565,32 @@ theorem homogeneous_solutions (A B dx dy : Int) (hc : gcd A B = 1)
       Int.mul_assoc, Int.mul_left_comm, Int.mul_comm, Int.one_mul,
       Int.mul_one, Int.zero_mul, Int.mul_zero] at hx hy hu hv ⊢ <;> omega
 
+theorem all_solutions (a b c x₀ y₀ x y : Int) (hne : a ≠ 0 ∨ b ≠ 0)
+    (h₀ : a * x₀ + b * y₀ = c) (h : a * x + b * y = c) :
+    ∃ k : Int, x = x₀ + k * (b / gcd a b) ∧ y = y₀ - k * (a / gcd a b) := by
+  /-
+  Theorem: Every solution comes from a given solution by the shift
+  formula. Proof: Put A=a/g and B=b/g, where g is the positive gcd.
+  Subtract the two equations and cancel g to get
+
+    A*(x-x₀) + B*(y-y₀) = 0.
+
+  The reduced coefficients are relatively prime. The homogeneous
+  result gives x-x₀=B*k and y-y₀=-A*k. Rearranging yields exactly
+  the two claimed formulas. QED
+  -/
+  have hf := gcd_quotients a b
+  have hp := gcd_positive a b hne
+  have hh : (a / gcd a b) * (x - x₀) + (b / gcd a b) * (y - y₀) = 0 := by
+    apply Int.eq_of_mul_eq_mul_left (a := gcd a b) (by omega)
+    rw [Int.mul_add, ← Int.mul_assoc, ← hf.1, ← Int.mul_assoc, ← hf.2,
+      Int.mul_zero, Int.mul_sub, Int.mul_sub]
+    omega
+  rcases homogeneous_solutions (a / gcd a b) (b / gcd a b) (x - x₀) (y - y₀)
+    (reduced_coprime a b hne) hh with ⟨k, hkx, hky⟩
+  exists k
+  rw [Int.mul_comm (b / gcd a b) k] at hkx
+  rw [Int.mul_comm (a / gcd a b) k] at hky
+  constructor <;> omega
+
 end NumberTheory.CommonDivisors
