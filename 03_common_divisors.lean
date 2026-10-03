@@ -389,4 +389,22 @@ theorem coprime_swap (a b : Int) (h : gcd a b = 1) : gcd b a = 1 := by
   rw [Int.add_comm]
   exact hxy
 
+theorem coprime_dvd_cancel (a b c : Int) (hdiv : a ∣ b * c)
+    (hcop : gcd a b = 1) : a ∣ c := by
+  /-
+  Theorem: If a divides b * c and a is relatively prime to b, then a
+  divides c. Proof: Choose x,y with a * x + b * y = 1. Multiply by c:
+
+    c = a * (x * c) + (b * c) * y.
+
+  Both terms on the right are divisible by a, so their sum is too. QED
+  -/
+  rcases coprime_bezout a b hcop with ⟨x, y, hxy⟩
+  have hd := dvd_linear a a (b * c) (x * c) y (dvd_refl a) hdiv
+  have heq := congrArg (fun t : Int => t * c) hxy
+  change (a * x + b * y) * c = 1 * c at heq
+  rw [Int.add_mul, Int.one_mul, Int.mul_assoc a, Int.mul_right_comm b y c] at heq
+  rw [heq] at hd
+  exact hd
+
 end NumberTheory.CommonDivisors
