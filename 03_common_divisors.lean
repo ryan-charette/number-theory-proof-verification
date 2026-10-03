@@ -540,4 +540,29 @@ theorem solution_next (a b c x₀ y₀ : Int) (h : a * x₀ + b * y₀ = c) :
   rw [Int.one_mul, Int.one_mul] at hs
   exact hs
 
+theorem homogeneous_solutions (A B dx dy : Int) (hc : gcd A B = 1)
+    (h : A * dx + B * dy = 0) : ∃ k : Int, dx = B * k ∧ dy = -(A * k) := by
+  /-
+  Theorem: If A and B are relatively prime, every solution of
+  A*dx+B*dy=0 has the form dx=B*k and dy=-A*k.
+  Proof: Choose u,v with A*u+B*v=1. Set k=v*dx-u*dy.
+  Multiply the identity by dx, and use A*dx=-B*dy, to obtain
+
+    dx = B*v*dx - B*u*dy = B*k.
+
+  Multiplying by dy and making the same substitution gives dy=-A*k.
+  This argument includes cases where A or B is zero. QED
+  -/
+  rcases coprime_bezout A B hc with ⟨u, v, huv⟩
+  exists v * dx - u * dy
+  have hx := congrArg (fun t : Int => t * dx) huv
+  have hy := congrArg (fun t : Int => t * dy) huv
+  have hu := congrArg (fun t : Int => t * u) h
+  have hv := congrArg (fun t : Int => t * v) h
+  dsimp at hx hy hu hv
+  constructor <;>
+    simp only [Int.mul_add, Int.add_mul, Int.mul_sub, Int.sub_mul,
+      Int.mul_assoc, Int.mul_left_comm, Int.mul_comm, Int.one_mul,
+      Int.mul_one, Int.zero_mul, Int.mul_zero] at hx hy hu hv ⊢ <;> omega
+
 end NumberTheory.CommonDivisors
