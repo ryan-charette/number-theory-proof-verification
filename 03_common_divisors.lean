@@ -529,4 +529,15 @@ theorem solution_shift (a b c x₀ y₀ k : Int)
   simp only [Int.mul_add, Int.mul_sub, Int.mul_assoc, Int.mul_left_comm, Int.mul_comm] at hk ⊢
   omega
 
+theorem solution_next (a b c x₀ y₀ : Int) (h : a * x₀ + b * y₀ = c) :
+    a * (x₀ + b / gcd a b) + b * (y₀ - a / gcd a b) = c := by
+  /-
+  Theorem: Increasing x by b/g and decreasing y by a/g preserves a
+  solution. Proof: This is the shift formula with the integer k=1.
+  QED
+  -/
+  have hs := solution_shift a b c x₀ y₀ 1 h
+  rw [Int.one_mul, Int.one_mul] at hs
+  exact hs
+
 end NumberTheory.CommonDivisors
