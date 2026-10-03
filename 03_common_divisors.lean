@@ -378,4 +378,15 @@ theorem bezout (a b : Int) : ∃ x y : Int, a * x + b * y = gcd a b := by
   -/
   exact (gcd_data a b).2.2.2
 
+theorem coprime_swap (a b : Int) (h : gcd a b = 1) : gcd b a = 1 := by
+  /-
+  Theorem: Coprimality is unchanged by interchanging the inputs.
+  Proof: If a * x + b * y = 1, commutativity of addition gives
+  b * y + a * x = 1. Apply the coprimality criterion. QED
+  -/
+  rcases coprime_bezout a b h with ⟨x, y, hxy⟩
+  apply coprime_of_bezout b a y x
+  rw [Int.add_comm]
+  exact hxy
+
 end NumberTheory.CommonDivisors
