@@ -315,4 +315,29 @@ theorem composite_small_prime (n : Nat) (hn : 1 < n) (hp : ¬ Prime n) :
     · rw [heq]
       exact Nat.mul_le_mul (by omega) hpb
 
+theorem prime_trial_bound (n : Nat) (hn : 1 < n) :
+    Prime n ↔ ∀ p : Nat, Prime p → p * p ≤ n → ¬ p ∣ n := by
+  /-
+  Theorem: A number greater than one is prime exactly when no prime
+  whose square is at most n divides n. The condition p*p≤n expresses
+  p≤sqrt(n) without introducing real square roots.
+  Proof: If n is prime, a prime divisor p must equal n. But p>1
+  implies p*p>p=n, contradicting the bound. Conversely, a nonprime
+  number has a prime divisor meeting the bound by the previous theorem.
+  QED
+  -/
+  constructor
+  · intro h p hp hbound hd
+    rcases h.2 p hd with h₁ | h₂
+    · have hpos := hp.1
+      omega
+    · have hlarge := Nat.mul_lt_mul_of_pos_left hp.1 (by omega : 0 < p)
+      rw [Nat.mul_one] at hlarge
+      omega
+  · intro h
+    apply Classical.byContradiction
+    intro hnot
+    rcases composite_small_prime n hn hnot with ⟨p, hp, hd, hbound⟩
+    exact h p hp hbound hd
+
 end NumberTheory.Factorization
