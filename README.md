@@ -4,7 +4,7 @@ This project formalizes elementary number theory in Lean, following *Number Theo
 
 ## Overview
 
-Each textbook subsection will have one self-contained Lean file. `01_divisibility.lean` develops integer divisibility, congruence, powers, and decimal digit-sum tests. `02_remainders.lean` proves quotient-and-remainder existence by well-ordering, uniqueness, and the equivalence between congruence and equal remainders. `03_common_divisors.lean` develops the Euclidean procedure and greatest common divisors, Bezout identities, coprimality, all solutions of integer linear equations, gcd scaling, and least common multiples.
+Each textbook subsection will have one self-contained Lean file. `01_divisibility.lean` develops integer divisibility, congruence, powers, and decimal digit-sum tests. `02_remainders.lean` proves quotient-and-remainder existence by well-ordering, uniqueness, and the equivalence between congruence and equal remainders. `03_common_divisors.lean` develops the Euclidean procedure and greatest common divisors, Bezout identities, coprimality, all solutions of integer linear equations, gcd scaling, and least common multiples. `04_factorization.lean` develops prime divisors, the trial-division bound, the sieve criterion, and existence and uniqueness of prime factorization.
 
 Each proof includes a statement in words, a step-by-step mathematical argument, and the corresponding Lean proof. All definitions and supporting results needed for each subsection appear in that subsection's file. Only Lean's bundled arithmetic and tactics are imported; no other project files or external packages are required. The tactic `omega` checks linear arithmetic after explicit mathematical arguments. The common-divisor file constructs its own gcd by Euclidean induction and back-substitution, then proves that it is greatest. Its lcm expression is proved to be the least positive common multiple; no library gcd, lcm, or Bezout theorem is used.
 
@@ -32,6 +32,9 @@ The project pins Lean 4.12.0. To check the file directly with that version:
 lean 01_divisibility.lean
 lean 02_remainders.lean
 lean 03_common_divisors.lean
+lean 04_factorization.lean
 ```
 
-Each file can also be copied into another Lean 4.12.0 project without copying any other source files from this repository. Import a file with its quoted filename, such as `import «03_common_divisors»`. The namespaces are `NumberTheory`, `NumberTheory.Remainders`, and `NumberTheory.CommonDivisors`, respectively. In the common-divisor file, positive integer hypotheses express the textbook convention that natural-number factors and lcm inputs are positive; solution formulas use exact integer quotients by the gcd.
+Each file can also be copied into another Lean 4.12.0 project without copying any other source files from this repository. Import a file with its quoted filename, such as `import «03_common_divisors»`. The namespaces are `NumberTheory`, `NumberTheory.Remainders`, `NumberTheory.CommonDivisors`, and `NumberTheory.Factorization`, respectively. In the common-divisor file, positive integer hypotheses express the textbook convention that natural-number factors and lcm inputs are positive; solution formulas use exact integer quotients by the gcd.
+
+Prime factorizations are represented as finite lists of primes. Repeated entries represent powers, as verified by `product_replicate`; occurrence counts record exponents. Uniqueness proves that any two factorizations are permutations and have the same primes and multiplicities. The trial-division bound uses `p * p ≤ n`, the integer equivalent of `p ≤ sqrt(n)`. The file proves its own primality and factorization results using elementary induction, Euclidean back-substitution, and cancellation.
