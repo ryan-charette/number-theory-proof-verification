@@ -385,4 +385,34 @@ theorem product_append (xs ys : List Nat) : product (xs ++ ys) = product xs * pr
   | nil => rw [List.nil_append, product, Nat.one_mul]
   | cons p ps ih => rw [List.cons_append, product, product, ih, Nat.mul_assoc]
 
+theorem factorization_exists (n : Nat) (hn : 1 < n) :
+    ∃ ps : List Nat, PrimeFactors ps ∧ product ps = n := by
+  /-
+  Theorem: Every natural number greater than one is a finite product
+  of primes. Proof: Use strong induction. A prime n has the one-entry
+  factorization [n]. Otherwise write n=a*b with 1<a,b<n. Induction
+  gives prime lists for a and b. Concatenate them: all entries remain
+  prime and their product is a*b=n. QED
+  -/
+  induction n using Nat.strongRecOn with
+  | ind n ih =>
+    by_cases hp : Prime n
+    · exists [n]
+      constructor
+      · intro p hmem
+        have heq : p = n := by simpa using hmem
+        rw [heq]
+        exact hp
+      · rw [product, product, Nat.mul_one]
+    · rcases nonprime_factors n hn hp with ⟨a, b, ha, han, hb, hbn, heq⟩
+      rcases ih a han ha with ⟨xs, hxs, hx⟩
+      rcases ih b hbn hb with ⟨ys, hys, hy⟩
+      exists xs ++ ys
+      constructor
+      · intro p hm
+        rcases List.mem_append.mp hm with hleft | hright
+        · exact hxs p hleft
+        · exact hys p hright
+      · rw [product_append, hx, hy, ← heq]
+
 end NumberTheory.Factorization
