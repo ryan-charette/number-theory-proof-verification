@@ -514,4 +514,35 @@ theorem factorization_multiplicities (xs ys : List Nat)
   intro p
   exact ⟨hp.mem_iff, hp.countP_eq (fun q => q == p)⟩
 
+theorem prime_sieve_criterion (n : Nat) (hn : 1 < n) :
+    Prime n ↔ ∀ p : Nat, Prime p → p < n → ¬ p ∣ n := by
+  /-
+  Theorem: A number greater than one survives removal of all proper
+  multiples of smaller primes exactly when it is prime.
+  Proof: A smaller prime cannot divide a prime n, whose only positive
+  divisors are one and n. Conversely, a nonprime n has a smaller
+  nontrivial factor a. A prime divisor of a is smaller than n and
+  divides n, so n would already have been removed.
+
+  This explains the sieve: the smallest unremoved number is prime,
+  and removing its larger multiples never removes another prime.
+  The argument applies to any finite cutoff. QED
+  -/
+  constructor
+  · intro h p hp hsmall hd
+    rcases h.2 p hd with h₁ | h₂
+    · have hpos := hp.1
+      omega
+    · omega
+  · intro h
+    apply Classical.byContradiction
+    intro hnot
+    rcases nonprime_factors n hn hnot with ⟨a, b, ha, han, _, _, heq⟩
+    rcases prime_divisor a ha with ⟨p, hp, hd⟩
+    have hpa := Nat.le_of_dvd (by omega : 0 < a) hd
+    rcases hd with ⟨t, ht⟩
+    apply h p hp (by omega)
+    exists t * b
+    rw [heq, ht, Nat.mul_assoc]
+
 end NumberTheory.Factorization
