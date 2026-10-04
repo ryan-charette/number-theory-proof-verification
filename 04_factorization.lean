@@ -415,4 +415,26 @@ theorem factorization_exists (n : Nat) (hn : 1 < n) :
         · exact hys p hright
       · rw [product_append, hx, hy, ← heq]
 
+theorem prime_divides_prime_list (p : Nat) (ps : List Nat) (hp : Prime p)
+    (hps : PrimeFactors ps) (hd : p ∣ product ps) : p ∈ ps := by
+  /-
+  Lemma: A prime dividing a product of primes occurs among those primes.
+  Proof: Induct on the list. The empty product is one, which no prime
+  divides. For a first prime q, the product lemma says p divides q
+  or the remaining product. In the first case primality of q forces
+  p=q; in the second case use the induction hypothesis. QED
+  -/
+  induction ps with
+  | nil =>
+    have hle := Nat.le_of_dvd (by decide : 0 < 1) hd
+    have hp₁ := hp.1
+    omega
+  | cons q qs ih =>
+    rcases prime_dvd_mul p q (product qs) hp hd with hq | htail
+    · rcases (hps q (by simp)).2 p hq with hp₁ | hpq
+      · have hpos := hp.1
+        omega
+      · simp [hpq]
+    · exact List.mem_cons_of_mem q (ih (fun t ht => hps t (List.mem_cons_of_mem q ht)) htail)
+
 end NumberTheory.Factorization
