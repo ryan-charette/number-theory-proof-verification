@@ -545,4 +545,17 @@ theorem prime_sieve_criterion (n : Nat) (hn : 1 < n) :
     exists t * b
     rw [heq, ht, Nat.mul_assoc]
 
+theorem product_replicate (p r : Nat) : product (List.replicate r p) = p ^ r := by
+  /-
+  Lemma: Repeating the factor p exactly r times gives p to the power r.
+  Proof: Induct on r. With no factors, both sides equal one. Adding
+  another p multiplies the previous product by p, giving the next
+  power. Thus repeated entries in a factor list represent powers,
+  with the occurrence count as exponent. QED
+  -/
+  induction r with
+  | zero => rfl
+  | succ r ih =>
+    rw [List.replicate_succ, product, ih, Nat.pow_succ, Nat.mul_comm]
+
 end NumberTheory.Factorization
