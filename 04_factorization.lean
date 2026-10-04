@@ -446,4 +446,19 @@ theorem prime_multiple_match (p k : Nat) (qs : List Nat) (hp : Prime p)
   -/
   exact prime_divides_prime_list p qs hp hqs ⟨k, h.symm⟩
 
+theorem product_perm (xs ys : List Nat) (h : List.Perm xs ys) : product xs = product ys := by
+  /-
+  Lemma: Reordering factors does not change their product.
+  Proof: A permutation is built from keeping a first entry, exchanging
+  adjacent entries, and composing reorderings. Keeping an entry uses
+  the equality for the tails; exchange uses commutativity and
+  associativity of multiplication; composition uses equality transitivity.
+  QED
+  -/
+  induction h with
+  | nil => rfl
+  | cons a h ih => rw [product, product, ih]
+  | swap a b xs => simp only [product, Nat.mul_left_comm]
+  | trans h₁ h₂ ih₁ ih₂ => exact ih₁.trans ih₂
+
 end NumberTheory.Factorization
