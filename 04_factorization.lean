@@ -133,4 +133,12 @@ theorem division_exists (m n : Nat) (hn : 0 < n) :
   exact ⟨hq, by omega, by omega⟩
 
 
+theorem dvd_refl (a : Int) : a ∣ a := by
+  /-
+  Theorem: Every integer divides itself.
+  Proof: a = a * 1, so choose the integer 1. QED
+  -/
+  exists 1
+  rw [Int.mul_one]
+
 end NumberTheory.Factorization
