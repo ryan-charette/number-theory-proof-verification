@@ -558,4 +558,21 @@ theorem product_replicate (p r : Nat) : product (List.replicate r p) = p ^ r := 
   | succ r ih =>
     rw [List.replicate_succ, product, ih, Nat.pow_succ, Nat.mul_comm]
 
+theorem factorization_exists_unique (n : Nat) (hn : 1 < n) :
+    ∃ ps : List Nat, PrimeFactors ps ∧ product ps = n ∧
+      ∀ qs : List Nat, PrimeFactors qs → product qs = n → List.Perm ps qs := by
+  /-
+  Theorem: Every natural number greater than one has a prime
+  factorization, and every other prime factorization differs only
+  in the order of its factors.
+  Proof: Existence supplies a prime list with product n. Any other
+  prime list with product n has the same product as this one, so
+  uniqueness supplies a reordering between them. QED
+  -/
+  rcases factorization_exists n hn with ⟨ps, hps, hp⟩
+  exists ps
+  refine ⟨hps, hp, ?_⟩
+  intro qs hqs hq
+  exact factorization_unique ps qs hps hqs (hp.trans hq.symm)
+
 end NumberTheory.Factorization
