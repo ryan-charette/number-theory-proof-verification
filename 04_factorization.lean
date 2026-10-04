@@ -459,7 +459,7 @@ theorem product_perm (xs ys : List Nat) (h : List.Perm xs ys) : product xs = pro
   | nil => rfl
   | cons a h ih => rw [product, product, ih]
   | swap a b xs => simp only [product, Nat.mul_left_comm]
-  | trans h₁ h₂ ih₁ ih₂ => exact ih₁.trans ih₂
+  | trans _ _ ih₁ ih₂ => exact ih₁.trans ih₂
 
 theorem factorization_unique (xs ys : List Nat)
     (hxs : PrimeFactors xs) (hys : PrimeFactors ys) (h : product xs = product ys) :
