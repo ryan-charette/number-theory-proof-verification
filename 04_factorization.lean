@@ -461,4 +461,42 @@ theorem product_perm (xs ys : List Nat) (h : List.Perm xs ys) : product xs = pro
   | swap a b xs => simp only [product, Nat.mul_left_comm]
   | trans h₁ h₂ ih₁ ih₂ => exact ih₁.trans ih₂
 
+theorem factorization_unique (xs ys : List Nat)
+    (hxs : PrimeFactors xs) (hys : PrimeFactors ys) (h : product xs = product ys) :
+    List.Perm xs ys := by
+  /-
+  Theorem: Two prime factorizations of the same number agree up to order.
+  Proof: Induct on the first list. If it is empty, its product is one.
+  A nonempty prime list on the other side would have a prime divisor
+  of one, so that list must also be empty.
+
+  Otherwise let p be the first prime. The matching lemma finds p in
+  the second list. Move this occurrence to the front and remove it
+  from both lists. Cancelling positive p leaves equal products for
+  the shorter lists. Induction matches their entries. Restoring p and
+  undoing the reordering proves the result. QED
+  -/
+  letI : BEq Nat := instBEqOfDecidableEq
+  induction xs generalizing ys with
+  | nil =>
+    cases ys with
+    | nil => exact List.Perm.nil
+    | cons q qs =>
+      have hq := (hys q (by simp)).1
+      have hd : q ∣ 1 := ⟨product qs, h⟩
+      have hle := Nat.le_of_dvd (by decide : 0 < 1) hd
+      omega
+  | cons p ps ih =>
+    have hp := hxs p (by simp)
+    have hp₁ := hp.1
+    have hps : PrimeFactors ps := fun q hq => hxs q (List.mem_cons_of_mem p hq)
+    have hmem := prime_multiple_match p (product ps) ys hp hys h
+    have hperm := List.perm_cons_erase hmem
+    have heq := product_perm ys (p :: ys.erase p) hperm
+    change p * product ps = product ys at h
+    change product ys = p * product (ys.erase p) at heq
+    have hcancel := Nat.eq_of_mul_eq_mul_left (by omega : 0 < p) (h.trans heq)
+    have htail : PrimeFactors (ys.erase p) := fun q hq => hys q (List.mem_of_mem_erase hq)
+    exact (List.Perm.cons p (ih (ys.erase p) hps htail hcancel)).trans hperm.symm
+
 end NumberTheory.Factorization
