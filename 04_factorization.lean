@@ -340,4 +340,32 @@ theorem prime_trial_bound (n : Nat) (hn : 1 < n) :
     rcases composite_small_prime n hn hnot with ⟨p, hp, hd, hbound⟩
     exact h p hp hbound hd
 
+theorem prime_dvd_mul (p a b : Nat) (hp : Prime p) (h : p ∣ a * b) :
+    p ∣ a ∨ p ∣ b := by
+  /-
+  Theorem: A prime dividing a product divides at least one factor.
+  Proof: The Euclidean construction for p and a supplies a common
+  divisor d and integers x,y with p*x+a*y=d. Since d divides prime p,
+  it equals one or p. If d=p, then p divides a. If d=1, multiply by b:
+
+    b = p*(x*b) + (a*b)*y.
+
+  Each term on the right is divisible by p, so p divides b. QED
+  -/
+  rcases euclid_natural p a with ⟨d, hdp, hda, x, y, hxy⟩
+  rcases hp.2 d (Int.ofNat_dvd.mp hdp) with hd₁ | hdp'
+  · right
+    rw [hd₁] at hxy
+    have hab : (p : Int) ∣ (a : Int) * (b : Int) := Int.ofNat_dvd.mpr h
+    have hd := dvd_linear p p ((a : Int) * b) (x * b) y (dvd_refl p) hab
+    have heq := congrArg (fun t : Int => t * (b : Int)) hxy
+    change ((p : Int) * x + (a : Int) * y) * b = 1 * (b : Int) at heq
+    rw [Int.add_mul, Int.one_mul, Int.mul_assoc (p : Int),
+      Int.mul_right_comm (a : Int) y (b : Int)] at heq
+    rw [heq] at hd
+    exact Int.ofNat_dvd.mp hd
+  · left
+    rw [hdp'] at hda
+    exact Int.ofNat_dvd.mp hda
+
 end NumberTheory.Factorization
