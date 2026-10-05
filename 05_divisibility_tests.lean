@@ -1133,4 +1133,17 @@ theorem no_12_power_2 (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
   rw [exponent_3_12]
   decide
 
+
+theorem no_7_power_3 (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
+    7 * m ^ 3 ≠ n ^ 3 := by
+  /-
+  Theorem: There are no positive natural numbers m,n with
+  7*m^3=n^3. Proof: The exponent of 7 on the left is
+  1+3*e(m); on the right it is 3*e(n). Subtracting would
+  make one divisible by 3, which is impossible. QED
+  -/
+  apply power_equation_obstruction 7 7 3 m n (by decide) hm hn
+  rw [exponent_7_7]
+  decide
+
 end NumberTheory.DivisibilityTests
