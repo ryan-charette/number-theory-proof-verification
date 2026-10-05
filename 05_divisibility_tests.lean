@@ -1473,4 +1473,37 @@ theorem oddPart_spec (a : Nat) (ha : 0 < a) :
   rw [dif_pos ha]
   exact Classical.choose_spec (odd_part_exists a ha)
 
+
+theorem same_odd_part_comparable (a b : Nat) (ha : 0 < a) (hb : 0 < b)
+    (h : oddPart a = oddPart b) : a ∣ b ∨ b ∣ a := by
+  /-
+  Lemma: Two positive integers with the same odd part are comparable
+  by divisibility. Proof: Write a=2^k*r and b=2^l*r. If k≤l, then
+  b=a*2^(l-k). If l≤k, then a=b*2^(k-l). These explicit quotients
+  establish divisibility in one direction or the other. QED
+  -/
+  rcases (oddPart_spec a ha).2.2.2 with ⟨k, hk⟩
+  rcases (oddPart_spec b hb).2.2.2 with ⟨l, hl⟩
+  by_cases hkl : k ≤ l
+  · left
+    exists 2^(l-k)
+    calc
+      b = 2^l * oddPart b := hl
+      _ = (2^k * 2^(l-k)) * oddPart a := by
+        rw [← Nat.pow_add, Nat.add_sub_of_le hkl, h]
+      _ = (2^k*oddPart a) * 2^(l-k) := by
+        simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
+      _ = a * 2^(l-k) := congrArg (fun t => t * 2^(l-k)) hk.symm
+  · right
+    have hlk : l ≤ k := by omega
+    exists 2^(k-l)
+    calc
+      a = 2^k * oddPart a := hk
+      _ = (2^l * 2^(k-l)) * oddPart b := by
+        rw [← Nat.pow_add, Nat.add_sub_of_le hlk, h]
+      _ = (2^l*oddPart b) * 2^(k-l) := by
+        simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
+      _ = b * 2^(k-l) := congrArg (fun t => t * 2^(k-l)) hl.symm
+
+
 end NumberTheory.DivisibilityTests
