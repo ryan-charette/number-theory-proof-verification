@@ -975,4 +975,19 @@ theorem prime_2 : Prime 2 := by
   have hfour := Nat.mul_le_mul (by omega : 2 ≤ q) (by omega : 2 ≤ q)
   omega
 
+
+theorem prime_3 : Prime 3 := by
+  /-
+  Lemma: 3 is prime. Proof: A nonprime number has a prime divisor
+  whose square does not exceed it. Such a divisor is at least two.
+  For two or three this square is already too large; for seven the
+  only remaining possibility is two, which does not divide seven.
+  Thus the trial-division criterion proves primality. QED
+  -/
+  apply (prime_trial_bound 3 (by decide)).mpr
+  intro q hq hbound hd
+  have hqpos := hq.1
+  have hfour := Nat.mul_le_mul (by omega : 2 ≤ q) (by omega : 2 ≤ q)
+  omega
+
 end NumberTheory.DivisibilityTests
