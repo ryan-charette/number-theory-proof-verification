@@ -62,4 +62,19 @@ theorem common_divisor_remainder (a b n r k : Int)
   have heq : a + -(n * b) = r := by omega
   rw [heq] at hd
   exact hd
+theorem common_divisors_step (a b n r k : Int) (h : a = n * b + r) :
+    (k ∣ a ∧ k ∣ b) ↔ (k ∣ b ∧ k ∣ r) := by
+  /-
+  Theorem: Replacing (a, b) by (b, r), where a = n * b + r,
+  leaves the common divisors unchanged.
+  Proof: The forward implication follows from the preceding theorem.
+  Conversely, if k divides b and r, it divides n * b + r = a. QED
+  -/
+  constructor
+  · intro hk
+    exact ⟨hk.2, common_divisor_remainder a b n r k h hk.1 hk.2⟩
+  · intro hk
+    have hd := dvd_linear k b r n 1 hk.1 hk.2
+    rw [Int.mul_one, Int.mul_comm b n, ← h] at hd
+    exact ⟨hd, hk.1⟩
 end NumberTheory.DivisibilityTests
