@@ -1506,4 +1506,44 @@ theorem same_odd_part_comparable (a b : Nat) (ha : 0 < a) (hb : 0 < b)
       _ = b * 2^(k-l) := congrArg (fun t => t * 2^(k-l)) hl.symm
 
 
+
+theorem dividing_pair (xs : List Nat) (n : Nat)
+    (hlen : xs.length = n+1) (hbound : ∀ a ∈ xs, 0 < a ∧ a ≤ 2*n) :
+    ∃ (i j : Nat) (hi : i < xs.length) (hj : j < xs.length),
+      i ≠ j ∧ xs[i] ∣ xs[j] := by
+  /-
+  Theorem: Among n+1 positive integers at most 2n, two at distinct
+  positions have one dividing the other.
+  Proof: Remove factors of two from each input a, leaving an odd
+  part r. Because 1≤r≤2n and r is odd, the label r/2 is one of
+  0,...,n-1. There are n+1 inputs but only n labels, so two positions
+  have equal labels. Odd integers with equal quotients on division
+  by two are equal, since both remainders are one. These two inputs
+  therefore have the same odd part. Comparing their powers of two
+  gives divisibility in one direction. Order the two positions to
+  put the divisor first. Repeated input values cause no difficulty:
+  the positions are distinct, even if their values coincide. QED
+  -/
+  let labels := xs.map (fun a => oddPart a / 2)
+  have hlabels : ∀ r ∈ labels, r < n := by
+    intro r hr
+    rcases List.mem_map.mp hr with ⟨a, ha, he⟩
+    have hab := hbound a ha
+    have hs := oddPart_spec a hab.1
+    omega
+  have hl : n < labels.length := by simp only [labels, List.length_map]; omega
+  rcases repeated_bounded_label labels n hlabels hl with ⟨i,j,hi,hj,hij,he⟩
+  have hi' : i < xs.length := by simpa only [labels, List.length_map] using hi
+  have hj' : j < xs.length := by simpa only [labels, List.length_map] using hj
+  have hai := hbound xs[i] (List.getElem_mem xs i hi')
+  have haj := hbound xs[j] (List.getElem_mem xs j hj')
+  have hsi := oddPart_spec xs[i] hai.1
+  have hsj := oddPart_spec xs[j] haj.1
+  have hparts : oddPart xs[i] = oddPart xs[j] := by
+    simp only [labels, List.getElem_map] at he
+    omega
+  rcases same_odd_part_comparable xs[i] xs[j] hai.1 haj.1 hparts with hd | hd
+  · exact ⟨i,j,hi',hj',by omega,hd⟩
+  · exact ⟨j,i,hj',hi',by omega,hd⟩
+
 end NumberTheory.DivisibilityTests
