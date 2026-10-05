@@ -726,4 +726,18 @@ theorem factorization_unique (xs ys : List Nat)
     have hcancel := Nat.eq_of_mul_eq_mul_left (by omega : 0 < p) (h.trans heq)
     have htail : PrimeFactors (ys.erase p) := fun q hq => hys q (List.mem_of_mem_erase hq)
     exact (List.Perm.cons p (ih (ys.erase p) hps htail hcancel)).trans hperm.symm
+theorem factorization_multiplicities (xs ys : List Nat)
+    (hxs : PrimeFactors xs) (hys : PrimeFactors ys) (h : product xs = product ys) :
+    xs.length = ys.length ∧ ∀ p : Nat, (p ∈ xs ↔ p ∈ ys) ∧ xs.count p = ys.count p := by
+  /-
+  Corollary: Equal prime products have exactly the same primes with
+  exactly the same multiplicities. Proof: Uniqueness gives a reordering
+  between the lists. Reordering preserves length, membership, and the
+  number of times each prime occurs. These occurrence counts are the
+  exponents when repeated factors are collected into prime powers. QED
+  -/
+  have hp := factorization_unique xs ys hxs hys h
+  refine ⟨hp.length_eq, ?_⟩
+  intro p
+  exact ⟨hp.mem_iff, hp.countP_eq (fun q => q == p)⟩
 end NumberTheory.DivisibilityTests
