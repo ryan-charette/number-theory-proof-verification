@@ -875,4 +875,17 @@ theorem factors_spec (n : Nat) (hn : 0 < n) :
   rw [dif_pos hn]
   exact Classical.choose_spec (positive_factorization n hn)
 
+
+theorem exponent_of_factors (n p : Nat) (hn : 0 < n)
+    (ps : List Nat) (hps : PrimeFactors ps) (he : product ps = n) :
+    exponent p n = ps.count p := by
+  /-
+  Lemma: Any prime factorization computes the same exponent.
+  Proof: The chosen list and the supplied list have the same product.
+  Uniqueness therefore gives the same number of occurrences of p. QED
+  -/
+  have hs := factors_spec n hn
+  exact ((factorization_multiplicities (factors n) ps hs.1 hps
+    (hs.2.trans he.symm)).2 p).2
+
 end NumberTheory.DivisibilityTests
