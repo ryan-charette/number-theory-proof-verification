@@ -1236,4 +1236,35 @@ theorem irrational_root_7_3 (a b : Int) (hb : b ≠ 0) :
   rw [exponent_7_7]
   decide
 
+
+theorem prime_not_dvd_iff_coprime (p : Nat) (hp : Prime p) (a : Int) :
+    ¬ (p : Int) ∣ a ↔ gcd a p = 1 := by
+  /-
+  Theorem: An integer is not divisible by a prime exactly when their
+  gcd is one. Proof: The nonnegative gcd divides p, so its absolute
+  value is either one or p. If p does not divide a, the second case
+  is impossible. Conversely, if the gcd is one, a Bezout combination
+  equals one. A common divisor p would then divide one, contradicting
+  p>1. QED
+  -/
+  have hg := gcd_data a p
+  constructor
+  · intro hnot
+    have hd := Int.natAbs_dvd_natAbs.mpr hg.2.2.1
+    rw [Int.natAbs_ofNat] at hd
+    rcases hp.2 (gcd a p).natAbs hd with h | h
+    · have he := Int.natAbs_of_nonneg hg.1
+      rw [h] at he
+      exact he.symm
+    · have he := Int.natAbs_of_nonneg hg.1
+      rw [h] at he
+      exact False.elim (hnot (he ▸ hg.2.1))
+  · intro hcop hd
+    rcases coprime_bezout a p hcop with ⟨x, y, he⟩
+    have hone := dvd_linear p a p x y hd (dvd_refl p)
+    rw [he] at hone
+    have hle := divisor_le_positive p 1 (by decide) hone
+    have hpos := hp.1
+    omega
+
 end NumberTheory.DivisibilityTests
