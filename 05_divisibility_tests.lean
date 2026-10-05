@@ -524,4 +524,32 @@ theorem prime_divisor (n : Nat) (hn : 1 < n) :
       · exact hpp
       · exists t * b
         rw [heq, ht, Nat.mul_assoc]
+theorem composite_small_prime (n : Nat) (hn : 1 < n) (hp : ¬ Prime n) :
+    ∃ p : Nat, Prime p ∧ p ∣ n ∧ p * p ≤ n := by
+  /-
+  Theorem: A nonprime number greater than one has a prime divisor
+  whose square is at most the number.
+  Proof: Write n=a*b with both factors greater than one. The smaller
+  factor has a prime divisor p. Then p is at most both factors, so
+  p*p≤a*b=n. It divides n because it divides one of the factors. QED
+  -/
+  rcases nonprime_factors n hn hp with ⟨a, b, ha, _, hb, _, heq⟩
+  by_cases hab : a ≤ b
+  · rcases prime_divisor a ha with ⟨p, hpp, hd⟩
+    have hpa := Nat.le_of_dvd (by omega : 0 < a) hd
+    rcases hd with ⟨t, ht⟩
+    exists p
+    refine ⟨hpp, ⟨t * b, by rw [heq, ht, Nat.mul_assoc]⟩, ?_⟩
+    rw [heq]
+    exact Nat.mul_le_mul hpa (by omega)
+  · rcases prime_divisor b hb with ⟨p, hpp, hd⟩
+    have hpb := Nat.le_of_dvd (by omega : 0 < b) hd
+    rcases hd with ⟨t, ht⟩
+    exists p
+    refine ⟨hpp, ⟨t * a, ?_⟩, ?_⟩
+    · calc
+        n = b * a := by rw [heq, Nat.mul_comm]
+        _ = p * (t * a) := by rw [ht, Nat.mul_assoc]
+    · rw [heq]
+      exact Nat.mul_le_mul (by omega) hpb
 end NumberTheory.DivisibilityTests
