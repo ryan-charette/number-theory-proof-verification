@@ -1267,4 +1267,18 @@ theorem prime_not_dvd_iff_coprime (p : Nat) (hp : Prime p) (a : Int) :
     have hpos := hp.1
     omega
 
+
+theorem prime_dvd_integer_product (p : Nat) (hp : Prime p) (a b : Int)
+    (h : (p : Int) ∣ a * b) : (p : Int) ∣ a ∨ (p : Int) ∣ b := by
+  /-
+  Theorem: A prime dividing a product of integers divides a factor.
+  Proof: If p divides a, we are done. Otherwise a is coprime to p.
+  Swapping the gcd arguments and cancelling the coprime factor a
+  from p dividing a*b shows that p divides b. QED
+  -/
+  by_cases ha : (p : Int) ∣ a
+  · exact Or.inl ha
+  · exact Or.inr (coprime_dvd_cancel p a b h
+      (coprime_swap a p ((prime_not_dvd_iff_coprime p hp a).mp ha)))
+
 end NumberTheory.DivisibilityTests
