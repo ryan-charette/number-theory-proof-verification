@@ -1403,4 +1403,28 @@ theorem distinct_length_bound (xs ys : List Nat) (h : xs.Nodup)
     omega
 
 
+
+theorem repeated_bounded_label (xs : List Nat) (n : Nat)
+    (hbound : ∀ a ∈ xs, a < n) (hlen : n < xs.length) :
+    ∃ (i j : Nat) (hi : i < xs.length) (hj : j < xs.length),
+      i < j ∧ xs[i] = xs[j] := by
+  /-
+  Lemma: More than n labels drawn from 0,...,n-1 repeat at two
+  different positions. Proof: Otherwise every earlier entry differs
+  from every later one, making the list distinct. The counting bound
+  against the list 0,...,n-1 would give length at most n, contradicting
+  the hypothesis. The two positions, not merely two values, are kept
+  in the conclusion so that repeated original inputs are covered. QED
+  -/
+  apply Classical.byContradiction
+  intro hnot
+  have hdistinct : xs.Nodup := by
+    apply List.pairwise_iff_getElem.mpr
+    intro i j hi hj hij he
+    exact hnot ⟨i, j, hi, hj, hij, he⟩
+  have hle := distinct_length_bound xs (List.range n) hdistinct
+    (fun a ha => List.mem_range.mpr (hbound a ha))
+  rw [List.length_range] at hle
+  omega
+
 end NumberTheory.DivisibilityTests
