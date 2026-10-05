@@ -1188,4 +1188,20 @@ theorem no_rational_root (p c k : Nat) (hc : 0 < c) (hk : 0 < k)
     · omega
   exact power_equation_obstruction p c k b.natAbs a.natAbs hc hbp hap hnot he
 
+
+theorem irrational_root_7_2 (a b : Int) (hb : b ≠ 0) :
+    (7 : Int) * b ^ 2 ≠ a ^ 2 := by
+  /-
+  Theorem: The square root of seven is irrational.
+  Proof: An integer fraction a/b representing this root, with b
+  nonzero, would give 7*b^2=a^2. The exponent of 7 in 7
+  is one, which is not divisible by 2. The general rational-root
+  obstruction proves that no such numerator and denominator exist.
+  The statement uses that equivalent denominator-cleared condition.
+  QED
+  -/
+  apply no_rational_root 7 7 2 (by decide) (by decide) ?_ a b hb
+  rw [exponent_7_7]
+  decide
+
 end NumberTheory.DivisibilityTests
