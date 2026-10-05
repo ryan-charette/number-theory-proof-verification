@@ -373,4 +373,23 @@ theorem coprime_product_dvd (a b n : Int) (ha : a ∣ n) (hb : b ∣ n)
   rcases coprime_dvd_cancel b a k hbk (coprime_swap a b hcop) with ⟨t, ht⟩
   exists t
   rw [hk, ht, Int.mul_assoc]
+theorem coprime_product (a b n : Int) (ha : gcd a n = 1)
+    (hb : gcd b n = 1) : gcd (a * b) n = 1 := by
+  /-
+  Theorem: A product of two integers each relatively prime to n is
+  relatively prime to n. Proof: Choose a*x+n*y=1 and b*u+n*v=1.
+  Multiplying and collecting the terms containing n gives
+
+    (a*b)*(x*u) + n*(a*x*v + b*y*u + n*y*v) = 1.
+
+  The coprimality criterion applies to this linear combination. QED
+  -/
+  rcases coprime_bezout a n ha with ⟨x, y, hxy⟩
+  rcases coprime_bezout b n hb with ⟨u, v, huv⟩
+  apply coprime_of_bezout (a * b) n (x * u) (a * x * v + b * y * u + n * y * v)
+  calc
+    _ = (a * x + n * y) * (b * u + n * v) := by
+      simp only [Int.mul_add, Int.add_mul, Int.mul_assoc, Int.mul_left_comm, Int.mul_comm]
+      omega
+    _ = 1 := by rw [hxy, huv]; rfl
 end NumberTheory.DivisibilityTests
