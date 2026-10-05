@@ -752,4 +752,18 @@ theorem product_replicate (p r : Nat) : product (List.replicate r p) = p ^ r := 
   | zero => rfl
   | succ r ih =>
     rw [List.replicate_succ, product, ih, Nat.pow_succ, Nat.mul_comm]
+
+theorem prime_product_positive (ps : List Nat) (hps : PrimeFactors ps) : 0 < product ps := by
+  /-
+  Lemma: A product of primes is positive, including the empty product.
+  Proof: The empty product is one. For a nonempty list, the first
+  prime is positive and the tail product is positive by induction.
+  Multiplying two positive numbers gives a positive number. QED
+  -/
+  induction ps with
+  | nil => decide
+  | cons p ps ih =>
+    exact Nat.mul_pos (by have := (hps p (by simp)).1; omega)
+      (ih (fun q hq => hps q (by simp [hq])))
+
 end NumberTheory.DivisibilityTests
