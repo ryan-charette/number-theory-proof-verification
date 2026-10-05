@@ -854,4 +854,25 @@ theorem prime_product_dvd_iff (xs ys : List Nat)
     omega
   · exact product_dvd_of_counts xs ys
 
+
+noncomputable def factors (n : Nat) : List Nat :=
+  if h : 0 < n then Classical.choose (positive_factorization n h) else []
+
+noncomputable def exponent (p n : Nat) : Nat := (factors n).count p
+
+theorem factors_spec (n : Nat) (hn : 0 < n) :
+    PrimeFactors (factors n) ∧ product (factors n) = n := by
+  /-
+  Lemma: The chosen factor list of a positive number consists of primes
+  and has that number as its product.
+  Proof: Choose one of the lists supplied by existence. Its two defining
+  properties hold by that existence proof. The choice of order will not
+  affect any exponent, since uniqueness preserves occurrence counts.
+  We use an empty list at zero only to make the definitions total;
+  all statements about these exponents assume positive inputs. QED
+  -/
+  unfold factors
+  rw [dif_pos hn]
+  exact Classical.choose_spec (positive_factorization n hn)
+
 end NumberTheory.DivisibilityTests
