@@ -960,4 +960,19 @@ theorem dvd_of_square_dvd (a b : Nat) (ha : 0 < a) (hb : 0 < b)
   rw [exponent_pow p a 2 ha, exponent_pow p b 2 hb] at he
   omega
 
+
+theorem prime_2 : Prime 2 := by
+  /-
+  Lemma: 2 is prime. Proof: A nonprime number has a prime divisor
+  whose square does not exceed it. Such a divisor is at least two.
+  For two or three this square is already too large; for seven the
+  only remaining possibility is two, which does not divide seven.
+  Thus the trial-division criterion proves primality. QED
+  -/
+  apply (prime_trial_bound 2 (by decide)).mpr
+  intro q hq hbound hd
+  have hqpos := hq.1
+  have hfour := Nat.mul_le_mul (by omega : 2 ≤ q) (by omega : 2 ≤ q)
+  omega
+
 end NumberTheory.DivisibilityTests
