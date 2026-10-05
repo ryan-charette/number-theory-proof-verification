@@ -667,4 +667,12 @@ theorem prime_divides_prime_list (p : Nat) (ps : List Nat) (hp : Prime p)
         omega
       · simp [hpq]
     · exact List.mem_cons_of_mem q (ih (fun t ht => hps t (List.mem_cons_of_mem q ht)) htail)
+theorem prime_multiple_match (p k : Nat) (qs : List Nat) (hp : Prime p)
+    (hqs : PrimeFactors qs) (h : p * k = product qs) : p ∈ qs := by
+  /-
+  Lemma: If a multiple of a prime is a product of primes, that prime
+  equals an entry of the product. Proof: The displayed equation gives
+  the divisibility witness k. Apply the preceding matching lemma. QED
+  -/
+  exact prime_divides_prime_list p qs hp hqs ⟨k, h.symm⟩
 end NumberTheory.DivisibilityTests
