@@ -480,4 +480,29 @@ theorem nonprime_factors (n : Nat) (hn : 1 < n) (hp : ¬ Prime n) :
     exact ha₁ haeq
   exists a, b
   exact ⟨by omega, by omega, by omega, by omega, heq⟩
+theorem prime_iff_no_smaller_factors (p : Nat) :
+    Prime p ↔ 1 < p ∧ ¬ Composite p := by
+  /-
+  Theorem: A number is prime exactly when it is greater than one and
+  is not a product of two smaller natural numbers.
+  Proof: For a prime p, a factor a of p must be one or p. In a smaller
+  factorization, a cannot be p; if a=1 the other factor would be p,
+  also impossible. Conversely, a nonprime number greater than one
+  has the smaller factorization provided by the preceding theorem.
+  QED
+  -/
+  constructor
+  · intro hp
+    refine ⟨hp.1, ?_⟩
+    intro hc
+    rcases hc with ⟨a, b, ha, hb, heq⟩
+    rcases hp.2 a ⟨b, heq⟩ with h₁ | h₂
+    · rw [h₁, Nat.one_mul] at heq
+      omega
+    · omega
+  · intro h
+    apply Classical.byContradiction
+    intro hp
+    rcases nonprime_factors p h.1 hp with ⟨a, b, _, ha, _, hb, heq⟩
+    exact h.2 ⟨a, b, ha, hb, heq⟩
 end NumberTheory.DivisibilityTests
