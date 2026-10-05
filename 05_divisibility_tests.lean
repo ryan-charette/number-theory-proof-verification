@@ -254,4 +254,23 @@ theorem gcd_positive (a b : Int) (h : a ≠ 0 ∨ b ≠ 0) : 0 < gcd a b := by
     · exact False.elim (ha hu)
     · exact False.elim (hb hv)
   · omega
+theorem divisor_le_positive (e d : Int) (hd : 0 < d) (he : e ∣ d) : e ≤ d := by
+  /-
+  Theorem: A divisor of a positive integer is at most that integer.
+  Proof: A nonpositive divisor is already smaller. Otherwise write
+  d = e * k with e > 0. If k ≤ 0 then d ≤ 0, a contradiction.
+  Thus the integer k is at least 1, and d = e * k ≥ e * 1 = e. QED
+  -/
+  by_cases hep : 0 < e
+  · rcases he with ⟨k, hk⟩
+    have hkpos : 0 < k := by
+      by_cases hkn : k ≤ 0
+      · have hm := Int.mul_le_mul_of_nonneg_left hkn (Int.le_of_lt hep)
+        rw [Int.mul_zero, ← hk] at hm
+        omega
+      · omega
+    have hm := Int.mul_le_mul_of_nonneg_left (show 1 ≤ k by omega) (Int.le_of_lt hep)
+    rw [Int.mul_one, ← hk] at hm
+    exact hm
+  · omega
 end NumberTheory.DivisibilityTests
