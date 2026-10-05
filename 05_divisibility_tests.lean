@@ -297,4 +297,22 @@ theorem coprime_bezout (a b : Int) (h : gcd a b = 1) :
   exists x, y
   rw [h] at hxy
   exact hxy
+theorem coprime_of_bezout (a b x y : Int) (h : a * x + b * y = 1) :
+    gcd a b = 1 := by
+  /-
+  Theorem: An integer linear combination equal to one implies coprimality.
+  Proof: The gcd divides both inputs, so divides the combination one.
+  It is nonnegative and cannot be zero, since zero does not divide one.
+  A positive divisor of one is at most one, hence must equal one. QED
+  -/
+  have hg := gcd_data a b
+  have hd := dvd_linear (gcd a b) a b x y hg.2.1 hg.2.2.1
+  rw [h] at hd
+  have hle := divisor_le_positive (gcd a b) 1 (by decide) hd
+  have hne : gcd a b ≠ 0 := by
+    intro hz
+    rcases hd with ⟨k, hk⟩
+    rw [hz, Int.zero_mul] at hk
+    omega
+  omega
 end NumberTheory.DivisibilityTests
