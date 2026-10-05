@@ -943,4 +943,21 @@ theorem dvd_iff_exponents (a b : Nat) (ha : 0 < a) (hb : 0 < b) :
   rw [hfa.2, hfb.2] at h
   exact h
 
+
+theorem dvd_of_square_dvd (a b : Nat) (ha : 0 < a) (hb : 0 < b)
+    (h : a ^ 2 ∣ b ^ 2) : a ∣ b := by
+  /-
+  Theorem: If the square of a positive number divides the square of
+  another, the first number divides the second.
+  Proof: The exponent criterion applied to the squares says that
+  twice each exponent of a is at most twice its exponent in b.
+  Cancel two from these inequalities and apply the criterion again.
+  QED
+  -/
+  apply (dvd_iff_exponents a b ha hb).mpr
+  intro p
+  have he := (dvd_iff_exponents (a^2) (b^2) (Nat.pow_pos ha) (Nat.pow_pos hb)).mp h p
+  rw [exponent_pow p a 2 ha, exponent_pow p b 2 hb] at he
+  omega
+
 end NumberTheory.DivisibilityTests
