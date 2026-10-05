@@ -1158,4 +1158,34 @@ theorem natAbs_power (a : Int) (k : Nat) : (a ^ k).natAbs = a.natAbs ^ k := by
   | zero => rfl
   | succ k ih => rw [Int.pow_succ, Int.natAbs_mul, ih, Nat.pow_succ]
 
+
+theorem no_rational_root (p c k : Nat) (hc : 0 < c) (hk : 0 < k)
+    (hnot : ¬ k ∣ exponent p c) (a b : Int) (hb : b ≠ 0) :
+    (c : Int) * b ^ k ≠ a ^ k := by
+  /-
+  Theorem: If some prime exponent in a positive integer c is not a
+  multiple of k>0, no integer fraction a/b with b nonzero can be a
+  kth root of c.
+  Proof: Such a fraction would give c*b^k=a^k after clearing the
+  nonzero denominator. Taking absolute values gives
+  c*|b|^k=|a|^k. The left side is positive, so |a| is positive too.
+  The prime-exponent obstruction now rules out this equation. QED
+
+  Formalization: We state the denominator-cleared integer equation.
+  This is precisely the condition for an integer fraction to have kth
+  power c. It includes both signs of numerator and denominator and
+  avoids importing a construction of real numbers or real roots.
+  -/
+  intro h
+  have he := congrArg Int.natAbs h
+  rw [Int.natAbs_mul, Int.natAbs_ofNat, natAbs_power, natAbs_power] at he
+  have hbp := Int.natAbs_pos.mpr hb
+  have hap : 0 < a.natAbs := by
+    have hp := Nat.mul_pos hc (Nat.pow_pos (n := k) hbp)
+    by_cases hz : a.natAbs = 0
+    · rw [hz, Nat.zero_pow_of_pos k hk] at he
+      omega
+    · omega
+  exact power_equation_obstruction p c k b.natAbs a.natAbs hc hbp hap hnot he
+
 end NumberTheory.DivisibilityTests
