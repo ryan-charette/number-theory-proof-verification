@@ -1455,4 +1455,22 @@ theorem odd_part_exists (a : Nat) (ha : 0 < a) :
           rw [Nat.pow_succ]
           simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
 
+
+noncomputable def oddPart (a : Nat) : Nat :=
+  if h : 0 < a then Classical.choose (odd_part_exists a h) else 0
+
+theorem oddPart_spec (a : Nat) (ha : 0 < a) :
+    0 < oddPart a ∧ oddPart a % 2 = 1 ∧ oddPart a ≤ a ∧
+      ∃ k : Nat, a = 2^k * oddPart a := by
+  /-
+  Lemma: The selected odd part is positive, odd, no larger than the
+  input, and leaves a power of two as quotient.
+  Proof: Choose an odd part from the preceding decomposition theorem.
+  Each assertion is one of the properties supplied by that theorem.
+  The value at zero only makes the definition total. QED
+  -/
+  unfold oddPart
+  rw [dif_pos ha]
+  exact Classical.choose_spec (odd_part_exists a ha)
+
 end NumberTheory.DivisibilityTests
