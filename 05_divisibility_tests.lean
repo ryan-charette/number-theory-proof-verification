@@ -908,4 +908,23 @@ theorem exponent_mul (p a b : Nat) (ha : 0 < a) (hb : 0 < b) :
     (factors a ++ factors b) hcat (by rw [product_append, hfa.2, hfb.2])]
   exact List.count_append _ _ _
 
+
+theorem exponent_pow (p a k : Nat) (ha : 0 < a) :
+    exponent p (a ^ k) = k * exponent p a := by
+  /-
+  Lemma: Raising a positive number to the kth power multiplies every
+  prime exponent by k. Proof: Induct on k. For k=0 the number is one,
+  whose empty factorization has no primes. Each following power is
+  the preceding power times a, so add one more copy of its exponent.
+  QED
+  -/
+  induction k with
+  | zero =>
+    have he := exponent_of_factors 1 p (by decide) []
+      (by intro q hq; cases hq) rfl
+    simpa using he
+  | succ k ih =>
+    rw [Nat.pow_succ, exponent_mul p (a^k) a (Nat.pow_pos ha) ha, ih]
+    rw [Nat.succ_mul]
+
 end NumberTheory.DivisibilityTests
