@@ -418,4 +418,27 @@ theorem reduced_coprime (a b : Int) (hne : a ≠ 0 ∨ b ≠ 0) :
   apply Int.eq_of_mul_eq_mul_left (a := gcd a b) (by omega)
   rw [Int.mul_add, ← Int.mul_assoc, ← hf.1, ← Int.mul_assoc, ← hf.2, Int.mul_one]
   exact hxy
+theorem gcd_eq_of_combination (a b d : Int) (hd : 0 < d)
+    (ha : d ∣ a) (hb : d ∣ b) (hxy : ∃ x y : Int, a * x + b * y = d) :
+    gcd a b = d := by
+  /-
+  Theorem: A positive common divisor that is a linear combination of
+  the inputs is their gcd. Proof: The inputs cannot both vanish,
+  because the combination is positive. Thus d is at most their gcd.
+  Conversely, the gcd divides the combination d, so is at most d.
+  These two inequalities prove equality. QED
+  -/
+  rcases hxy with ⟨x, y, heq⟩
+  have hne : a ≠ 0 ∨ b ≠ 0 := by
+    by_cases ha₀ : a = 0
+    · right
+      intro hb₀
+      rw [ha₀, hb₀, Int.zero_mul, Int.zero_mul, Int.add_zero] at heq
+      omega
+    · exact Or.inl ha₀
+  have hle := gcd_greatest a b hne d ha hb
+  have hdiv := dvd_linear (gcd a b) a b x y (gcd_data a b).2.1 (gcd_data a b).2.2.1
+  rw [heq] at hdiv
+  have hge := divisor_le_positive (gcd a b) d hd hdiv
+  omega
 end NumberTheory.DivisibilityTests
