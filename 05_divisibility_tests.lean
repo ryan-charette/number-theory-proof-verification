@@ -1357,4 +1357,17 @@ theorem gcd_mul_of_coprime (a b c : Int) (h : gcd b c = 1) :
 
 
 
+
+theorem coprime_right_product (a b c : Int) (hb : gcd a b = 1)
+    (hc : gcd a c = 1) : gcd a (b*c) = 1 := by
+  /-
+  Theorem: An integer coprime to each of two integers is coprime to
+  their product. Proof: Swap the arguments in both hypotheses, apply
+  the product coprimality result, then swap the conclusion back. That
+  result multiplies two Bezout equations equal to one, so it needs no
+  assumption that b and c are coprime to each other. QED
+  -/
+  exact coprime_swap (b*c) a
+    (coprime_product b c a (coprime_swap a b hb) (coprime_swap a c hc))
+
 end NumberTheory.DivisibilityTests
