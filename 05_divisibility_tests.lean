@@ -190,4 +190,39 @@ theorem euclid_natural (a b : Nat) :
       rw [Int.add_mul, Int.mul_assoc] at htimes
       rw [Int.mul_sub]
       omega
+theorem euclid_integer (a b : Int) :
+    ∃ d : Nat, (d : Int) ∣ a ∧ (d : Int) ∣ b ∧
+      ∃ x y : Int, a * x + b * y = (d : Int) := by
+  /-
+  Theorem: The Euclidean construction also works for arbitrary integers.
+  Proof: Apply the natural-number procedure to the absolute values.
+  Changing a sign does not change divisibility. If the resulting
+  coefficients are x and y, multiply them by the signs of a and b.
+  Since a * sign(a) = |a|, the same linear combination gives d. QED
+  -/
+  rcases euclid_natural a.natAbs b.natAbs with ⟨d, ha, hb, x, y, hxy⟩
+  exists d
+  constructor
+  · rcases ha with ⟨u, hu⟩
+    exists a.sign * u
+    calc
+      a = a.sign * (a.natAbs : Int) := (Int.sign_mul_natAbs a).symm
+      _ = (d : Int) * (a.sign * u) := by rw [hu, Int.mul_left_comm]
+  · constructor
+    · rcases hb with ⟨v, hv⟩
+      exists b.sign * v
+      calc
+        b = b.sign * (b.natAbs : Int) := (Int.sign_mul_natAbs b).symm
+        _ = (d : Int) * (b.sign * v) := by rw [hv, Int.mul_left_comm]
+    · exists a.sign * x, b.sign * y
+      rw [← Int.mul_assoc, Int.mul_sign, ← Int.mul_assoc, Int.mul_sign]
+      exact hxy
+
+/-
+The Euclidean construction supplies a nonnegative common divisor together
+with coefficients. We name that number gcd(a,b). The next proofs verify
+that it is the greatest common divisor in the ordinary numerical sense.
+We also set gcd(0,0) = 0 through this construction; statements that require
+a positive greatest divisor explicitly exclude the pair (0,0).
+-/
 end NumberTheory.DivisibilityTests
