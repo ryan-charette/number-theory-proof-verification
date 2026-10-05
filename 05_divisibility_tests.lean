@@ -816,4 +816,42 @@ theorem product_dvd_of_counts (xs ys : List Nat)
     change product ys = (p * product ps) * k
     rw [he, product, hk, Nat.mul_assoc]
 
+
+theorem prime_product_dvd_iff (xs ys : List Nat)
+    (hx : PrimeFactors xs) (hy : PrimeFactors ys) :
+    product xs ∣ product ys ↔ ∀ p, xs.count p ≤ ys.count p := by
+  /-
+  Theorem: One positive integer divides another exactly when every
+  prime exponent in its factorization is at most the corresponding
+  exponent in the other factorization. Missing primes have exponent zero.
+  Proof: If the second product is the first times k, positivity makes
+  k positive. Factor k and concatenate its factors with the first list.
+  Uniqueness of factorization says that this concatenation and the second
+  list have the same counts. Thus each second count is the first count
+  plus a nonnegative count. Conversely, remove the first list's factors
+  one at a time from the second; the count inequalities ensure that all
+  of them can be removed. The leftover product is the quotient. QED
+  -/
+  constructor
+  · rintro ⟨k, hk⟩
+    have hpos := prime_product_positive ys hy
+    have hkpos : 0 < k := by
+      by_cases hz : k = 0
+      · simp [hz] at hk
+        omega
+      · omega
+    rcases positive_factorization k hkpos with ⟨ks, hks, he⟩
+    have hcat : PrimeFactors (xs ++ ks) := by
+      intro p hp
+      rcases List.mem_append.mp hp with hp | hp
+      · exact hx p hp
+      · exact hks p hp
+    have hp := factorization_multiplicities (xs ++ ks) ys hcat hy
+      (by rw [product_append, he, ← hk])
+    intro p
+    have hc := (hp.2 p).2
+    rw [List.count_append] at hc
+    omega
+  · exact product_dvd_of_counts xs ys
+
 end NumberTheory.DivisibilityTests
