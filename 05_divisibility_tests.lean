@@ -315,4 +315,15 @@ theorem coprime_of_bezout (a b x y : Int) (h : a * x + b * y = 1) :
     rw [hz, Int.zero_mul] at hk
     omega
   omega
+theorem coprime_iff_bezout (a b : Int) :
+    gcd a b = 1 ↔ ∃ x y : Int, a * x + b * y = 1 := by
+  /-
+  Theorem: Coprimality is equivalent to an integer linear combination
+  equal to one. Proof: Apply the two implications just proved. QED
+  -/
+  constructor
+  · exact coprime_bezout a b
+  · intro h
+    rcases h with ⟨x, y, hxy⟩
+    exact coprime_of_bezout a b x y hxy
 end NumberTheory.DivisibilityTests
