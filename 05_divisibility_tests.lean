@@ -1146,4 +1146,16 @@ theorem no_7_power_3 (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
   rw [exponent_7_7]
   decide
 
+
+theorem natAbs_power (a : Int) (k : Nat) : (a ^ k).natAbs = a.natAbs ^ k := by
+  /-
+  Lemma: The absolute value of an integer power is the corresponding
+  power of its absolute value. Proof: Induct on the exponent. Both
+  zeroth powers are one. The next power multiplies by a; absolute
+  values multiply, so the induction equality gives the next case. QED
+  -/
+  induction k with
+  | zero => rfl
+  | succ k ih => rw [Int.pow_succ, Int.natAbs_mul, ih, Nat.pow_succ]
+
 end NumberTheory.DivisibilityTests
