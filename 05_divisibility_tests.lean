@@ -1204,4 +1204,20 @@ theorem irrational_root_7_2 (a b : Int) (hb : b ≠ 0) :
   rw [exponent_7_7]
   decide
 
+
+theorem irrational_root_12_2 (a b : Int) (hb : b ≠ 0) :
+    (12 : Int) * b ^ 2 ≠ a ^ 2 := by
+  /-
+  Theorem: The square root of twelve is irrational.
+  Proof: An integer fraction a/b representing this root, with b
+  nonzero, would give 12*b^2=a^2. The exponent of 3 in 12
+  is one, which is not divisible by 2. The general rational-root
+  obstruction proves that no such numerator and denominator exist.
+  The statement uses that equivalent denominator-cleared condition.
+  QED
+  -/
+  apply no_rational_root 3 12 2 (by decide) (by decide) ?_ a b hb
+  rw [exponent_3_12]
+  decide
+
 end NumberTheory.DivisibilityTests
