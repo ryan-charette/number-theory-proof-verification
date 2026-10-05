@@ -403,4 +403,19 @@ theorem gcd_quotients (a b : Int) :
   -/
   exact ⟨(Int.mul_ediv_cancel' (gcd_data a b).2.1).symm,
     (Int.mul_ediv_cancel' (gcd_data a b).2.2.1).symm⟩
+theorem reduced_coprime (a b : Int) (hne : a ≠ 0 ∨ b ≠ 0) :
+    gcd (a / gcd a b) (b / gcd a b) = 1 := by
+  /-
+  Theorem: Removing the gcd leaves relatively prime integers.
+  Proof: Write a=g*A and b=g*B. Bezout gives a*x+b*y=g, hence
+  g*(A*x+B*y)=g. Since g is positive, cancel g to get A*x+B*y=1.
+  The coprimality criterion applies. QED
+  -/
+  rcases bezout a b with ⟨x, y, hxy⟩
+  have hf := gcd_quotients a b
+  have hp := gcd_positive a b hne
+  apply coprime_of_bezout (a / gcd a b) (b / gcd a b) x y
+  apply Int.eq_of_mul_eq_mul_left (a := gcd a b) (by omega)
+  rw [Int.mul_add, ← Int.mul_assoc, ← hf.1, ← Int.mul_assoc, ← hf.2, Int.mul_one]
+  exact hxy
 end NumberTheory.DivisibilityTests
