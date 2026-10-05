@@ -1281,4 +1281,19 @@ theorem prime_dvd_integer_product (p : Nat) (hp : Prime p) (a b : Int)
   · exact Or.inr (coprime_dvd_cancel p a b h
       (coprime_swap a p ((prime_not_dvd_iff_coprime p hp a).mp ha)))
 
+
+theorem coprime_divisors (a b u v : Int) (h : gcd a b = 1)
+    (hu : u ∣ a) (hv : v ∣ b) : gcd u v = 1 := by
+  /-
+  Theorem: Divisors of two coprime integers are coprime.
+  Proof: Write a=u*s and b=v*t. A Bezout equation a*x+b*y=1
+  becomes u*(s*x)+v*(t*y)=1. This combination proves coprimality.
+  QED
+  -/
+  rcases hu with ⟨s, hs⟩
+  rcases hv with ⟨t, ht⟩
+  rcases coprime_bezout a b h with ⟨x, y, he⟩
+  apply coprime_of_bezout u v (s*x) (t*y)
+  simpa only [hs, ht, Int.mul_assoc] using he
+
 end NumberTheory.DivisibilityTests
