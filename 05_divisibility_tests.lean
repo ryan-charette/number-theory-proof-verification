@@ -1120,4 +1120,17 @@ theorem no_24_power_3 (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
   rw [exponent_3_24]
   decide
 
+
+theorem no_12_power_2 (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
+    12 * m ^ 2 ≠ n ^ 2 := by
+  /-
+  Theorem: There are no positive natural numbers m,n with
+  12*m^2=n^2. Proof: The exponent of 3 on the left is
+  1+2*e(m); on the right it is 2*e(n). Subtracting would
+  make one divisible by 2, which is impossible. QED
+  -/
+  apply power_equation_obstruction 3 12 2 m n (by decide) hm hn
+  rw [exponent_3_12]
+  decide
+
 end NumberTheory.DivisibilityTests
