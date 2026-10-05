@@ -225,4 +225,19 @@ that it is the greatest common divisor in the ordinary numerical sense.
 We also set gcd(0,0) = 0 through this construction; statements that require
 a positive greatest divisor explicitly exclude the pair (0,0).
 -/
+noncomputable def gcd (a b : Int) : Int := (Classical.choose (euclid_integer a b) : Nat)
+
+theorem gcd_data (a b : Int) :
+    0 ≤ gcd a b ∧ gcd a b ∣ a ∧ gcd a b ∣ b ∧
+      ∃ x y : Int, a * x + b * y = gcd a b := by
+  /-
+  Theorem: The constructed gcd is nonnegative, divides both inputs,
+  and is an integer linear combination of them.
+  Proof: These are exactly the properties supplied by the Euclidean
+  construction used in its definition. QED
+  -/
+  constructor
+  · unfold gcd
+    omega
+  · exact Classical.choose_spec (euclid_integer a b)
 end NumberTheory.DivisibilityTests
