@@ -1220,4 +1220,20 @@ theorem irrational_root_12_2 (a b : Int) (hb : b ≠ 0) :
   rw [exponent_3_12]
   decide
 
+
+theorem irrational_root_7_3 (a b : Int) (hb : b ≠ 0) :
+    (7 : Int) * b ^ 3 ≠ a ^ 3 := by
+  /-
+  Theorem: The cube root of seven is irrational.
+  Proof: An integer fraction a/b representing this root, with b
+  nonzero, would give 7*b^3=a^3. The exponent of 7 in 7
+  is one, which is not divisible by 3. The general rational-root
+  obstruction proves that no such numerator and denominator exist.
+  The statement uses that equivalent denominator-cleared condition.
+  QED
+  -/
+  apply no_rational_root 7 7 3 (by decide) (by decide) ?_ a b hb
+  rw [exponent_7_7]
+  decide
+
 end NumberTheory.DivisibilityTests
