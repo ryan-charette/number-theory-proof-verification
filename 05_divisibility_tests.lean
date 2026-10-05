@@ -1094,4 +1094,17 @@ theorem power_equation_obstruction (p c k m n : Nat)
   rw [Nat.add_sub_cancel] at hs
   exact hnot hs
 
+
+theorem no_7_power_2 (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
+    7 * m ^ 2 ≠ n ^ 2 := by
+  /-
+  Theorem: There are no positive natural numbers m,n with
+  7*m^2=n^2. Proof: The exponent of 7 on the left is
+  1+2*e(m); on the right it is 2*e(n). Subtracting would
+  make one divisible by 2, which is impossible. QED
+  -/
+  apply power_equation_obstruction 7 7 2 m n (by decide) hm hn
+  rw [exponent_7_7]
+  decide
+
 end NumberTheory.DivisibilityTests
