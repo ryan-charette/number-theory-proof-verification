@@ -285,4 +285,16 @@ theorem gcd_greatest (a b : Int) (h : a ≠ 0 ∨ b ≠ 0)
   have hd := dvd_linear e a b x y ha hb
   rw [hxy] at hd
   exact divisor_le_positive e (gcd a b) (gcd_positive a b h) hd
+theorem coprime_bezout (a b : Int) (h : gcd a b = 1) :
+    ∃ x y : Int, a * x + b * y = 1 := by
+  /-
+  Theorem: Relatively prime integers have an integer linear combination
+  equal to one. Here relatively prime means that their gcd equals one.
+  Proof: The Euclidean back-substitution coefficients give the gcd.
+  Substituting the hypothesis changes that right side to one. QED
+  -/
+  rcases (gcd_data a b).2.2.2 with ⟨x, y, hxy⟩
+  exists x, y
+  rw [h] at hxy
+  exact hxy
 end NumberTheory.DivisibilityTests
