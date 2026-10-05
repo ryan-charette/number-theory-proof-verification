@@ -1318,4 +1318,43 @@ theorem gcd_eq_of_nonnegative_combination (a b d : Int) (hd : 0 ≤ d)
   · exact gcd_eq_of_combination a b d (by omega) ha hb hxy
 
 
+
+theorem gcd_mul_of_coprime (a b c : Int) (h : gcd b c = 1) :
+    gcd a (b*c) = gcd a b * gcd a c := by
+  /-
+  Theorem: If b and c are coprime, gcd(a,b*c)=gcd(a,b)*gcd(a,c).
+  Proof: Put d=gcd(a,b), e=gcd(a,c). Since d divides b and e divides c,
+  they are coprime. Both divide a, so d*e divides a. It also divides
+  b*c. Choose a*x+b*y=d and a*u+c*v=e. Multiplication gives
+  d*e = a*(a*x*u+c*x*v+b*y*u) + (b*c)*(y*v).
+  Thus d*e is a nonnegative common divisor expressed as a combination
+  of a and b*c. The gcd characterization proves the equality, even
+  when some inputs are zero. QED
+  -/
+  have hd := gcd_data a b
+  have he := gcd_data a c
+  have hcop := coprime_divisors b c (gcd a b) (gcd a c) h hd.2.2.1 he.2.2.1
+  have hda := coprime_product_dvd (gcd a b) (gcd a c) a hd.2.1 he.2.1 hcop
+  have hdbc : gcd a b * gcd a c ∣ b*c := by
+    rcases hd.2.2.1 with ⟨s, hs⟩
+    rcases he.2.2.1 with ⟨t, ht⟩
+    exists s*t
+    calc
+      b*c = (gcd a b*s)*(gcd a c*t) := (congrArg (fun z => z*c) hs).trans (congrArg (fun z => (gcd a b*s)*z) ht)
+      _ = (gcd a b*gcd a c)*(s*t) := by
+        simp only [Int.mul_assoc, Int.mul_left_comm, Int.mul_comm]
+  apply gcd_eq_of_nonnegative_combination a (b*c) (gcd a b * gcd a c)
+    (Int.mul_nonneg hd.1 he.1) hda hdbc
+  rcases hd.2.2.2 with ⟨x, y, hx⟩
+  rcases he.2.2.2 with ⟨u, v, hu⟩
+  exists a*x*u+c*x*v+b*y*u, y*v
+  calc
+    a*(a*x*u+c*x*v+b*y*u)+(b*c)*(y*v)
+        = (a*x+b*y)*(a*u+c*v) := by
+            simp only [Int.mul_add, Int.add_mul, Int.mul_assoc, Int.mul_left_comm, Int.mul_comm]
+            omega
+    _ = gcd a b * gcd a c := by rw [hx, hu]
+
+
+
 end NumberTheory.DivisibilityTests
