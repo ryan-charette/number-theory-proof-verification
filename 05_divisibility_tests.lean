@@ -780,4 +780,40 @@ theorem positive_factorization (n : Nat) (hn : 0 < n) :
   · exact factorization_exists n (by omega)
 
 
+
+theorem product_dvd_of_counts (xs ys : List Nat)
+    (h : ∀ p, xs.count p ≤ ys.count p) : product xs ∣ product ys := by
+  /-
+  Lemma: If each factor occurs at least as often in the second list,
+  the first product divides the second.
+  Proof: Induct on the first list. One divides every product. Otherwise
+  its first factor p occurs in the second list. Remove one occurrence
+  there. The count inequalities still hold for the two remaining lists.
+  Induction supplies a quotient; restoring p gives the same quotient
+  for the original products. QED
+  -/
+  induction xs generalizing ys with
+  | nil => exact ⟨product ys, by simp [product]⟩
+  | cons p ps ih =>
+    have hmem : p ∈ ys := List.count_pos_iff_mem.mp (by have := h p; simp at this; omega)
+    let zs := @List.erase Nat instBEqOfDecidableEq ys p
+    have hperm : List.Perm ys (p :: zs) := List.perm_cons_erase hmem
+    have hc (q : Nat) := hperm.countP_eq (fun t => t == q)
+    have htail : ∀ q, ps.count q ≤ zs.count q := by
+      intro q
+      have hh := h q
+      have he := hc q
+      change ys.count q = (p :: zs).count q at he
+      by_cases hq : q = p
+      · subst q
+        simp only [List.count_cons_self] at hh he
+        omega
+      · simp only [List.count_cons_of_ne hq] at hh he
+        omega
+    rcases ih zs htail with ⟨k, hk⟩
+    exists k
+    have he := product_perm ys (p :: zs) hperm
+    change product ys = (p * product ps) * k
+    rw [he, product, hk, Nat.mul_assoc]
+
 end NumberTheory.DivisibilityTests
