@@ -888,4 +888,24 @@ theorem exponent_of_factors (n p : Nat) (hn : 0 < n)
   exact ((factorization_multiplicities (factors n) ps hs.1 hps
     (hs.2.trans he.symm)).2 p).2
 
+
+theorem exponent_mul (p a b : Nat) (ha : 0 < a) (hb : 0 < b) :
+    exponent p (a * b) = exponent p a + exponent p b := by
+  /-
+  Lemma: Multiplication adds prime exponents.
+  Proof: Concatenate prime lists for a and b. Its product is a*b, and
+  its count of p is the sum of the two counts. Independence of the
+  chosen factorization gives the asserted equality. QED
+  -/
+  have hfa := factors_spec a ha
+  have hfb := factors_spec b hb
+  have hcat : PrimeFactors (factors a ++ factors b) := by
+    intro q hq
+    rcases List.mem_append.mp hq with hq | hq
+    · exact hfa.1 q hq
+    · exact hfb.1 q hq
+  rw [exponent_of_factors (a*b) p (Nat.mul_pos ha hb)
+    (factors a ++ factors b) hcat (by rw [product_append, hfa.2, hfb.2])]
+  exact List.count_append _ _ _
+
 end NumberTheory.DivisibilityTests
