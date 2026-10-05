@@ -766,4 +766,18 @@ theorem prime_product_positive (ps : List Nat) (hps : PrimeFactors ps) : 0 < pro
     exact Nat.mul_pos (by have := (hps p (by simp)).1; omega)
       (ih (fun q hq => hps q (by simp [hq])))
 
+
+theorem positive_factorization (n : Nat) (hn : 0 < n) :
+    ∃ ps : List Nat, PrimeFactors ps ∧ product ps = n := by
+  /-
+  Lemma: Every positive natural number has a prime product expression.
+  Proof: For one, use the empty list, whose product is one. Any other
+  positive number exceeds one, so factorization existence applies. QED
+  -/
+  by_cases h : n = 1
+  · subst n
+    exact ⟨[], (by intro p hp; cases hp), rfl⟩
+  · exact factorization_exists n (by omega)
+
+
 end NumberTheory.DivisibilityTests
