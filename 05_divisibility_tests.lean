@@ -927,4 +927,20 @@ theorem exponent_pow (p a k : Nat) (ha : 0 < a) :
     rw [Nat.pow_succ, exponent_mul p (a^k) a (Nat.pow_pos ha) ha, ih]
     rw [Nat.succ_mul]
 
+
+theorem dvd_iff_exponents (a b : Nat) (ha : 0 < a) (hb : 0 < b) :
+    a ∣ b ↔ ∀ p, exponent p a ≤ exponent p b := by
+  /-
+  Theorem: A positive number divides another exactly when all its
+  prime exponents are bounded by those of the other number.
+  Proof: Apply the count criterion to chosen prime lists. Their
+  products are the original numbers and their counts are the exponents.
+  Nonprime indices have zero counts and impose no extra restriction. QED
+  -/
+  have hfa := factors_spec a ha
+  have hfb := factors_spec b hb
+  have h := prime_product_dvd_iff (factors a) (factors b) hfa.1 hfb.1
+  rw [hfa.2, hfb.2] at h
+  exact h
+
 end NumberTheory.DivisibilityTests
