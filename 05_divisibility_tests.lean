@@ -1296,4 +1296,26 @@ theorem coprime_divisors (a b u v : Int) (h : gcd a b = 1)
   apply coprime_of_bezout u v (s*x) (t*y)
   simpa only [hs, ht, Int.mul_assoc] using he
 
+
+theorem gcd_eq_of_nonnegative_combination (a b d : Int) (hd : 0 ≤ d)
+    (ha : d ∣ a) (hb : d ∣ b) (hxy : ∃ x y : Int, a*x+b*y=d) :
+    gcd a b = d := by
+  /-
+  Lemma: A nonnegative common divisor that is a linear combination
+  is the gcd. Proof: For positive d the earlier characterization applies.
+  If d is zero, its dividing both inputs makes both inputs zero.
+  The gcd's own Bezout combination then forces the gcd to be zero.
+  This also covers the convention gcd(0,0)=0. QED
+  -/
+  by_cases hz : d = 0
+  · rcases ha with ⟨s, hs⟩
+    rcases hb with ⟨t, ht⟩
+    rcases (gcd_data a b).2.2.2 with ⟨x, y, he⟩
+    simp only [hz, Int.zero_mul] at hs ht
+    rw [hs, ht, Int.zero_mul, Int.zero_mul, Int.add_zero] at he
+    rw [hs, ht, hz]
+    exact he.symm
+  · exact gcd_eq_of_combination a b d (by omega) ha hb hxy
+
+
 end NumberTheory.DivisibilityTests
