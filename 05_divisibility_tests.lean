@@ -1073,4 +1073,25 @@ theorem exponent_3_24 : exponent 3 24 = 1 := by
       exact prime_3
   · decide
 
+
+theorem power_equation_obstruction (p c k m n : Nat)
+    (hc : 0 < c) (hm : 0 < m) (hn : 0 < n)
+    (hnot : ¬ k ∣ exponent p c) : c * m ^ k ≠ n ^ k := by
+  /-
+  Lemma: If some prime exponent in c is not divisible by k, the
+  equation c*m^k=n^k has no positive integer solutions.
+  Proof: Comparing that exponent gives e(c)+k*e(m)=k*e(n).
+  Both k*e(m) and the right side are divisible by k. Subtracting the
+  former from the latter shows k divides e(c), a contradiction. QED
+  -/
+  intro h
+  have he := congrArg (exponent p) h
+  rw [exponent_mul p c (m^k) hc (Nat.pow_pos hm),
+    exponent_pow p m k hm, exponent_pow p n k hn] at he
+  have hd : k ∣ exponent p c + k * exponent p m := ⟨exponent p n, he⟩
+  have hs := Nat.dvd_sub (Nat.le_add_left (k * exponent p m) (exponent p c))
+    hd (show k ∣ k * exponent p m from ⟨exponent p m, rfl⟩)
+  rw [Nat.add_sub_cancel] at hs
+  exact hnot hs
+
 end NumberTheory.DivisibilityTests
