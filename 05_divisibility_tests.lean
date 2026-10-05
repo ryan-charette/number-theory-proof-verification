@@ -1050,4 +1050,27 @@ theorem exponent_3_12 : exponent 3 12 = 1 := by
       exact prime_3
   · decide
 
+
+theorem exponent_3_24 : exponent 3 24 = 1 := by
+  /-
+  Lemma: The exponent of 3 in 24 is one.
+  Proof: The prime factor list [2, 2, 2, 3] has product 24. Counting the
+  entries equal to 3 gives one; uniqueness makes this the exponent.
+  QED
+  -/
+  rw [exponent_of_factors 24 3 (by decide) [2, 2, 2, 3]]
+  · decide
+  · intro q hq
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at hq
+    rcases hq with hq | hq | hq | hq
+    · subst q
+      exact prime_2
+    · subst q
+      exact prime_2
+    · subst q
+      exact prime_2
+    · subst q
+      exact prime_3
+  · decide
+
 end NumberTheory.DivisibilityTests
