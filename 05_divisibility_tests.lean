@@ -1012,4 +1012,21 @@ theorem prime_7 : Prime 7 := by
   rw [he] at ht
   omega
 
+
+theorem exponent_7_7 : exponent 7 7 = 1 := by
+  /-
+  Lemma: The exponent of 7 in 7 is one.
+  Proof: The prime factor list [7] has product 7. Counting the
+  entries equal to 7 gives one; uniqueness makes this the exponent.
+  QED
+  -/
+  rw [exponent_of_factors 7 7 (by decide) [7]]
+  · decide
+  · intro q hq
+    simp only [List.mem_cons, List.not_mem_nil, or_false] at hq
+    rcases hq with hq
+    subst q
+    exact prime_7
+  · decide
+
 end NumberTheory.DivisibilityTests
