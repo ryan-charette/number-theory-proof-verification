@@ -4,4 +4,4 @@ defaultTargets = ["NumberTheory"]
 
 [[lean_lib]]
 name = "NumberTheory"
-roots = ["«01_divisibility»", "«02_remainders»", "«03_common_divisors»", "«04_factorization»"]
+roots = ["«01_divisibility»", "«02_remainders»", "«03_common_divisors»", "«04_factorization»", "«05_divisibility_tests»"]
