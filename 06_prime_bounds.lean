@@ -94,4 +94,79 @@ theorem avoids_small_divisors (k : Nat) :
       (divides_initialProduct d k (by omega) hle) hdiv
     omega
 
+def Prime (p : Nat) : Prop := 1 < p ∧ ∀ d : Nat, d ∣ p → d = 1 ∨ d = p
+
+theorem nonprime_factors (n : Nat) (hn : 1 < n) (hp : ¬ Prime n) :
+    ∃ a b : Nat, 1 < a ∧ a < n ∧ 1 < b ∧ b < n ∧ n = a * b := by
+  /-
+  Theorem: A nonprime number greater than one is a product of two
+  numbers strictly between one and itself.
+  Proof: Since n is not prime, it has a divisor a other than one and n.
+  Write n=a*b. Neither factor is zero. The factor b cannot be one,
+  since that would give a=n. Both factors are therefore at least two.
+  Each divides n and is at most n; equality would force the other
+  factor to be one. Thus both factors are strictly smaller than n. QED
+  -/
+  have hex : ∃ a : Nat, a ∣ n ∧ a ≠ 1 ∧ a ≠ n := by
+    apply Classical.byContradiction
+    intro he
+    apply hp
+    constructor
+    · exact hn
+    · intro a ha
+      by_cases h₁ : a = 1
+      · exact Or.inl h₁
+      · by_cases h₂ : a = n
+        · exact Or.inr h₂
+        · exact False.elim (he ⟨a, ha, h₁, h₂⟩)
+  rcases hex with ⟨a, ha, ha₁, han⟩
+  rcases ha with ⟨b, heq⟩
+  have ha₀ : a ≠ 0 := by intro hz; rw [hz, Nat.zero_mul] at heq; omega
+  have hb₀ : b ≠ 0 := by intro hz; rw [hz, Nat.mul_zero] at heq; omega
+  have hb₁ : b ≠ 1 := by intro ho; rw [ho, Nat.mul_one] at heq; omega
+  have hal := Nat.le_of_dvd (by omega : 0 < n) (show a ∣ n from ⟨b, heq⟩)
+  have hbl := Nat.le_of_dvd (by omega : 0 < n) (show b ∣ n from ⟨a, by rw [Nat.mul_comm]; exact heq⟩)
+  have hbn : b ≠ n := by
+    intro hbn
+    have ht : b * a = b * 1 := by rw [Nat.mul_one, Nat.mul_comm]; omega
+    have haeq := Nat.eq_of_mul_eq_mul_left (by omega : 0 < b) ht
+    exact ha₁ haeq
+  exists a, b
+  exact ⟨by omega, by omega, by omega, by omega, heq⟩
+
+theorem prime_divisor (n : Nat) (hn : 1 < n) :
+    ∃ p : Nat, Prime p ∧ p ∣ n := by
+  /-
+  Theorem: Every natural number greater than one has a prime divisor.
+  Proof: Use strong induction on n. If n is prime, take n itself.
+  Otherwise n=a*b with 1<a<n. By induction a has a prime divisor p.
+  If a=p*t, then n=p*(t*b), so p also divides n. QED
+  -/
+  induction n using Nat.strongRecOn with
+  | ind n ih =>
+    by_cases hp : Prime n
+    · exact ⟨n, hp, ⟨1, by rw [Nat.mul_one]⟩⟩
+    · rcases nonprime_factors n hn hp with ⟨a, b, ha, han, _, _, heq⟩
+      rcases ih a han ha with ⟨p, hpp, t, ht⟩
+      exists p
+      constructor
+      · exact hpp
+      · exists t * b
+        rw [heq, ht, Nat.mul_assoc]
+
+
+theorem prime_above (k : Nat) : ∃ p : Nat, Prime p ∧ k < p := by
+  /-
+  Theorem: There is a prime greater than every prescribed bound k.
+  Proof: Construct n>1 with no divisor between two and k. It has
+  a prime divisor p. Since p>1, the condition on n rules out p≤k.
+  Thus p>k. Notice that n itself need not be prime. QED
+  -/
+  rcases avoids_small_divisors k with ⟨n, hn, havoid⟩
+  rcases prime_divisor n hn with ⟨p, hp, hd⟩
+  refine ⟨p, hp, ?_⟩
+  by_cases hle : p ≤ k
+  · exact False.elim (havoid p hp.1 hle hd)
+  · omega
+
 end NumberTheory.PrimeBounds
