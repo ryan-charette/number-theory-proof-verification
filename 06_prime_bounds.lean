@@ -210,4 +210,71 @@ theorem primes_not_finitely_listed (xs : List Nat) :
   have hle := member_le_listBound p xs hm
   omega
 
+def product : List Nat → Nat
+  | [] => 1
+  | p :: ps => p * product ps
+
+theorem product_append (xs ys : List Nat) : product (xs ++ ys) = product xs * product ys := by
+  /-
+  Lemma: Joining two lists multiplies their products.
+  Proof: Induct on the first list. An empty list contributes one.
+  For a first entry p, use the induction hypothesis for the remaining
+  list and reassociate p*(product(xs)*product(ys)). QED
+  -/
+  induction xs with
+  | nil => rw [List.nil_append, product, Nat.one_mul]
+  | cons p ps ih => rw [List.cons_append, product, product, ih, Nat.mul_assoc]
+
+def PrimeFactors (ps : List Nat) : Prop := ∀ p ∈ ps, Prime p
+
+theorem factorization_exists (n : Nat) (hn : 1 < n) :
+    ∃ ps : List Nat, PrimeFactors ps ∧ product ps = n := by
+  /-
+  Theorem: Every natural number greater than one is a finite product
+  of primes. Proof: Use strong induction. A prime n has the one-entry
+  factorization [n]. Otherwise write n=a*b with 1<a,b<n. Induction
+  gives prime lists for a and b. Concatenate them: all entries remain
+  prime and their product is a*b=n. QED
+  -/
+  induction n using Nat.strongRecOn with
+  | ind n ih =>
+    by_cases hp : Prime n
+    · exists [n]
+      constructor
+      · intro p hmem
+        have heq : p = n := by simpa using hmem
+        rw [heq]
+        exact hp
+      · rw [product, product, Nat.mul_one]
+    · rcases nonprime_factors n hn hp with ⟨a, b, ha, han, hb, hbn, heq⟩
+      rcases ih a han ha with ⟨xs, hxs, hx⟩
+      rcases ih b hbn hb with ⟨ys, hys, hy⟩
+      exists xs ++ ys
+      constructor
+      · intro p hm
+        rcases List.mem_append.mp hm with hleft | hright
+        · exact hxs p hleft
+        · exact hys p hright
+      · rw [product_append, hx, hy, ← heq]
+
+
+theorem product_one_mod_four (xs : List Nat) (h : ∀ a ∈ xs, a % 4 = 1) :
+    product xs % 4 = 1 := by
+  /-
+  Theorem: A finite product of numbers congruent to one modulo four
+  is itself congruent to one modulo four.
+  Proof: Induct on the number of factors. The empty product is one.
+  For a nonempty list, its first factor and its tail product both
+  have remainder one. Multiplying numbers 4u+1 and 4v+1 gives
+  4*(4*u*v+u+v)+1, so the new product also has remainder one. QED
+
+  Remainder one expresses congruence to one, as in elementary division.
+  -/
+  induction xs with
+  | nil => decide
+  | cons a xs ih =>
+    have ha := h a (by simp)
+    have ht := ih (fun b hb => h b (by simp [hb]))
+    rw [product, Nat.mul_mod, ha, ht]
+
 end NumberTheory.PrimeBounds
