@@ -154,4 +154,19 @@ theorem prime_divisor (n : Nat) (hn : 1 < n) :
       · exists t * b
         rw [heq, ht, Nat.mul_assoc]
 
+
+theorem prime_above (k : Nat) : ∃ p : Nat, Prime p ∧ k < p := by
+  /-
+  Theorem: There is a prime greater than every prescribed bound k.
+  Proof: Construct n>1 with no divisor between two and k. It has
+  a prime divisor p. Since p>1, the condition on n rules out p≤k.
+  Thus p>k. Notice that n itself need not be prime. QED
+  -/
+  rcases avoids_small_divisors k with ⟨n, hn, havoid⟩
+  rcases prime_divisor n hn with ⟨p, hp, hd⟩
+  refine ⟨p, hp, ?_⟩
+  by_cases hle : p ≤ k
+  · exact False.elim (havoid p hp.1 hle hd)
+  · omega
+
 end NumberTheory.PrimeBounds
