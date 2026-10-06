@@ -192,4 +192,22 @@ theorem member_le_listBound (a : Nat) (xs : List Nat) (ha : a ∈ xs) :
       exact Nat.le_max_left _ _
     · exact Nat.le_trans (ih ht) (Nat.le_max_right _ _)
 
+
+theorem primes_not_finitely_listed (xs : List Nat) :
+    ∃ p : Nat, Prime p ∧ p ∉ xs := by
+  /-
+  Theorem: There are infinitely many primes.
+  Proof: Any proposed finite list is bounded by its maximum. Choose
+  a prime greater than that maximum. It cannot occur on the list.
+  Thus no finite list can contain all primes. QED
+
+  We state infinitude as failure of every finite list to exhaust the
+  primes, avoiding any set-theoretic library or cardinality machinery.
+  -/
+  rcases prime_above (listBound xs) with ⟨p, hp, hlarge⟩
+  refine ⟨p, hp, ?_⟩
+  intro hm
+  have hle := member_le_listBound p xs hm
+  omega
+
 end NumberTheory.PrimeBounds
