@@ -72,4 +72,26 @@ theorem divides_initialProduct (d n : Nat) (hd : 0 < d) (hle : d ≤ n) :
       rw [initialProduct, ht]
       simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
 
+
+theorem avoids_small_divisors (k : Nat) :
+    ∃ n : Nat, 1 < n ∧ ∀ d : Nat, 1 < d → d ≤ k → ¬ d ∣ n := by
+  /-
+  Theorem: For any bound k, there is a number greater than one with
+  no divisor between two and k, inclusive.
+  Proof: Let P be the product of the integers from one through k,
+  and take n=P+1. Positivity of P gives n>1. Every d between two
+  and k divides P. If it also divided P+1, coprimality of these
+  consecutive integers would force d=1, a contradiction. QED
+
+  The inclusive upper bound strengthens the version with d<k.
+  -/
+  exists initialProduct k + 1
+  constructor
+  · have := initialProduct_positive k
+    omega
+  · intro d hd hle hdiv
+    have he := consecutive_coprime (initialProduct k) d
+      (divides_initialProduct d k (by omega) hle) hdiv
+    omega
+
 end NumberTheory.PrimeBounds
