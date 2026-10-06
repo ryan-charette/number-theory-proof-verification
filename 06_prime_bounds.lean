@@ -383,4 +383,20 @@ theorem prime_three_mod_four_above (k : Nat) :
     exact False.elim (Nat.not_le_of_lt hp.1 hle)
   · omega
 
+
+theorem primes_three_mod_four_not_finitely_listed (xs : List Nat) :
+    ∃ p : Nat, Prime p ∧ p % 4 = 3 ∧ p ∉ xs := by
+  /-
+  Theorem: There are infinitely many primes congruent to three modulo
+  four. Proof: Given any finite list, choose such a prime greater
+  than its maximum. Every listed number is at most that maximum,
+  so the new prime is absent. No finite list exhausts these primes.
+  QED
+  -/
+  rcases prime_three_mod_four_above (listBound xs) with ⟨p, hp, hlarge, hr⟩
+  refine ⟨p, hp, hr, ?_⟩
+  intro hm
+  have hle := member_le_listBound p xs hm
+  omega
+
 end NumberTheory.PrimeBounds
