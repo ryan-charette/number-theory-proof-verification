@@ -315,4 +315,42 @@ theorem prime_residue_mod_four (p : Nat) (hp : Prime p) (hne : p ≠ 2) :
     · omega
     · exact False.elim (hne he.symm)
 
+
+theorem prime_three_mod_four_divisor (n : Nat) (hn : n % 4 = 3) :
+    ∃ p : Nat, Prime p ∧ p ∣ n ∧ p % 4 = 3 := by
+  /-
+  Lemma: A number congruent to three modulo four has a prime divisor
+  congruent to three modulo four.
+  Proof: Factor n into primes. Two cannot occur, since then n would
+  be even. Every factor therefore has remainder one or three modulo
+  four. If none had remainder three, all would have remainder one,
+  making their product congruent to one as well. That contradicts
+  the remainder of n. Hence some prime factor has remainder three.
+  QED
+  -/
+  rcases factorization_exists n (by omega) with ⟨ps, hps, he⟩
+  have hex : ∃ p : Nat, p ∈ ps ∧ p % 4 = 3 := by
+    apply Classical.byContradiction
+    intro hnot
+    have hall : ∀ p ∈ ps, p % 4 = 1 := by
+      intro p hm
+      have hd := member_divides_product p ps hm
+      rw [he] at hd
+      have hne : p ≠ 2 := by
+        intro htwo
+        rcases hd with ⟨t, ht⟩
+        rw [htwo] at ht
+        omega
+      rcases prime_residue_mod_four p (hps p hm) hne with hOne | hThree
+      · exact hOne
+      · exact False.elim (hnot ⟨p, hm, hThree⟩)
+    have hproduct := product_one_mod_four ps hall
+    rw [he] at hproduct
+    omega
+  rcases hex with ⟨p, hm, hthree⟩
+  refine ⟨p, hps p hm, ?_, hthree⟩
+  have hd := member_divides_product p ps hm
+  rw [he] at hd
+  exact hd
+
 end NumberTheory.PrimeBounds
