@@ -277,4 +277,25 @@ theorem product_one_mod_four (xs : List Nat) (h : ∀ a ∈ xs, a % 4 = 1) :
     have ht := ih (fun b hb => h b (by simp [hb]))
     rw [product, Nat.mul_mod, ha, ht]
 
+
+theorem member_divides_product (p : Nat) (xs : List Nat) (hp : p ∈ xs) :
+    p ∣ product xs := by
+  /-
+  Lemma: Every entry of a finite factor list divides its product.
+  Proof: Induct on the list. If p is the first entry, the tail product
+  is the quotient. Otherwise the tail product equals p*t by induction.
+  Multiplying by the first entry a gives p*(a*t), the required witness.
+  QED
+  -/
+  induction xs with
+  | nil => cases hp
+  | cons a xs ih =>
+    rcases List.mem_cons.mp hp with he | hm
+    · subst p
+      exact ⟨product xs, rfl⟩
+    · rcases ih hm with ⟨t, ht⟩
+      exists a*t
+      rw [product, ht]
+      simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
+
 end NumberTheory.PrimeBounds
