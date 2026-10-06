@@ -169,4 +169,27 @@ theorem prime_above (k : Nat) : ∃ p : Nat, Prime p ∧ k < p := by
   · exact False.elim (havoid p hp.1 hle hd)
   · omega
 
+
+def listBound : List Nat → Nat
+  | [] => 0
+  | a :: xs => max a (listBound xs)
+
+theorem member_le_listBound (a : Nat) (xs : List Nat) (ha : a ∈ xs) :
+    a ≤ listBound xs := by
+  /-
+  Lemma: Every member of a finite list is bounded by its recursively
+  computed maximum. Proof: The empty case has no member. In a
+  nonempty list, a member is either the first entry or belongs to
+  the tail. The maximum bounds the first entry directly and bounds
+  the tail's maximum, which bounds every tail entry by induction.
+  QED
+  -/
+  induction xs with
+  | nil => cases ha
+  | cons b xs ih =>
+    rcases List.mem_cons.mp ha with he | ht
+    · subst a
+      exact Nat.le_max_left _ _
+    · exact Nat.le_trans (ih ht) (Nat.le_max_right _ _)
+
 end NumberTheory.PrimeBounds
