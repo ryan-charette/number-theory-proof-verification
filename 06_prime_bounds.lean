@@ -134,4 +134,24 @@ theorem nonprime_factors (n : Nat) (hn : 1 < n) (hp : ¬ Prime n) :
   exists a, b
   exact ⟨by omega, by omega, by omega, by omega, heq⟩
 
+theorem prime_divisor (n : Nat) (hn : 1 < n) :
+    ∃ p : Nat, Prime p ∧ p ∣ n := by
+  /-
+  Theorem: Every natural number greater than one has a prime divisor.
+  Proof: Use strong induction on n. If n is prime, take n itself.
+  Otherwise n=a*b with 1<a<n. By induction a has a prime divisor p.
+  If a=p*t, then n=p*(t*b), so p also divides n. QED
+  -/
+  induction n using Nat.strongRecOn with
+  | ind n ih =>
+    by_cases hp : Prime n
+    · exact ⟨n, hp, ⟨1, by rw [Nat.mul_one]⟩⟩
+    · rcases nonprime_factors n hn hp with ⟨a, b, ha, han, _, _, heq⟩
+      rcases ih a han ha with ⟨p, hpp, t, ht⟩
+      exists p
+      constructor
+      · exact hpp
+      · exists t * b
+        rw [heq, ht, Nat.mul_assoc]
+
 end NumberTheory.PrimeBounds
