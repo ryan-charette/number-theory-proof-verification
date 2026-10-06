@@ -210,4 +210,19 @@ theorem primes_not_finitely_listed (xs : List Nat) :
   have hle := member_le_listBound p xs hm
   omega
 
+def product : List Nat → Nat
+  | [] => 1
+  | p :: ps => p * product ps
+
+theorem product_append (xs ys : List Nat) : product (xs ++ ys) = product xs * product ys := by
+  /-
+  Lemma: Joining two lists multiplies their products.
+  Proof: Induct on the first list. An empty list contributes one.
+  For a first entry p, use the induction hypothesis for the remaining
+  list and reassociate p*(product(xs)*product(ys)). QED
+  -/
+  induction xs with
+  | nil => rw [List.nil_append, product, Nat.one_mul]
+  | cons p ps ih => rw [List.cons_append, product, product, ih, Nat.mul_assoc]
+
 end NumberTheory.PrimeBounds
