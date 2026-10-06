@@ -353,4 +353,34 @@ theorem prime_three_mod_four_divisor (n : Nat) (hn : n % 4 = 3) :
   rw [he] at hd
   exact hd
 
+
+theorem prime_three_mod_four_above (k : Nat) :
+    ∃ p : Nat, Prime p ∧ k < p ∧ p % 4 = 3 := by
+  /-
+  Theorem: For every bound k there is a larger prime congruent to
+  three modulo four.
+  Proof: Let P be the product of the integers from one through k+1,
+  and set N=4*P-1. Since P is positive, N has remainder three modulo
+  four. It has a prime divisor p with the same remainder. If p≤k,
+  then p divides P and hence 4*P. It also divides N, so it divides
+  their difference one. This contradicts p>1. Therefore p>k. QED
+  -/
+  let P := initialProduct (k+1)
+  have hP : 0 < P := initialProduct_positive (k+1)
+  have hres : (4*P-1) % 4 = 3 := by omega
+  rcases prime_three_mod_four_divisor (4*P-1) hres with ⟨p, hp, hd, hr⟩
+  refine ⟨p, hp, ?_, hr⟩
+  by_cases hsmall : p ≤ k
+  · have hdP : p ∣ P := divides_initialProduct p (k+1) (by have := hp.1; omega) (by omega)
+    rcases hdP with ⟨t, ht⟩
+    have hdFour : p ∣ 4*P := by
+      exists 4*t
+      rw [ht]
+      simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
+    have hone := Nat.dvd_sub (by omega : 4*P-1 ≤ 4*P) hdFour hd
+    rw [show 4*P-(4*P-1)=1 by omega] at hone
+    have hle := Nat.le_of_dvd (by decide : 0 < 1) hone
+    exact False.elim (Nat.not_le_of_lt hp.1 hle)
+  · omega
+
 end NumberTheory.PrimeBounds
