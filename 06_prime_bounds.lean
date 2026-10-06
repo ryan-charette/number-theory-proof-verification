@@ -257,4 +257,24 @@ theorem factorization_exists (n : Nat) (hn : 1 < n) :
         · exact hys p hright
       · rw [product_append, hx, hy, ← heq]
 
+
+theorem product_one_mod_four (xs : List Nat) (h : ∀ a ∈ xs, a % 4 = 1) :
+    product xs % 4 = 1 := by
+  /-
+  Theorem: A finite product of numbers congruent to one modulo four
+  is itself congruent to one modulo four.
+  Proof: Induct on the number of factors. The empty product is one.
+  For a nonempty list, its first factor and its tail product both
+  have remainder one. Multiplying numbers 4u+1 and 4v+1 gives
+  4*(4*u*v+u+v)+1, so the new product also has remainder one. QED
+
+  Remainder one expresses congruence to one, as in elementary division.
+  -/
+  induction xs with
+  | nil => decide
+  | cons a xs ih =>
+    have ha := h a (by simp)
+    have ht := ih (fun b hb => h b (by simp [hb]))
+    rw [product, Nat.mul_mod, ha, ht]
+
 end NumberTheory.PrimeBounds
