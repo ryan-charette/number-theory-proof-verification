@@ -152,4 +152,19 @@ theorem int_odd_power_plus_dvd (x : Int) (t : Nat) :
 
 
 
+
+theorem odd_power_plus_dvd (x m : Nat) (hm : m % 2 = 1) :
+    x+1 ∣ x^m+1 := by
+  /-
+  Lemma: If m is odd, x+1 divides x^m+1 for every natural x.
+  Proof: Division by two writes m=2*t+1. Apply the integer witness
+  construction for odd powers. Since both sides are natural numbers,
+  integer divisibility gives natural divisibility. QED
+  -/
+  have he : m = 2*(m/2)+1 := by omega
+  apply Int.ofNat_dvd.mp
+  simp only [Int.natCast_add, Int.natCast_pow, Int.natCast_one]
+  rw [he]
+  exact int_odd_power_plus_dvd (x : Int) (m/2)
+
 end NumberTheory.PowerFactors
