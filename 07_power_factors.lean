@@ -95,4 +95,34 @@ theorem nonprime_factors (n : Nat) (hn : 1 < n) (hp : ¬ Prime n) :
   exact ⟨by omega, by omega, by omega, by omega, heq⟩
 
 
+
+theorem prime_exponent_of_two_pow_sub_one (n : Nat) (hp : Prime (2^n-1)) :
+    Prime n := by
+  /-
+  Theorem: If 2^n-1 is prime, n is prime.
+  Proof: Exponents zero and one give zero and one, not primes, so
+  n>1. If n were not prime, write n=a*b with 1<a<n and 1<b<n.
+  The geometric identity makes 2^a-1 a divisor of (2^a)^b-1=2^n-1.
+  Since a>1, this divisor exceeds one. Since a<n, it is smaller than
+  2^n-1. Both possibilities allowed for a divisor of a prime are
+  therefore excluded. This contradiction proves that n is prime. QED
+  -/
+  have hn : 1 < n := by
+    by_cases hz : n = 0
+    · subst n; have := hp.1; simp at this
+    · by_cases ho : n = 1
+      · subst n; have := hp.1; simp at this
+      · omega
+  by_cases hprime : Prime n
+  · exact hprime
+  · rcases nonprime_factors n hn hprime with ⟨a,b,ha,han,_,_,he⟩
+    have hd := power_sub_one_dvd (2^a) b (Nat.pow_pos (by decide))
+    rw [← Nat.pow_mul, ← he] at hd
+    have hlarge := Nat.pow_lt_pow_of_lt (by decide : 1 < 2) ha
+    have hsmall := Nat.pow_lt_pow_of_lt (by decide : 1 < 2) han
+    rcases hp.2 (2^a-1) hd with hone | hall
+    · simp only [Nat.pow_one] at hlarge
+      omega
+    · omega
+
 end NumberTheory.PowerFactors
