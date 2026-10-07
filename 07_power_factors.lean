@@ -196,4 +196,37 @@ theorem odd_part_exists (a : Nat) (ha : 0 < a) :
 
 
 
+
+theorem power_of_two_exponent_of_two_pow_add_one (n : Nat) (hn : 0 < n)
+    (hp : Prime (2^n+1)) : ∃ k : Nat, n = 2^k := by
+  /-
+  Theorem: If n is positive and 2^n+1 is prime, then n is a power
+  of two. Proof: Remove factors of two from n to write n=2^k*r,
+  where r is positive and odd. Put x=2^(2^k). Then 2^n+1=x^r+1,
+  and oddness of r makes x+1 a divisor. If r>1, then 2^k<n, so
+  1<x+1<2^n+1. This contradicts primality. Thus r=1 and n=2^k.
+  QED
+
+  The positive hypothesis matches the textbook's natural-number
+  convention. It is necessary: n=0 gives the prime 2, but zero is
+  not a power of two. The exponent k may be zero, allowing n=1.
+  -/
+  rcases odd_part_exists n hn with ⟨r, hr, hodd, _, k, he⟩
+  by_cases hone : r = 1
+  · exists k
+    simpa only [hone, Nat.mul_one] using he
+  · have hrlarge : 1 < r := by omega
+    have hkpos : 0 < 2^k := Nat.pow_pos (by decide)
+    have hklt : 2^k < n := by
+      have h := Nat.mul_lt_mul_of_pos_left hrlarge hkpos
+      rw [Nat.mul_one, ← he] at h
+      exact h
+    have hd := odd_power_plus_dvd (2^(2^k)) r hodd
+    rw [← Nat.pow_mul, ← he] at hd
+    have hxpos : 0 < 2^(2^k) := Nat.pow_pos (by decide)
+    have hsmall := Nat.pow_lt_pow_of_lt (by decide : 1 < 2) hklt
+    rcases hp.2 (2^(2^k)+1) hd with hOne | hWhole
+    · omega
+    · omega
+
 end NumberTheory.PowerFactors
