@@ -167,4 +167,33 @@ theorem odd_power_plus_dvd (x m : Nat) (hm : m % 2 = 1) :
   rw [he]
   exact int_odd_power_plus_dvd (x : Int) (m/2)
 
+theorem odd_part_exists (a : Nat) (ha : 0 < a) :
+    ∃ r : Nat, 0 < r ∧ r % 2 = 1 ∧ r ≤ a ∧ ∃ k : Nat, a = 2^k*r := by
+  /-
+  Lemma: Every positive integer is a power of two times a positive
+  odd integer no larger than itself.
+  Proof: Use strong induction. If a is odd, take r=a and exponent
+  zero. Otherwise a=2*q, where 0<q<a. By induction q=2^k*r with
+  r odd. Then a=2^(k+1)*r. The bound r≤q<a gives r≤a. This is
+  exactly the process of removing factors of two until none remain.
+  QED
+  -/
+  induction a using Nat.strongRecOn with
+  | ind a ih =>
+    by_cases ho : a % 2 = 1
+    · exact ⟨a, ha, ho, Nat.le_refl a, 0, by simp⟩
+    · have hqpos : 0 < a/2 := by omega
+      have hqsmall : a/2 < a := by omega
+      have he : a = 2*(a/2) := by omega
+      rcases ih (a/2) hqsmall hqpos with ⟨r, hr, hodd, hle, k, hk⟩
+      refine ⟨r, hr, hodd, by omega, k+1, ?_⟩
+      calc
+        a = 2*(a/2) := he
+        _ = 2*(2^k*r) := congrArg (fun t => 2*t) hk
+        _ = 2^(k+1)*r := by
+          rw [Nat.pow_succ]
+          simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
+
+
+
 end NumberTheory.PowerFactors
