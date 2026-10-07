@@ -38,4 +38,20 @@ theorem geometric_identity (x : Int) (m : Nat) :
         omega
 
 
+
+theorem power_sub_one_dvd (x m : Nat) (hx : 0 < x) :
+    x-1 ∣ x^m-1 := by
+  /-
+  Lemma: For positive x, x-1 divides x^m-1.
+  Proof: The geometric identity supplies an integer quotient. Both
+  the divisor and dividend are nonnegative natural numbers, so integer
+  divisibility is equivalent to natural divisibility. Positivity of x
+  ensures its powers are at least one, so the natural subtractions
+  agree with integer subtraction. QED
+  -/
+  apply Int.ofNat_dvd.mp
+  rw [Int.ofNat_sub (by omega : 1 ≤ x),
+    Int.ofNat_sub (by have := Nat.pow_pos (n := m) hx; omega), Int.natCast_pow]
+  exact ⟨geometricSum (x : Int) m, (geometric_identity (x : Int) m).symm⟩
+
 end NumberTheory.PowerFactors
