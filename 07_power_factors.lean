@@ -125,4 +125,31 @@ theorem prime_exponent_of_two_pow_sub_one (n : Nat) (hp : Prime (2^n-1)) :
       omega
     · omega
 
+
+theorem int_odd_power_plus_dvd (x : Int) (t : Nat) :
+    x+1 ∣ x^(2*t+1)+1 := by
+  /-
+  Lemma: x+1 divides every odd power of x plus one.
+  Proof: For exponent one the quotient is one. Suppose
+  x^(2t+1)+1=(x+1)*q. Multiplying the equation by x squared and
+  subtracting x squared minus one gives
+  x^(2t+3)+1=(x+1)*(x*x*q-(x-1)).
+  Thus the displayed expression is a quotient at the next odd exponent.
+  Induction proves the result with explicit integer witnesses. QED
+  -/
+  induction t with
+  | zero => exact ⟨1, by simp [Int.pow_succ, Int.pow_zero]⟩
+  | succ t ih =>
+    rcases ih with ⟨q,hq⟩
+    exists x*x*q-(x-1)
+    have hstep : 2*(t+1)+1 = (2*t+1)+1+1 := by omega
+    rw [hstep, Int.pow_succ, Int.pow_succ]
+    have he := congrArg (fun z => x*x*z) hq
+    simp only [Int.mul_add, Int.mul_one, Int.mul_assoc, Int.mul_left_comm, Int.mul_comm] at he
+    simp only [Int.mul_sub, Int.add_mul, Int.mul_add, Int.sub_mul,
+      Int.mul_one, Int.one_mul, Int.mul_assoc, Int.mul_left_comm, Int.mul_comm]
+    omega
+
+
+
 end NumberTheory.PowerFactors
