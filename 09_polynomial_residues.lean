@@ -827,4 +827,43 @@ theorem complete_residues_length (reps : List Int) (n : Nat) (hn : 0 < n)
   simp only [labels,List.length_map,List.length_range] at hle hge
   omega
 
+
+theorem noncongruent_full_length_complete (reps : List Int) (n : Nat) (hn : 0 < n)
+    (h : Noncongruent reps n) (hlen : reps.length=n) : CompleteResidues reps n := by
+  /-
+  Theorem: Any n pairwise noncongruent integers form a complete
+  residue system modulo n.
+  Proof: Their canonical labels are n distinct members of 0,...,n-1.
+  If a label were missing, adjoining it would give n+1 distinct
+  members of a list with only n entries, contradicting the counting
+  bound. Thus the canonical label of any integer a occurs. Its
+  corresponding representative is congruent to a. This proves coverage;
+  noncongruence already gives uniqueness. QED
+  -/
+  refine ⟨h,?_⟩
+  intro a
+  let labels := reps.map (fun b => canonicalLabel b n)
+  have hnd : labels.Nodup := labels_distinct reps n hn h
+  have hsub : ∀ r ∈ labels, r ∈ List.range n := by
+    intro r hr
+    rcases List.mem_map.mp hr with ⟨b,_,he⟩
+    apply List.mem_range.mpr
+    have hb := canonicalLabel_spec b n hn
+    omega
+  have hmem : canonicalLabel a n ∈ labels := by
+    apply Classical.byContradiction
+    intro hnot
+    have hmore : (canonicalLabel a n :: labels).Nodup := List.nodup_cons.mpr ⟨hnot,hnd⟩
+    have hmoreSub : ∀ r ∈ canonicalLabel a n :: labels, r ∈ List.range n := by
+      intro r hr
+      rcases List.mem_cons.mp hr with he | ht
+      · subst r
+        exact List.mem_range.mpr (canonicalLabel_spec a n hn).1
+      · exact hsub r ht
+    have hb := distinct_length_bound (canonicalLabel a n :: labels) (List.range n) hmore hmoreSub
+    simp only [List.length_cons,List.length_range,labels,List.length_map,hlen] at hb
+    omega
+  rcases List.mem_map.mp hmem with ⟨b,hb,he⟩
+  exact ⟨b,hb,(canonicalLabel_eq_iff a b n hn).mp he.symm⟩
+
 end NumberTheory.PolynomialResidues
