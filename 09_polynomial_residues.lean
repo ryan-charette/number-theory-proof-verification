@@ -281,4 +281,16 @@ theorem positive_leading_lower_bound (cs : List Int) (hl : 0 < leading cs) :
       change 1 ≤ c+x*evaluate (d::ds) x
       omega
 
+
+theorem polynomial_eventually_positive (cs : List Int) (hl : 0 < leading cs) :
+    ∃ K : Int, ∀ x : Int, K < x → 0 < evaluate cs x := by
+  /-
+  Theorem: A polynomial with positive leading coefficient is eventually
+  positive. Proof: The preceding lower bound gives value at least one
+  past an integer threshold, and hence strictly greater than zero.
+  This also covers positive constant polynomials. QED
+  -/
+  rcases positive_leading_lower_bound cs hl with ⟨K,hK⟩
+  exact ⟨K,fun x hx => by have := hK x hx; omega⟩
+
 end NumberTheory.PolynomialResidues
