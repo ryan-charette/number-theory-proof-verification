@@ -739,4 +739,30 @@ theorem distinct_length_bound (xs ys : List Nat) (h : xs.Nodup)
     simp only [List.length_cons]
     omega
 
+
+def Noncongruent (reps : List Int) (n : Nat) : Prop :=
+  reps.Nodup ∧ ∀ a ∈ reps, ∀ b ∈ reps, a ≡ b [MOD (n : Int)] → a=b
+
+def CompleteResidues (reps : List Int) (n : Nat) : Prop :=
+  Noncongruent reps n ∧ ∀ a : Int, ∃ r : Int, r ∈ reps ∧ a ≡ r [MOD (n : Int)]
+
+theorem complete_representative_unique (reps : List Int) (n : Nat)
+    (h : CompleteResidues reps n) (a : Int) :
+    ∃ r : Int, r ∈ reps ∧ a ≡ r [MOD (n : Int)] ∧
+      ∀ s ∈ reps, a ≡ s [MOD (n : Int)] → s=r := by
+  /-
+  Lemma: A complete residue system represents each integer exactly once.
+  Proof: Completeness supplies a representative r. If s also represents
+  a, symmetry and transitivity give s congruent to r. Distinct entries
+  of the system cannot be congruent, so s=r. QED
+
+  Finite sets are represented by lists without repeated entries. The
+  definition of completeness combines coverage with uniqueness modulo n;
+  it imposes no ordering or bounds on the chosen integer representatives.
+  -/
+  rcases h.2 a with ⟨r,hr,har⟩
+  refine ⟨r,hr,har,?_⟩
+  intro s hs has
+  exact h.1.2 s hs r hr (modeq_trans s a r n (modeq_symm a s n has) har)
+
 end NumberTheory.PolynomialResidues
