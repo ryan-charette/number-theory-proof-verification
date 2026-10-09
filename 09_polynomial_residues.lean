@@ -322,4 +322,18 @@ theorem polynomial_eventually_above (cs : List Int) (hdegree : 2 ≤ cs.length)
       change M < c+x*evaluate (d::ds) x
       omega
 
+
+theorem evaluate_negated (cs : List Int) (x : Int) :
+    evaluate (cs.map (fun a => -a)) x = -evaluate cs x := by
+  /-
+  Lemma: Negating every coefficient negates the polynomial's value.
+  Proof: Induct on the coefficient list. Zero negates to zero. At a
+  further coefficient, -c+x*(-g(x))=-(c+x*g(x)) by distributivity
+  and the induction hypothesis. QED
+  -/
+  induction cs with
+  | nil => rfl
+  | cons c cs ih =>
+    simp only [List.map_cons,evaluate,ih,Int.mul_neg,Int.neg_add]
+
 end NumberTheory.PolynomialResidues
