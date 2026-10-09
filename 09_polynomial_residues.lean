@@ -293,4 +293,33 @@ theorem polynomial_eventually_positive (cs : List Int) (hl : 0 < leading cs) :
   rcases positive_leading_lower_bound cs hl with ⟨K,hK⟩
   exact ⟨K,fun x hx => by have := hK x hx; omega⟩
 
+
+theorem polynomial_eventually_above (cs : List Int) (hdegree : 2 ≤ cs.length)
+    (hl : 0 < leading cs) (M : Int) :
+    ∃ K : Int, ∀ x : Int, K < x → M < evaluate cs x := by
+  /-
+  Theorem: A nonconstant integer polynomial with positive leading
+  coefficient eventually exceeds any prescribed bound.
+  Proof: Write f(x)=c+x*g(x), where g has positive leading coefficient.
+  Beyond a threshold, g(x)≥1. Also require x>0 and x>M-c. Then
+  f(x)≥c+x>M. Taking the largest of these thresholds proves the claim.
+  For a real bound, choose an integer above it first; the integer-bound
+  formulation therefore expresses the same unbounded-growth assertion.
+  QED
+  -/
+  cases cs with
+  | nil => simp at hdegree
+  | cons c cs =>
+    cases cs with
+    | nil => simp at hdegree
+    | cons d ds =>
+      rcases positive_leading_lower_bound (d::ds) hl with ⟨K,hK⟩
+      refine ⟨max K (max 0 (M-c)),?_⟩
+      intro x hx
+      have htail := hK x (by omega)
+      have hmul := Int.mul_le_mul_of_nonneg_left htail (by omega : 0 ≤ x)
+      rw [Int.mul_one] at hmul
+      change M < c+x*evaluate (d::ds) x
+      omega
+
 end NumberTheory.PolynomialResidues
