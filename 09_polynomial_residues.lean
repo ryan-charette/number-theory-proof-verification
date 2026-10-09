@@ -70,4 +70,21 @@ theorem modeq_symm (a b n : Int) (h : a ≡ b [MOD n]) : b ≡ a [MOD n] := by
   · exists -k
     rw [← Int.neg_sub a b, hk, Int.mul_neg]
 
+theorem modeq_trans (a b c n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : b ≡ c [MOD n]) : a ≡ c [MOD n] := by
+  /-
+  Theorem: Two consecutive congruences combine.
+  Proof: The hypotheses tell us that n divides a - b and b - c.
+  Therefore n divides their sum. Adding the differences gives:
+
+    (a - b) + (b - c) = a - c.
+
+  Both differences are divisible by n, so their sum is too. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h := dvd_add n (a - b) (b - c) h₀.2 h₁.2
+    rw [← Int.add_sub_assoc, Int.sub_add_cancel] at h
+    exact h
+
 end NumberTheory.PolynomialResidues
