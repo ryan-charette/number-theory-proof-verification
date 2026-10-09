@@ -336,4 +336,20 @@ theorem evaluate_negated (cs : List Int) (x : Int) :
   | cons c cs ih =>
     simp only [List.map_cons,evaluate,ih,Int.mul_neg,Int.neg_add]
 
+
+theorem leading_negated (cs : List Int) :
+    leading (cs.map (fun a => -a)) = -leading cs := by
+  /-
+  Lemma: Negating the coefficients negates the leading coefficient.
+  Proof: The empty list has leading coefficient zero; a singleton's
+  leading coefficient is its entry. For a longer list, discard the
+  first coefficient and apply induction to the remaining list. QED
+  -/
+  induction cs with
+  | nil => rfl
+  | cons c cs ih =>
+    cases cs with
+    | nil => rfl
+    | cons d ds => exact ih
+
 end NumberTheory.PolynomialResidues
