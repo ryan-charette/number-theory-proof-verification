@@ -142,4 +142,30 @@ theorem modeq_pow_step (a b n : Int) (k : Nat)
   rw [Int.pow_succ, Int.pow_succ]
   exact modeq_mult (a ^ k) (b ^ k) a b n hk h
 
+theorem modeq_pow (a b n : Int) (k : Nat) (h : a ≡ b [MOD n]) :
+    a ^ k ≡ b ^ k [MOD n] := by
+  /-
+  Theorem: Every natural-number power preserves congruence.
+  Proof: We use induction on k, including zero.
+
+  Base case: When k = 0, both powers are 1. We have already shown
+  that every integer is congruent to itself.
+
+  Inductive case: Suppose a ^ k is congruent to b ^ k modulo n.
+  We also know that a is congruent to b modulo n. Multiplying these
+  congruences gives
+
+    a ^ k * a ≡ b ^ k * b [MOD n].
+
+  These products are a ^ (k + 1) and b ^ (k + 1), as required.
+
+  QED
+  -/
+  induction k with
+  | zero =>
+    rw [Int.pow_zero, Int.pow_zero]
+    exact modeq_refl 1 n h.1
+  | succ k ih =>
+    exact modeq_pow_step a b n k h ih
+
 end NumberTheory.PolynomialResidues
