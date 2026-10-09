@@ -491,4 +491,143 @@ theorem thirty_nine_dvd_power_difference : (39 : Int) ∣ 17^48-5^24 := by
   have he := modeq_trans _ _ _ _ h17large (modeq_symm _ _ _ h5large)
   exact he.2
 
+theorem least_natural (P : Nat → Prop) (h : ∃ b, P b) :
+    ∃ a, P a ∧ ∀ b, P b → a ≤ b := by
+  /-
+  Theorem: A nonempty collection of natural numbers has a least member.
+  Proof: We prove by strong induction on b that if b is a member, the
+  collection has a least member. Strong induction allows us to assume
+  the assertion for every natural number smaller than b.
+
+  If some member a is smaller than b, the induction hypothesis at a
+  gives a least member. If no member is smaller than b, then b itself
+  is least. Finally, nonemptiness supplies a member to start with. QED
+  -/
+  letI := Classical.propDecidable
+  have least_below : ∀ b, P b → ∃ a, P a ∧ ∀ c, P c → a ≤ c := by
+    intro b
+    induction b using Nat.strongRecOn with
+    | ind b ih =>
+      intro hb
+      by_cases hs : ∃ a, a < b ∧ P a
+      · rcases hs with ⟨a, hab, ha⟩
+        exact ih a hab ha
+      · exists b
+        constructor
+        · exact hb
+        · intro c hc
+          apply Nat.le_of_not_lt
+          intro hcb
+          exact hs ⟨c, hcb, hc⟩
+  rcases h with ⟨b, hb⟩
+  exact least_below b hb
+
+theorem division_exists (m n : Nat) (hn : 0 < n) :
+    ∃ q r : Int, (m : Int) = (n : Int) * q + r ∧ 0 ≤ r ∧ r < (n : Int) := by
+  /-
+  Theorem: For a natural number m and a positive natural number n,
+  there are integers q and r with m = n * q + r and 0 ≤ r < n.
+  Lean includes zero among the natural numbers, so we explicitly require
+  n > 0. The conclusion also holds when m = 0.
+
+  Proof: Consider all nonnegative integers r for which m = n * q + r
+  for some integer q. This collection is nonempty: q = 0 and r = m
+  satisfy the equation. Choose its least member r by well-ordering,
+  and choose an integer q giving the equation.
+
+  If r ≥ n, then r - n is nonnegative and
+
+    m = n * q + r = n * (q + 1) + (r - n).
+
+  Thus r - n is another member of the collection. Since n > 0,
+  it is smaller than r, contradicting the choice of r. Hence r < n.
+  The chosen q and r have all the required properties. QED
+  -/
+  let P : Nat → Prop := fun r => ∃ q : Int, (m : Int) = (n : Int) * q + r
+  have hnonempty : ∃ r, P r := by
+    exists m
+    exists (0 : Int)
+    rw [Int.mul_zero, Int.zero_add]
+  rcases least_natural P hnonempty with ⟨r, hr, hleast⟩
+  rcases hr with ⟨q, hq⟩
+  have hsmall : r < n := by
+    apply Nat.lt_of_not_ge
+    intro hlarge
+    have hnext : P (r - n) := by
+      exists q + 1
+      rw [Int.mul_add, Int.mul_one]
+      -- Since n ≤ r, natural subtraction agrees with integer subtraction.
+      omega
+    have hminimal := hleast (r - n) hnext
+    -- Subtracting positive n gives a strictly smaller natural number.
+    omega
+  exists q, (r : Int)
+  exact ⟨hq, by omega, by omega⟩
+
+theorem division_unique (m n q r q' r' : Int) (hn : 0 < n)
+    (h : m = n * q + r) (h' : m = n * q' + r')
+    (hr : 0 ≤ r) (hrn : r < n) (hr' : 0 ≤ r') (hrn' : r' < n) :
+    q = q' ∧ r = r' := by
+  /-
+  Theorem: Two decompositions with the same positive divisor and
+  remainders between zero and n - 1 have equal quotients and remainders.
+  We allow any integer m, which also covers natural-number dividends.
+
+  Proof: Suppose m = n * q + r = n * q' + r'. If q < q', the
+  quotients are integers, so q + 1 ≤ q'. Multiplying by positive n,
+
+    n * q + n ≤ n * q'.
+
+  But r < n and r' ≥ 0 give
+
+    m = n * q + r < n * q + n ≤ n * q' ≤ n * q' + r' = m.
+
+  This is impossible. Interchanging the two decompositions rules out
+  q' < q in exactly the same way. Therefore q = q'. Substituting into
+  the original equations and cancelling n * q gives r = r'. QED
+  -/
+  have hnot : ¬ q < q' := by
+    intro hlt
+    have hstep : q + 1 ≤ q' := by omega
+    have hmul := Int.mul_le_mul_of_nonneg_left hstep (Int.le_of_lt hn)
+    rw [Int.mul_add, Int.mul_one] at hmul
+    -- The remainder bounds would force m < m.
+    omega
+  have hnot' : ¬ q' < q := by
+    intro hlt
+    have hstep : q' + 1 ≤ q := by omega
+    have hmul := Int.mul_le_mul_of_nonneg_left hstep (Int.le_of_lt hn)
+    rw [Int.mul_add, Int.mul_one] at hmul
+    omega
+  have hq : q = q' := by omega
+  constructor
+  · exact hq
+  · rw [hq] at h
+    omega
+
+
+theorem integer_division_exists (a : Int) (n : Nat) (hn : 0 < n) :
+    ∃ q r : Int, a=(n : Int)*q+r ∧ 0 ≤ r ∧ r < n := by
+  /-
+  Lemma: Every integer has a quotient and a nonnegative remainder
+  less than a positive natural divisor n.
+  Proof: Let t=|a|. Since n≥1, a+n*t≥a+|a|≥0. Divide this
+  nonnegative integer by n using the well-ordering construction.
+  If a+n*t=n*q+r, then a=n*(q-t)+r, with the same remainder bounds.
+  QED
+  -/
+  let t : Int := a.natAbs
+  have ht : 0 ≤ t := by dsimp [t]; omega
+  have ha : -a ≤ t := by
+    have h : -a ≤ (-a).natAbs := Int.le_natAbs
+    simpa only [Int.natAbs_neg] using h
+  have hmul := Int.mul_le_mul_of_nonneg_right (by omega : (1 : Int) ≤ n) ht
+  rw [Int.one_mul] at hmul
+  have hnonneg : 0 ≤ a+(n : Int)*t := by omega
+  rcases division_exists (a+(n : Int)*t).toNat n hn with ⟨q,r,he,hr,hrn⟩
+  rw [Int.toNat_of_nonneg hnonneg] at he
+  refine ⟨q-t,r,?_,hr,hrn⟩
+  rw [Int.mul_sub]
+  omega
+
 end NumberTheory.PolynomialResidues
