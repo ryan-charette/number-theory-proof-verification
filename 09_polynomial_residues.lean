@@ -168,4 +168,28 @@ theorem modeq_pow (a b n : Int) (k : Nat) (h : a ≡ b [MOD n]) :
   | succ k ih =>
     exact modeq_pow_step a b n k h ih
 
+
+def evaluate : List Int → Int → Int
+  | [], _ => 0
+  | a :: cs, x => a + x * evaluate cs x
+
+theorem polynomial_congruence (cs : List Int) (a b m : Int)
+    (h : a ≡ b [MOD m]) : evaluate cs a ≡ evaluate cs b [MOD m] := by
+  /-
+  Theorem: An integer polynomial takes congruent values at congruent
+  integer inputs. Proof: Store coefficients in increasing power order.
+  The empty list evaluates to zero. For a first coefficient c and
+  remaining polynomial g, the polynomial is c+x*g(x). Induction
+  gives g(a) congruent to g(b). Multiply this by the input congruence
+  and add c to obtain the desired congruence. QED
+
+  This list representation includes every integer polynomial. The
+  proof also covers constant polynomials and leading zero coefficients.
+  -/
+  induction cs with
+  | nil => exact modeq_refl 0 m h.1
+  | cons c cs ih =>
+    exact modeq_add c c (a*evaluate cs a) (b*evaluate cs b) m
+      (modeq_refl c m h.1) (modeq_mult a b (evaluate cs a) (evaluate cs b) m h ih)
+
 end NumberTheory.PolynomialResidues
