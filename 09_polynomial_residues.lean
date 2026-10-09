@@ -454,4 +454,19 @@ theorem composite_polynomial_values (cs : List Int) (hdegree : 2 ≤ cs.length)
   rw [Int.natAbs_ofNat] at hnat
   exact ⟨x,by omega,composite_of_divisor _ d hd (by omega) hnat⟩
 
+
+theorem forty_one_dvd_power_difference : (41 : Int) ∣ 2^20-1 := by
+  /-
+  Theorem: Forty-one divides 2^20-1.
+  Proof: Since 2^5-(-9)=41, we have 2^5 congruent to -9. Taking
+  fourth powers gives 2^20 congruent to (-9)^4. The latter differs
+  from one by 6560=41*160. Transitivity gives the desired divisibility.
+  The arithmetic checks concern only these small reduced values. QED
+  -/
+  have h : (2 : Int)^5 ≡ -9 [MOD 41] := ⟨by decide,1,by decide⟩
+  have hp := modeq_pow _ _ _ 4 h
+  have hlast : (-9 : Int)^4 ≡ 1 [MOD 41] := ⟨by decide,160,by decide⟩
+  have he := modeq_trans _ _ _ _ hp hlast
+  exact he.2
+
 end NumberTheory.PolynomialResidues
