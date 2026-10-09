@@ -630,4 +630,17 @@ theorem integer_division_exists (a : Int) (n : Nat) (hn : 0 < n) :
   rw [Int.mul_sub]
   omega
 
+
+theorem bounded_congruent_equal (r s m : Int) (hr : 0 ≤ r) (hrm : r < m)
+    (hs : 0 ≤ s) (hsm : s < m) (h : r ≡ s [MOD m]) : r=s := by
+  /-
+  Lemma: Two congruent integers between zero and m-1 are equal.
+  Proof: Write r-s=m*q. Then r=m*q+s and also r=m*0+r.
+  Both remainders satisfy the required bounds, so uniqueness of
+  quotient and remainder makes r=s. QED
+  -/
+  rcases h.2 with ⟨q,hq⟩
+  exact (division_unique r m 0 r q s h.1 (by simp) (by omega)
+    hr hrm hs hsm).2
+
 end NumberTheory.PolynomialResidues
