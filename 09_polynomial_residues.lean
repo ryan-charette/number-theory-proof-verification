@@ -469,4 +469,26 @@ theorem forty_one_dvd_power_difference : (41 : Int) ∣ 2^20-1 := by
   have he := modeq_trans _ _ _ _ hp hlast
   exact he.2
 
+
+theorem thirty_nine_dvd_power_difference : (39 : Int) ∣ 17^48-5^24 := by
+  /-
+  Theorem: Thirty-nine divides 17^48-5^24.
+  Proof: Since 17^2=289 is congruent to 16, and 16^3=4096 is
+  congruent to one, 17^6 is congruent to one. Taking eighth powers
+  gives 17^48 congruent to one. Also 5^3=125 is
+  congruent to 8; 8^4=4096 is congruent to one. Therefore 5^12 is
+  congruent to one, and squaring gives 5^24 congruent to one.
+  Subtracting these congruences proves the asserted divisibility. QED
+  -/
+  have h17 : (17 : Int)^2 ≡ 16 [MOD 39] := ⟨by decide,7,by decide⟩
+  have h16 : (16 : Int)^3 ≡ 1 [MOD 39] := ⟨by decide,105,by decide⟩
+  have h17six := modeq_trans _ _ _ _ (modeq_pow _ _ _ 3 h17) h16
+  have h17large := modeq_pow _ _ _ 8 h17six
+  have h5 : (5 : Int)^3 ≡ 8 [MOD 39] := ⟨by decide,3,by decide⟩
+  have h8 : (8 : Int)^4 ≡ 1 [MOD 39] := ⟨by decide,105,by decide⟩
+  have h5twelve := modeq_trans _ _ _ _ (modeq_pow _ _ _ 4 h5) h8
+  have h5large := modeq_pow _ _ _ 2 h5twelve
+  have he := modeq_trans _ _ _ _ h17large (modeq_symm _ _ _ h5large)
+  exact he.2
+
 end NumberTheory.PolynomialResidues
