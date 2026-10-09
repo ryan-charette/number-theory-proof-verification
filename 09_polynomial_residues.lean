@@ -192,4 +192,23 @@ theorem polynomial_congruence (cs : List Int) (a b m : Int)
     exact modeq_add c c (a*evaluate cs a) (b*evaluate cs b) m
       (modeq_refl c m h.1) (modeq_mult a b (evaluate cs a) (evaluate cs b) m h ih)
 
+
+theorem congruent_dvd_iff (a b m : Int) (h : a ≡ b [MOD m]) : m ∣ a ↔ m ∣ b := by
+  /-
+  Lemma: Congruent integers are either both divisible by their modulus
+  or neither is. Proof: Write a-b=m*t. If a=m*u, then b=m*(u-t).
+  Conversely, if b=m*u, then a=m*(u+t). These are explicit witnesses.
+  QED
+  -/
+  rcases h.2 with ⟨t,ht⟩
+  constructor
+  · rintro ⟨u,hu⟩
+    exists u-t
+    rw [Int.mul_sub]
+    omega
+  · rintro ⟨u,hu⟩
+    exists u+t
+    rw [Int.mul_add]
+    omega
+
 end NumberTheory.PolynomialResidues
