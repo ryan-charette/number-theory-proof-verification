@@ -381,4 +381,22 @@ theorem polynomial_abs_eventually_above (cs : List Int) (hdegree : 2 ≤ cs.leng
     rw [Int.natAbs_neg] at hb
     omega
 
+
+theorem progression_above (a d B : Int) (hd : 0 < d) :
+    ∃ x : Int, B < x ∧ x ≡ a [MOD d] := by
+  /-
+  Lemma: A congruence class with positive modulus has members above
+  any bound. Proof: Take t=|B-a|+1 and x=a+d*t. Since d≥1 and
+  t>0, d*t≥t>B-a, so x>B. Also x-a=d*t, as required. QED
+  -/
+  let t : Int := (B-a).natAbs+1
+  have hb : B-a ≤ (B-a).natAbs := Int.le_natAbs
+  have ht : 0 ≤ t := by dsimp [t]; omega
+  have hmul := Int.mul_le_mul_of_nonneg_right (by omega : 1 ≤ d) ht
+  rw [Int.one_mul] at hmul
+  refine ⟨a+d*t,?_,hd,t,?_⟩
+  · dsimp [t] at *
+    omega
+  · omega
+
 end NumberTheory.PolynomialResidues
