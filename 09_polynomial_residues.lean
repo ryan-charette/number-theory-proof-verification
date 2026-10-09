@@ -54,4 +54,20 @@ theorem modeq_refl (a n : Int) (hn : 0 < n) : a ≡ a [MOD n] := by
   · exists 0
     rw [Int.sub_self, Int.mul_zero]
 
+theorem modeq_symm (a b n : Int) (h : a ≡ b [MOD n]) : b ≡ a [MOD n] := by
+  /-
+  Theorem: Reversing a congruence preserves it.
+  Proof: By the definition of congruence, n is positive and
+  a - b = n * k for some integer k. Then
+
+    b - a = -(a - b) = -(n * k) = n * (-k).
+
+  Use -k as the witness. QED
+  -/
+  rcases h with ⟨hn, k, hk⟩
+  constructor
+  · exact hn
+  · exists -k
+    rw [← Int.neg_sub a b, hk, Int.mul_neg]
+
 end NumberTheory.PolynomialResidues
