@@ -243,4 +243,42 @@ theorem three_dvd_iff_digit_sum (digits : List (Fin 10)) :
   exact congruent_dvd_iff _ _ 3
     (polynomial_congruence (digitCoefficients digits) 10 1 3 ⟨by decide,3,by decide⟩)
 
+
+def leading : List Int → Int
+  | [] => 0
+  | [a] => a
+  | _ :: b :: cs => leading (b :: cs)
+
+theorem positive_leading_lower_bound (cs : List Int) (hl : 0 < leading cs) :
+    ∃ K : Int, ∀ x : Int, K < x → 1 ≤ evaluate cs x := by
+  /-
+  Lemma: An integer polynomial with positive leading coefficient is
+  at least one for all sufficiently large integer inputs.
+  Proof: Induct on its coefficient list. A positive constant is at
+  least one. Otherwise write f(x)=c+x*g(x). The leading coefficient
+  of g is still positive, so g(x)≥1 beyond some bound by induction.
+  Choose x beyond that bound, zero, and 1-c. Then x*g(x)≥x and
+  f(x)≥c+x≥1. The empty list has leading coefficient zero and is
+  excluded. No limit or analytic growth result is used. QED
+  -/
+  induction cs with
+  | nil => simp [leading] at hl
+  | cons c cs ih =>
+    cases cs with
+    | nil =>
+      refine ⟨0,?_⟩
+      intro x _
+      simp only [leading] at hl
+      simp only [evaluate,Int.mul_zero,Int.add_zero]
+      omega
+    | cons d ds =>
+      rcases ih hl with ⟨K,hK⟩
+      refine ⟨max K (max 0 (1-c)),?_⟩
+      intro x hx
+      have htail := hK x (by omega)
+      have hmul := Int.mul_le_mul_of_nonneg_left htail (by omega : 0 ≤ x)
+      rw [Int.mul_one] at hmul
+      change 1 ≤ c+x*evaluate (d::ds) x
+      omega
+
 end NumberTheory.PolynomialResidues
