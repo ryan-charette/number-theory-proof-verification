@@ -352,4 +352,33 @@ theorem leading_negated (cs : List Int) :
     | nil => rfl
     | cons d ds => exact ih
 
+
+theorem polynomial_abs_eventually_above (cs : List Int) (hdegree : 2 ≤ cs.length)
+    (hl : leading cs ≠ 0) (M : Int) :
+    ∃ K : Int, ∀ x : Int, K < x → M < (evaluate cs x).natAbs := by
+  /-
+  Lemma: Absolute values of a nonconstant integer polynomial eventually
+  exceed every bound. Proof: If the leading coefficient is positive,
+  use positive growth and |f(x)|≥f(x). Otherwise negate all coefficients.
+  The new leading coefficient is positive and its value is -f(x).
+  Apply growth there and use |f(x)|≥-f(x). QED
+  -/
+  by_cases hp : 0 < leading cs
+  · rcases polynomial_eventually_above cs hdegree hp M with ⟨K,hK⟩
+    refine ⟨K,?_⟩
+    intro x hx
+    have h := hK x hx
+    have hb : evaluate cs x ≤ (evaluate cs x).natAbs := Int.le_natAbs
+    omega
+  · have hneg : 0 < leading (cs.map (fun a => -a)) := by rw [leading_negated]; omega
+    rcases polynomial_eventually_above (cs.map (fun a => -a))
+      (by simpa using hdegree) hneg M with ⟨K,hK⟩
+    refine ⟨K,?_⟩
+    intro x hx
+    have h := hK x hx
+    rw [evaluate_negated] at h
+    have hb : -evaluate cs x ≤ (-evaluate cs x).natAbs := Int.le_natAbs
+    rw [Int.natAbs_neg] at hb
+    omega
+
 end NumberTheory.PolynomialResidues
