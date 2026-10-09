@@ -794,4 +794,37 @@ theorem canonicalLabel_self (r n : Nat) (hr : r < n) :
     (by omega) (by omega) (by omega) hs.2
   omega
 
+
+theorem complete_residues_length (reps : List Int) (n : Nat) (hn : 0 < n)
+    (h : CompleteResidues reps n) : reps.length=n := by
+  /-
+  Theorem: Every complete residue system modulo n contains n elements.
+  Proof: Replace each representative by its canonical label. The labels
+  are distinct and belong to 0,...,n-1, so there are at most n.
+  Conversely, completeness represents every number in 0,...,n-1.
+  The representative of r must have label r, so all n labels occur.
+  The elementary bound for distinct lists gives the reverse inequality.
+  Mapping labels preserves length, and the two inequalities give n.
+  QED
+  -/
+  let labels := reps.map (fun a => canonicalLabel a n)
+  have hnd : labels.Nodup := labels_distinct reps n hn h.1
+  have hsub : ∀ r ∈ labels, r ∈ List.range n := by
+    intro r hr
+    rcases List.mem_map.mp hr with ⟨a,_,he⟩
+    apply List.mem_range.mpr
+    have hs := canonicalLabel_spec a n hn
+    omega
+  have hreverse : ∀ r ∈ List.range n, r ∈ labels := by
+    intro r hr
+    have hrn := List.mem_range.mp hr
+    rcases h.2 r with ⟨a,ha,hra⟩
+    have he := (canonicalLabel_eq_iff r a n hn).mpr hra
+    rw [canonicalLabel_self r n hrn] at he
+    exact List.mem_map.mpr ⟨a,ha,he.symm⟩
+  have hle := distinct_length_bound labels (List.range n) hnd hsub
+  have hge := distinct_length_bound (List.range n) labels (List.nodup_range n) hreverse
+  simp only [labels,List.length_map,List.length_range] at hle hge
+  omega
+
 end NumberTheory.PolynomialResidues
