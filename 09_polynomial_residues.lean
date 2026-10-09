@@ -420,4 +420,38 @@ theorem composite_of_divisor (n d : Nat) (hd : 1 < d) (hdn : d < n) (h : d ∣ n
   rw [Nat.one_mul,←hq] at hsmall
   exact ⟨d,q,hdn,hsmall,hq⟩
 
+
+theorem composite_polynomial_values (cs : List Int) (hdegree : 2 ≤ cs.length)
+    (hl : leading cs ≠ 0) (B : Int) :
+    ∃ x : Int, B < x ∧ Composite (evaluate cs x).natAbs := by
+  /-
+  Theorem: For every nonconstant integer polynomial and every input
+  bound B, some x>B has composite |f(x)|. Thus infinitely many integer
+  inputs give composite absolute values.
+  Proof: Growth of |f| gives an input a with d=|f(a)|>1. In the
+  congruence class a modulo d, polynomial congruence ensures that d
+  divides f(x), since it divides f(a). Choose x in this class beyond
+  B and beyond a threshold where |f(x)|>d. Then d is a divisor
+  strictly between one and |f(x)|, proving that |f(x)| is composite.
+  QED
+
+  Sign correction: The source statement allows negative leading
+  coefficients but defines composite only for natural numbers. For
+  example -x^2-1 is always negative. As approved, this theorem uses
+  |f(x)|, without restricting the sign of the leading coefficient.
+  -/
+  rcases polynomial_abs_eventually_above cs hdegree hl 1 with ⟨K,hK⟩
+  let a := K+1
+  let d := (evaluate cs a).natAbs
+  have hd : 1 < d := by have h := hK a (by dsimp [a]; omega); omega
+  rcases polynomial_abs_eventually_above cs hdegree hl d with ⟨L,hL⟩
+  rcases progression_above a d (max B L) (by omega) with ⟨x,hx,hcong⟩
+  have hbig := hL x (by omega)
+  have hf := polynomial_congruence cs x a d hcong
+  have hdiv : (d : Int) ∣ evaluate cs x :=
+    (congruent_dvd_iff _ _ _ hf).mpr Int.natAbs_dvd_self
+  have hnat := Int.natAbs_dvd_natAbs.mpr hdiv
+  rw [Int.natAbs_ofNat] at hnat
+  exact ⟨x,by omega,composite_of_divisor _ d hd (by omega) hnat⟩
+
 end NumberTheory.PolynomialResidues
