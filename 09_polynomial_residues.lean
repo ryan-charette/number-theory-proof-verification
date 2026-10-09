@@ -765,4 +765,19 @@ theorem complete_representative_unique (reps : List Int) (n : Nat)
   intro s hs has
   exact h.1.2 s hs r hr (modeq_trans s a r n (modeq_symm a s n has) har)
 
+
+theorem labels_distinct (reps : List Int) (n : Nat) (hn : 0 < n)
+    (h : Noncongruent reps n) : (reps.map (fun a => canonicalLabel a n)).Nodup := by
+  /-
+  Lemma: Replacing noncongruent representatives by their canonical
+  labels preserves distinctness. Proof: If two labels were equal,
+  the corresponding entries would be congruent. The hypothesis would
+  make those entries equal, contrary to their distinctness in the list.
+  QED
+  -/
+  apply List.pairwise_map.mpr
+  apply List.Pairwise.imp_of_mem ?_ h.1
+  intro a b ha hb hne he
+  exact hne (h.2 a ha b hb ((canonicalLabel_eq_iff a b n hn).mp he))
+
 end NumberTheory.PolynomialResidues
