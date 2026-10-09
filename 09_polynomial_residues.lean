@@ -399,4 +399,25 @@ theorem progression_above (a d B : Int) (hd : 0 < d) :
     omega
   · omega
 
+
+def Composite (n : Nat) : Prop := ∃ a b : Nat, a < n ∧ b < n ∧ n=a*b
+
+theorem composite_of_divisor (n d : Nat) (hd : 1 < d) (hdn : d < n) (h : d ∣ n) :
+    Composite n := by
+  /-
+  Lemma: A number with a divisor strictly between one and itself is
+  composite. Proof: Write n=d*q. The quotient q is positive and
+  cannot be one, since d<n. As d>1, q<d*q=n. Thus d and q are
+  both smaller factors of n, proving compositeness. QED
+  -/
+  rcases h with ⟨q,hq⟩
+  have hpos : 0 < q := by
+    by_cases hz : q=0
+    · simp [hz] at hq
+      omega
+    · omega
+  have hsmall := Nat.mul_lt_mul_of_pos_right hd hpos
+  rw [Nat.one_mul,←hq] at hsmall
+  exact ⟨d,q,hdn,hsmall,hq⟩
+
 end NumberTheory.PolynomialResidues
