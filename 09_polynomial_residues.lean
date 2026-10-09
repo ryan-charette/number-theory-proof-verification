@@ -643,4 +643,23 @@ theorem bounded_congruent_equal (r s m : Int) (hr : 0 ≤ r) (hrm : r < m)
   exact (division_unique r m 0 r q s h.1 (by simp) (by omega)
     hr hrm hs hsm).2
 
+
+theorem canonical_residue (a : Int) (n : Nat) (hn : 0 < n) :
+    ∃ r : Int, 0 ≤ r ∧ r < n ∧ a ≡ r [MOD (n : Int)] ∧
+      ∀ s : Int, 0 ≤ s → s < n → a ≡ s [MOD (n : Int)] → s=r := by
+  /-
+  Theorem: Every integer is congruent to exactly one integer among
+  zero through n-1, for positive n.
+  Proof: Division gives a=n*q+r with 0≤r<n, so a-r=n*q proves
+  congruence. If s is another such representative, reverse the
+  congruence a≡s and combine it with a≡r to get s≡r. Bounded
+  congruent representatives are equal. QED
+  -/
+  rcases integer_division_exists a n hn with ⟨q,r,he,hr,hrn⟩
+  have hcong : a ≡ r [MOD (n : Int)] := ⟨by omega,q,by omega⟩
+  refine ⟨r,hr,hrn,hcong,?_⟩
+  intro s hs hsn hsc
+  exact bounded_congruent_equal s r n hs hsn hr hrn
+    (modeq_trans s a r n (modeq_symm a s n hsc) hcong)
+
 end NumberTheory.PolynomialResidues
