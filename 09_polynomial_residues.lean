@@ -211,4 +211,23 @@ theorem congruent_dvd_iff (a b m : Int) (h : a ≡ b [MOD m]) : m ∣ a ↔ m �
     rw [Int.mul_add]
     omega
 
+
+def digitCoefficients (digits : List (Fin 10)) : List Int := digits.map (fun d => (d.val : Int))
+def decimalValue (digits : List (Fin 10)) : Int := evaluate (digitCoefficients digits) 10
+def digitSum (digits : List (Fin 10)) : Int := evaluate (digitCoefficients digits) 1
+
+theorem nine_dvd_iff_digit_sum (digits : List (Fin 10)) :
+    (9 : Int) ∣ decimalValue digits ↔ (9 : Int) ∣ digitSum digits := by
+  /-
+  Corollary: A decimal number is divisible by nine exactly when the
+  sum of its digits is. Proof: Regard its digits, units first, as
+  polynomial coefficients. Evaluation at ten gives the number;
+  evaluation at one gives the sum of its digits. Since 10-1=9,
+  the inputs are congruent modulo nine. Polynomial congruence makes
+  the two values congruent, so divisibility by nine is equivalent.
+  Leading zero digits and the empty representation are allowed. QED
+  -/
+  exact congruent_dvd_iff _ _ 9
+    (polynomial_congruence (digitCoefficients digits) 10 1 9 ⟨by decide,1,by decide⟩)
+
 end NumberTheory.PolynomialResidues
