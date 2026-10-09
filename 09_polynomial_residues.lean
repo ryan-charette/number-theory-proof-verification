@@ -780,4 +780,18 @@ theorem labels_distinct (reps : List Int) (n : Nat) (hn : 0 < n)
   intro a b ha hb hne he
   exact hne (h.2 a ha b hb ((canonicalLabel_eq_iff a b n hn).mp he))
 
+
+theorem canonicalLabel_self (r n : Nat) (hr : r < n) :
+    canonicalLabel (r : Int) n = r := by
+  /-
+  Lemma: A number from zero through n-1 is already its own canonical
+  representative. Proof: Its chosen label has the same congruence and
+  lies in the same interval. Bounded congruent representatives are
+  equal, proving the assertion. QED
+  -/
+  have hs := canonicalLabel_spec r n (by omega)
+  have he := bounded_congruent_equal r (canonicalLabel r n) n (by omega)
+    (by omega) (by omega) (by omega) hs.2
+  omega
+
 end NumberTheory.PolynomialResidues
