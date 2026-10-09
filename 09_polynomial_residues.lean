@@ -230,4 +230,17 @@ theorem nine_dvd_iff_digit_sum (digits : List (Fin 10)) :
   exact congruent_dvd_iff _ _ 9
     (polynomial_congruence (digitCoefficients digits) 10 1 9 ⟨by decide,1,by decide⟩)
 
+
+theorem three_dvd_iff_digit_sum (digits : List (Fin 10)) :
+    (3 : Int) ∣ decimalValue digits ↔ (3 : Int) ∣ digitSum digits := by
+  /-
+  Corollary: A decimal number is divisible by three exactly when its
+  digit sum is. Proof: The digit polynomial evaluated at ten gives
+  the number and at one gives the sum. The difference 10-1=3*3
+  makes these inputs congruent modulo three. Apply polynomial
+  congruence and the divisibility equivalence. QED
+  -/
+  exact congruent_dvd_iff _ _ 3
+    (polynomial_congruence (digitCoefficients digits) 10 1 3 ⟨by decide,3,by decide⟩)
+
 end NumberTheory.PolynomialResidues
