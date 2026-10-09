@@ -686,4 +686,28 @@ theorem canonicalLabel_spec (a : Int) (n : Nat) (hn : 0 < n) :
     exact h.2.2.1
 
 
+
+theorem canonicalLabel_eq_iff (a b : Int) (n : Nat) (hn : 0 < n) :
+    canonicalLabel a n = canonicalLabel b n ↔ a ≡ b [MOD (n : Int)] := by
+  /-
+  Lemma: Two inputs have the same canonical label exactly when they
+  are congruent. Proof: Equal labels give a common representative;
+  transitivity yields congruence of the inputs. Conversely, congruent
+  inputs have congruent labels by symmetry and transitivity. Both
+  labels lie between zero and n-1, so they are equal. QED
+  -/
+  have ha := canonicalLabel_spec a n hn
+  have hb := canonicalLabel_spec b n hn
+  constructor
+  · intro he
+    have hac := ha.2
+    rw [he] at hac
+    exact modeq_trans a (canonicalLabel b n) b n hac (modeq_symm b _ n hb.2)
+  · intro h
+    have hlabels := modeq_trans (canonicalLabel a n) a (canonicalLabel b n) n
+      (modeq_symm a _ n ha.2) (modeq_trans a b _ n h hb.2)
+    have he := bounded_congruent_equal (canonicalLabel a n) (canonicalLabel b n) n
+      (by omega) (by omega) (by omega) (by omega) hlabels
+    omega
+
 end NumberTheory.PolynomialResidues
