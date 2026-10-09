@@ -108,4 +108,27 @@ theorem modeq_add (a b c d n : Int)
     rw [heq]
     exact h
 
+theorem modeq_mult (a b c d n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : c ≡ d [MOD n]) : a * c ≡ b * d [MOD n] := by
+  /-
+  Theorem: Congruences can be multiplied.
+  Proof: We must show that n divides a * c - b * d. We can express
+  this difference in terms of a - b and c - d:
+
+    a * c - b * d = a * c - b * c + b * c - b * d
+                 = (a - b) * c + b * (c - d).
+
+  Since n divides a - b, it divides (a - b) * c. Similarly, since n
+  divides c - d, it divides b * (c - d). It therefore divides their
+  sum, which is a * c - b * d. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h₂ := dvd_mult_of_dvd_left n (a - b) c h₀.2
+    have h₃ := dvd_mult_of_dvd_left n (c - d) b h₁.2
+    have h := dvd_add n ((a - b) * c) ((c - d) * b) h₂ h₃
+    rw [Int.mul_comm (c - d) b, Int.sub_mul, Int.mul_sub,
+      ← Int.add_sub_assoc, Int.sub_add_cancel] at h
+    exact h
+
 end NumberTheory.PolynomialResidues
