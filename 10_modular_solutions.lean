@@ -390,4 +390,23 @@ theorem congruence_solvable_iff (a b n : Int) (hn : 0 < n) :
     rcases (linear_solvable_iff a n b).mpr hd with ⟨x,y,hy⟩
     exact ⟨x,(linear_congruence_iff_equation a b n x hn).mpr ⟨y,hy⟩⟩
 
+
+theorem modulus_step_data (a n : Int) (hn : 0 < n) :
+    0 < gcd a n ∧ 0 < n/gcd a n ∧ n=gcd a n*(n/gcd a n) := by
+  /-
+  Lemma: For positive n, its gcd d with a is positive, the quotient
+  s=n/d is positive, and n=d*s.
+  Proof: The inputs are not both zero, so d>0. Divisibility by the
+  gcd makes the quotient exact. If s≤0, multiplying by d>0 would
+  give n≤0, a contradiction. QED
+  -/
+  have hd := gcd_positive a n (Or.inr (by omega))
+  have he := (gcd_quotients a n).2
+  refine ⟨hd,?_,he⟩
+  by_cases hs : n/gcd a n ≤ 0
+  · have hm := Int.mul_nonpos_of_nonneg_of_nonpos (Int.le_of_lt hd) hs
+    rw [←he] at hm
+    omega
+  · omega
+
 end NumberTheory.ModularSolutions
