@@ -634,4 +634,47 @@ theorem canonical_solution_index (a b n r x : Int) (hn : 0 < n)
     exact canonical_progression_solution a b n r i hn hr hrs hsol
       (by omega) (by omega)
 
+
+theorem canonical_solution_count (a b n : Int) (hn : 0 < n)
+    (hsol : ∃ x : Int, Congruent (a*x) b n) :
+    ∃ solutions : List Int, solutions.Nodup ∧
+      solutions.length = (gcd a n).toNat ∧
+      ∀ x : Int, x ∈ solutions ↔ 0 ≤ x ∧ x < n ∧ Congruent (a*x) b n := by
+  /-
+  Theorem: A solvable linear congruence a*x congruent to b modulo n
+  has exactly d=gcd(a,n) solutions between zero and n-1.
+  Proof: Choose a solution r with 0≤r<s, where s=n/d. Make the
+  list r, r+s, ..., r+s*(d-1) by using the indices 0 through d-1.
+  The list has d entries. Distinct indices give distinct entries:
+  r+s*i=r+s*j implies s*i=s*j, and cancellation of positive s
+  gives i=j. The index characterization proves that an integer
+  occurs in this list exactly when it is a solution between zero
+  and n-1. Thus this list counts every such solution once. QED
+  -/
+  rcases small_solution_exists a b n hn hsol with ⟨r,hr,hrs,hrsol⟩
+  have hg := modulus_step_data a n hn
+  let solutions := (List.range (gcd a n).toNat).map
+    (fun i : Nat => r+(n/gcd a n)*(i : Int))
+  refine ⟨solutions,?_,?_,?_⟩
+  · change List.Pairwise (fun x y : Int => x ≠ y)
+      ((List.range (gcd a n).toNat).map (fun i : Nat => r+(n/gcd a n)*(i : Int)))
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp (l := List.range (gcd a n).toNat)
+      (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range _)
+    intro i j hij he
+    have hm : (n/gcd a n)*(i : Int)=(n/gcd a n)*(j : Int) := by omega
+    have heq := Int.eq_of_mul_eq_mul_left (a := n/gcd a n) (by omega) hm
+    exact hij (by omega)
+  · simp only [solutions,List.length_map,List.length_range]
+  · intro x
+    constructor
+    · intro hx
+      rcases List.mem_map.mp hx with ⟨i,hi,he⟩
+      exact (canonical_solution_index a b n r x hn hr hrs hrsol).mpr
+        ⟨i,List.mem_range.mp hi,he.symm⟩
+    · intro hx
+      rcases (canonical_solution_index a b n r x hn hr hrs hrsol).mp hx with
+        ⟨i,hi,he⟩
+      exact List.mem_map.mpr ⟨i,List.mem_range.mpr hi,he.symm⟩
+
 end NumberTheory.ModularSolutions
