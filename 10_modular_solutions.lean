@@ -460,4 +460,31 @@ theorem reduced_modulus_dvd_iff (a n z : Int) (hn : 0 < n) :
       _ = n*((a/gcd a n)*k) := by rw [Int.mul_assoc]
 
 
+
+theorem solution_difference_iff (a b n x₀ x : Int) (hn : 0 < n)
+    (h₀ : Congruent (a*x₀) b n) :
+    Congruent (a*x) b n ↔ n/gcd a n ∣ x-x₀ := by
+  /-
+  Theorem: Once x₀ is a solution, x is a solution exactly when
+  x-x₀ is divisible by n/gcd(a,n).
+  Proof: Subtract the equations a*x-b=n*q and a*x₀-b=n*q₀.
+  Their difference says n divides a*(x-x₀). The reduced-modulus
+  criterion converts this to divisibility of x-x₀. Conversely,
+  that criterion makes a*(x-x₀) a multiple of n; adding the equation
+  for x₀ gives an equation proving x is a solution. QED
+  -/
+  rcases h₀.2 with ⟨q₀,hq₀⟩
+  constructor
+  · rintro ⟨_,q,hq⟩
+    apply (reduced_modulus_dvd_iff a n (x-x₀) hn).mp
+    refine ⟨q-q₀,?_⟩
+    rw [Int.mul_sub,Int.mul_sub]
+    omega
+  · intro hd
+    rcases (reduced_modulus_dvd_iff a n (x-x₀) hn).mpr hd with ⟨q,hq⟩
+    rw [Int.mul_sub] at hq
+    refine ⟨hn,q+q₀,?_⟩
+    rw [Int.mul_add]
+    omega
+
 end NumberTheory.ModularSolutions
