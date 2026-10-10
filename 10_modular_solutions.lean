@@ -30,4 +30,12 @@ theorem dvd_refl (a : Int) : a ∣ a := by
   exists 1
   rw [Int.mul_one]
 
+theorem dvd_zero (a : Int) : a ∣ 0 := by
+  /-
+  Theorem: Every integer divides zero.
+  Proof: 0 = a * 0, so choose the integer 0. QED
+  -/
+  exists 0
+  rw [Int.mul_zero]
+
 end NumberTheory.ModularSolutions
