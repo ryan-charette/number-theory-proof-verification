@@ -565,4 +565,31 @@ theorem small_solution_exists (a b n : Int) (hn : 0 < n)
   rw [Int.mul_neg]
   omega
 
+
+theorem canonical_progression_solution (a b n r i : Int) (hn : 0 < n)
+    (hr : 0 ≤ r) (hrs : r < n/gcd a n) (hsol : Congruent (a*r) b n)
+    (hi : 0 ≤ i) (hid : i < gcd a n) :
+    0 ≤ r+(n/gcd a n)*i ∧ r+(n/gcd a n)*i < n ∧
+      Congruent (a*(r+(n/gcd a n)*i)) b n := by
+  /-
+  Lemma: Start with a solution r between zero and s-1, where
+  d=gcd(a,n) and s=n/d. For each integer i with 0≤i<d, r+s*i
+  is a solution between zero and n-1.
+  Proof: The term s*i is nonnegative. Also i+1≤d, so
+  s*i+s≤s*d=n. Since r<s, we have r+s*i<n. Its difference
+  from the known solution r is s*i; the difference criterion
+  proves that it is a solution. QED
+  -/
+  have hg := modulus_step_data a n hn
+  have hlo := Int.mul_nonneg (Int.le_of_lt hg.2.1) hi
+  have hhi := Int.mul_le_mul_of_nonneg_left (by omega : i+1 ≤ gcd a n)
+    (Int.le_of_lt hg.2.1)
+  have hsd : (n/gcd a n)*gcd a n=n := by
+    rw [Int.mul_comm]
+    exact hg.2.2.symm
+  rw [Int.mul_add,Int.mul_one,hsd] at hhi
+  refine ⟨by omega,by omega,?_⟩
+  apply (solution_difference_iff a b n r (r+(n/gcd a n)*i) hn hsol).mpr
+  exact ⟨i,by omega⟩
+
 end NumberTheory.ModularSolutions
