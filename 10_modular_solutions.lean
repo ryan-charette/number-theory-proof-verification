@@ -409,4 +409,19 @@ theorem modulus_step_data (a n : Int) (hn : 0 < n) :
     omega
   · omega
 
+
+theorem reduced_cross_product (a n : Int) :
+    a*(n/gcd a n)=n*(a/gcd a n) := by
+  /-
+  Lemma: Multiplying a by n/d equals multiplying n by a/d, where
+  d=gcd(a,n). Proof: Write a=d*A and n=d*N using exact division.
+  Both products are d*A*N, up to reordering the factors. QED
+  -/
+  have hf := gcd_quotients a n
+  calc
+    a*(n/gcd a n) = (gcd a n*(a/gcd a n))*(n/gcd a n) :=
+      congrArg (fun z => z*(n/gcd a n)) hf.1
+    _ = (gcd a n*(n/gcd a n))*(a/gcd a n) := by rw [Int.mul_right_comm]
+    _ = n*(a/gcd a n) := congrArg (fun z => z*(a/gcd a n)) hf.2.symm
+
 end NumberTheory.ModularSolutions
