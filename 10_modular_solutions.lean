@@ -370,4 +370,24 @@ theorem linear_congruence_iff_equation (a b n x : Int) (hn : 0 < n) :
     rw [Int.mul_neg]
     omega
 
+
+theorem congruence_solvable_iff (a b n : Int) (hn : 0 < n) :
+    (∃ x : Int, Congruent (a*x) b n) ↔ gcd a n ∣ b := by
+  /-
+  Theorem: The linear congruence a*x congruent to b modulo n has a
+  solution exactly when gcd(a,n) divides b.
+  Proof: A congruence solution extends to a solution of a*x+n*y=b.
+  The integer equation is solvable exactly when its gcd divides b,
+  as proved using Bezout coefficients. Conversely, any solution of
+  that equation gives a congruence solution by the preceding equivalence.
+  QED
+  -/
+  constructor
+  · rintro ⟨x,hx⟩
+    rcases (linear_congruence_iff_equation a b n x hn).mp hx with ⟨y,hy⟩
+    exact (linear_solvable_iff a n b).mp ⟨x,y,hy⟩
+  · intro hd
+    rcases (linear_solvable_iff a n b).mpr hd with ⟨x,y,hy⟩
+    exact ⟨x,(linear_congruence_iff_equation a b n x hn).mpr ⟨y,hy⟩⟩
+
 end NumberTheory.ModularSolutions
