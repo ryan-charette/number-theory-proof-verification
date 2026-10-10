@@ -592,4 +592,46 @@ theorem canonical_progression_solution (a b n r i : Int) (hn : 0 < n)
   apply (solution_difference_iff a b n r (r+(n/gcd a n)*i) hn hsol).mpr
   exact ⟨i,by omega⟩
 
+
+theorem canonical_solution_index (a b n r x : Int) (hn : 0 < n)
+    (hr : 0 ≤ r) (hrs : r < n/gcd a n) (hsol : Congruent (a*r) b n) :
+    (0 ≤ x ∧ x < n ∧ Congruent (a*x) b n) ↔
+      ∃ i : Nat, i < (gcd a n).toNat ∧ x=r+(n/gcd a n)*(i : Int) := by
+  /-
+  Lemma: With r and s as above, the solutions x between zero and
+  n-1 are precisely r+s*i for natural indices i<d.
+  Proof: Any solution is r+s*k for an integer k. If k<0, then
+  k≤-1 and s*k≤-s, giving x≤r-s<0. If k≥d, then s*k≥s*d=n,
+  giving x≥n because r≥0. Thus 0≤k<d, so k is a natural index
+  in the stated range. Conversely, each such index gives a
+  canonical solution by the bounds and congruence just proved. QED
+  -/
+  have hg := modulus_step_data a n hn
+  have hdcast := Int.toNat_of_nonneg (Int.le_of_lt hg.1)
+  have hsd : (n/gcd a n)*gcd a n=n := by
+    rw [Int.mul_comm]
+    exact hg.2.2.symm
+  constructor
+  · rintro ⟨hx,hxn,hxs⟩
+    rcases (all_integer_solutions a b n r x hn hsol).mp hxs with ⟨k,hk⟩
+    have hk0 : 0 ≤ k := by
+      by_cases h : k < 0
+      · have hm := Int.mul_le_mul_of_nonneg_left (by omega : k ≤ -1)
+          (Int.le_of_lt hg.2.1)
+        simp only [Int.mul_neg,Int.mul_one] at hm
+        omega
+      · omega
+    have hkd : k < gcd a n := by
+      by_cases h : gcd a n ≤ k
+      · have hm := Int.mul_le_mul_of_nonneg_left h (Int.le_of_lt hg.2.1)
+        rw [hsd] at hm
+        omega
+      · omega
+    have hkcast := Int.toNat_of_nonneg hk0
+    exact ⟨k.toNat,by omega,by rw [hkcast]; exact hk⟩
+  · rintro ⟨i,hi,he⟩
+    rw [he]
+    exact canonical_progression_solution a b n r i hn hr hrs hsol
+      (by omega) (by omega)
+
 end NumberTheory.ModularSolutions
