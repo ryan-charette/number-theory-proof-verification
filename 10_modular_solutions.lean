@@ -304,4 +304,25 @@ theorem gcd_quotients (a b : Int) :
   exact ⟨(Int.mul_ediv_cancel' (gcd_data a b).2.1).symm,
     (Int.mul_ediv_cancel' (gcd_data a b).2.2.1).symm⟩
 
+theorem linear_solvable_iff (a b c : Int) :
+    (∃ x y : Int, a * x + b * y = c) ↔ gcd a b ∣ c := by
+  /-
+  Theorem: An integer linear equation a*x+b*y=c is solvable exactly
+  when the gcd divides c. Proof: A solution expresses c as a linear
+  combination, so the gcd divides it. Conversely, write c=gcd(a,b)*t
+  and choose a*u+b*v=gcd(a,b). Multiplying this identity by t gives
+  the solution x=u*t and y=v*t. QED
+  -/
+  constructor
+  · intro h
+    rcases h with ⟨x, y, hxy⟩
+    have hd := dvd_linear (gcd a b) a b x y (gcd_data a b).2.1 (gcd_data a b).2.2.1
+    rw [hxy] at hd
+    exact hd
+  · intro h
+    rcases h with ⟨t, ht⟩
+    rcases bezout a b with ⟨u, v, huv⟩
+    exists u * t, v * t
+    rw [← Int.mul_assoc, ← Int.mul_assoc, ← Int.add_mul, huv, ← ht]
+
 end NumberTheory.ModularSolutions
