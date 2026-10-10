@@ -283,4 +283,13 @@ theorem gcd_greatest (a b : Int) (h : a ≠ 0 ∨ b ≠ 0)
   rw [hxy] at hd
   exact divisor_le_positive e (gcd a b) (gcd_positive a b h) hd
 
+theorem bezout (a b : Int) : ∃ x y : Int, a * x + b * y = gcd a b := by
+  /-
+  Theorem: The gcd of two integers is an integer linear combination.
+  Proof: These are the coefficients constructed by the Euclidean
+  procedure and back-substitution above. The construction also covers
+  the harmless extra case a = b = 0. QED
+  -/
+  exact (gcd_data a b).2.2.2
+
 end NumberTheory.ModularSolutions
