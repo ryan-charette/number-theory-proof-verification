@@ -349,4 +349,25 @@ theorem integer_division_exists (a : Int) (n : Nat) (hn : 0 < n) :
   rw [Int.mul_sub]
   omega
 
+
+def Congruent (a b n : Int) : Prop := 0 < n ∧ n ∣ a-b
+
+theorem linear_congruence_iff_equation (a b n x : Int) (hn : 0 < n) :
+    Congruent (a*x) b n ↔ ∃ y : Int, a*x+n*y=b := by
+  /-
+  Theorem: A solution x of a*x congruent to b modulo n is exactly
+  an x that can be extended to a solution of a*x+n*y=b.
+  Proof: A congruence gives a*x-b=n*q, so choose y=-q. Conversely,
+  a*x+n*y=b gives a*x-b=n*(-y), the divisibility witness. QED
+  -/
+  constructor
+  · rintro ⟨_,q,hq⟩
+    exists -q
+    rw [Int.mul_neg]
+    omega
+  · rintro ⟨y,hy⟩
+    refine ⟨hn,-y,?_⟩
+    rw [Int.mul_neg]
+    omega
+
 end NumberTheory.ModularSolutions
