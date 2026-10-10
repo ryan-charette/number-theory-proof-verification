@@ -505,4 +505,42 @@ theorem all_integer_solutions (a b n x₀ x : Int) (hn : 0 < n)
   · rintro ⟨k,hk⟩
     exact ⟨k,by omega⟩
 
+
+theorem finite_solution_classes (a b n x₀ x : Int) (hn : 0 < n)
+    (h₀ : Congruent (a*x₀) b n) :
+    Congruent (a*x) b n ↔ ∃ t : Int, 0 ≤ t ∧ t < gcd a n ∧
+      Congruent x (x₀+(n/gcd a n)*t) n := by
+  /-
+  Theorem: If x₀ is one solution and d=gcd(a,n), every solution is
+  congruent modulo n to x₀+(n/d)*t for some t with 0≤t<d.
+  Conversely, every integer congruent to one of these is a solution.
+  Proof: Put s=n/d. Every solution has the form x=x₀+s*k. Divide
+  k by d to write k=d*q+t with 0≤t<d. Since s*d=n, substitution
+  gives x=x₀+s*t+n*q, which is the desired congruence. Conversely,
+  if x-(x₀+s*t)=n*q, then x-x₀=s*(d*q+t). The difference criterion
+  therefore proves that x is a solution. QED
+  -/
+  have hg := modulus_step_data a n hn
+  have hdcast := Int.toNat_of_nonneg (Int.le_of_lt hg.1)
+  have hsd : (n/gcd a n)*gcd a n=n := by
+    rw [Int.mul_comm]
+    exact hg.2.2.symm
+  constructor
+  · intro hx
+    rcases (all_integer_solutions a b n x₀ x hn h₀).mp hx with ⟨k,hk⟩
+    rcases integer_division_exists k (gcd a n).toNat (by omega) with
+      ⟨q,t,he,ht,htd⟩
+    rw [hdcast] at he htd
+    have hm : (n/gcd a n)*k=n*q+(n/gcd a n)*t := by
+      calc
+        (n/gcd a n)*k = (n/gcd a n)*(gcd a n*q+t) :=
+          congrArg (fun z => (n/gcd a n)*z) he
+        _ = n*q+(n/gcd a n)*t := by rw [Int.mul_add,←Int.mul_assoc,hsd]
+    exact ⟨t,ht,htd,hn,q,by omega⟩
+  · rintro ⟨t,_,_,_,q,hq⟩
+    apply (solution_difference_iff a b n x₀ x hn h₀).mpr
+    refine ⟨gcd a n*q+t,?_⟩
+    rw [Int.mul_add,←Int.mul_assoc,hsd]
+    omega
+
 end NumberTheory.ModularSolutions
