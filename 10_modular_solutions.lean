@@ -235,4 +235,19 @@ theorem gcd_data (a b : Int) :
     omega
   · exact Classical.choose_spec (euclid_integer a b)
 
+theorem gcd_positive (a b : Int) (h : a ≠ 0 ∨ b ≠ 0) : 0 < gcd a b := by
+  /-
+  Theorem: The gcd is positive when the inputs are not both zero.
+  Proof: It is nonnegative. If it were zero, divisibility of a and b
+  would express both as zero times an integer, forcing a = b = 0.
+  This contradicts the hypothesis. QED
+  -/
+  rcases gcd_data a b with ⟨hn, ⟨u, hu⟩, ⟨v, hv⟩, hxy⟩
+  by_cases hz : gcd a b = 0
+  · rw [hz, Int.zero_mul] at hu hv
+    rcases h with ha | hb
+    · exact False.elim (ha hu)
+    · exact False.elim (hb hv)
+  · omega
+
 end NumberTheory.ModularSolutions
