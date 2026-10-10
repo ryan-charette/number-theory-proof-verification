@@ -424,4 +424,40 @@ theorem reduced_cross_product (a n : Int) :
     _ = (gcd a n*(n/gcd a n))*(a/gcd a n) := by rw [Int.mul_right_comm]
     _ = n*(a/gcd a n) := congrArg (fun z => z*(a/gcd a n)) hf.2.symm
 
+
+theorem reduced_modulus_dvd_iff (a n z : Int) (hn : 0 < n) :
+    n ∣ a*z ↔ n/gcd a n ∣ z := by
+  /-
+  Lemma: n divides a*z exactly when n/d divides z, where d=gcd(a,n).
+  Proof: Choose a*u+n*v=d. If a*z=n*q, multiplying the Bezout
+  equation by z gives d*z=n*(q*u+v*z). Substituting n=d*(n/d)
+  and cancelling positive d gives z=(n/d)*(q*u+v*z).
+  Conversely, if z=(n/d)*k, the cross-product identity gives
+  a*z=n*((a/d)*k), an explicit quotient. QED
+  -/
+  have hg := modulus_step_data a n hn
+  constructor
+  · rintro ⟨q,hq⟩
+    rcases bezout a n with ⟨u,v,hu⟩
+    exists q*u+v*z
+    apply Int.eq_of_mul_eq_mul_left (a := gcd a n) (by omega)
+    calc
+      gcd a n*z = (a*u+n*v)*z := congrArg (fun t => t*z) hu.symm
+      _ = (a*z)*u+n*(v*z) := by
+        simp only [Int.add_mul,Int.mul_add,Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+      _ = n*(q*u+v*z) := by rw [hq,Int.mul_add,Int.mul_assoc]
+      _ = gcd a n*((n/gcd a n)*(q*u+v*z)) := by
+        calc
+          n*(q*u+v*z) = (gcd a n*(n/gcd a n))*(q*u+v*z) :=
+            congrArg (fun t => t*(q*u+v*z)) hg.2.2
+          _ = _ := by rw [Int.mul_assoc]
+  · rintro ⟨k,hk⟩
+    exists (a/gcd a n)*k
+    calc
+      a*z = a*((n/gcd a n)*k) := congrArg (fun t => a*t) hk
+      _ = (a*(n/gcd a n))*k := by rw [Int.mul_assoc]
+      _ = (n*(a/gcd a n))*k := congrArg (fun t => t*k) (reduced_cross_product a n)
+      _ = n*((a/gcd a n)*k) := by rw [Int.mul_assoc]
+
+
 end NumberTheory.ModularSolutions
