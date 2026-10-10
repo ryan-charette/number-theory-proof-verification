@@ -292,4 +292,16 @@ theorem bezout (a b : Int) : ∃ x y : Int, a * x + b * y = gcd a b := by
   -/
   exact (gcd_data a b).2.2.2
 
+theorem gcd_quotients (a b : Int) :
+    a = gcd a b * (a / gcd a b) ∧ b = gcd a b * (b / gcd a b) := by
+  /-
+  Theorem: Dividing either input by its gcd gives an exact integer factor.
+  Proof: The gcd divides both numbers. Exact division of an integer
+  multiple recovers its factor, so multiplication by the gcd recovers
+  the original number. Only this basic exact-division identity is used.
+  QED
+  -/
+  exact ⟨(Int.mul_ediv_cancel' (gcd_data a b).2.1).symm,
+    (Int.mul_ediv_cancel' (gcd_data a b).2.2.1).symm⟩
+
 end NumberTheory.ModularSolutions
