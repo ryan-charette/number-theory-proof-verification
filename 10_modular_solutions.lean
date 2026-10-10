@@ -543,4 +543,26 @@ theorem finite_solution_classes (a b n x₀ x : Int) (hn : 0 < n)
     rw [Int.mul_add,←Int.mul_assoc,hsd]
     omega
 
+
+theorem small_solution_exists (a b n : Int) (hn : 0 < n)
+    (hsol : ∃ x : Int, Congruent (a*x) b n) :
+    ∃ r : Int, 0 ≤ r ∧ r < n/gcd a n ∧ Congruent (a*r) b n := by
+  /-
+  Lemma: Whenever there is a solution, there is one between zero
+  and n/d-1, where d=gcd(a,n).
+  Proof: Choose a solution x and divide it by the positive integer
+  s=n/d. Write x=s*q+r with 0≤r<s. Then r-x=s*(-q), so the
+  difference criterion shows that r is also a solution. QED
+  -/
+  rcases hsol with ⟨x,hx⟩
+  have hg := modulus_step_data a n hn
+  have hscast := Int.toNat_of_nonneg (Int.le_of_lt hg.2.1)
+  rcases integer_division_exists x (n/gcd a n).toNat (by omega) with
+    ⟨q,r,he,hr,hrs⟩
+  rw [hscast] at he hrs
+  refine ⟨r,hr,hrs,(solution_difference_iff a b n x r hn hx).mpr ?_⟩
+  refine ⟨-q,?_⟩
+  rw [Int.mul_neg]
+  omega
+
 end NumberTheory.ModularSolutions
