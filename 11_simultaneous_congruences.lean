@@ -529,4 +529,70 @@ theorem bezout_modulus_product (n : Int) (system : List (Int × Int))
     exact bezout_product n entry.2 (modulusProduct rest) hfirst
       (ih (fun e he => hcop e (List.mem_cons_of_mem _ he)))
 
+
+def Satisfies (x : Int) (system : List (Int × Int)) : Prop :=
+  ∀ entry ∈ system, Congruent x entry.1 entry.2
+
+theorem finite_congruences (system : List (Int × Int))
+    (hpos : ∀ entry ∈ system, 0 < entry.2)
+    (hcop : system.Pairwise (fun e f => gcd e.2 f.2=1)) :
+    ∃ r : Int, Satisfies r system ∧ ∀ x : Int,
+      Satisfies x system ↔ Congruent x r (modulusProduct system) := by
+  /-
+  Theorem: A finite system with positive, pairwise relatively prime
+  moduli has a solution, and all its solutions form exactly one
+  congruence class modulo the product of its moduli.
+  Proof: Induct on the number of congruences. The empty system
+  accepts every integer, exactly the class of zero modulo one.
+  For the induction step, the remaining congruences are equivalent
+  to a single congruence modulo their product by the induction
+  hypothesis. The first modulus is relatively prime to every
+  remaining modulus, so the product Bezout lemma shows that it
+  is relatively prime to their product too. Apply the two-modulus
+  theorem to the first congruence and the combined remaining one.
+  This gives precisely one class modulo the full product. Its
+  representative satisfies the system, since its difference from
+  itself is zero. Thus both existence and uniqueness follow. QED
+
+  A list entry is (remainder, modulus). Pairwise compares distinct
+  positions in this list. Including the empty list extends the
+  statement harmlessly, using the empty product one.
+  -/
+  induction system with
+  | nil =>
+    refine ⟨0,?_,?_⟩
+    · intro e he; cases he
+    · intro x
+      constructor
+      · intro _
+        exact ⟨by decide,x,by simp [modulusProduct]⟩
+      · intro _ e he; cases he
+  | cons entry rest ih =>
+    have hp := List.pairwise_cons.mp hcop
+    have hrest : ∀ e ∈ rest, 0 < e.2 :=
+      fun e he => hpos e (List.mem_cons_of_mem _ he)
+    rcases ih hrest hp.2 with ⟨r₀,_,hequiv⟩
+    have hn := hpos entry (List.mem_cons_self _ _)
+    have hprod := modulus_product_positive rest hrest
+    have hrel := gcd_one_of_bezout entry.2 (modulusProduct rest) hn
+      (bezout_modulus_product entry.2 rest hp.1)
+    rcases two_coprime_congruences entry.1 r₀ entry.2
+      (modulusProduct rest) hn hprod hrel with ⟨r,hr⟩
+    have hall : ∀ x : Int, Satisfies x (entry::rest) ↔
+        Congruent x r (modulusProduct (entry::rest)) := by
+      intro x
+      constructor
+      · intro hx
+        apply (hr x).mp
+        exact ⟨hx entry (List.mem_cons_self _ _),
+          (hequiv x).mp (fun e he => hx e (List.mem_cons_of_mem _ he))⟩
+      · intro hx
+        rcases (hr x).mpr hx with ⟨hfirst,htail⟩
+        intro e he
+        rcases List.mem_cons.mp he with he | he
+        · subst e; exact hfirst
+        · exact (hequiv x).mpr htail e he
+    refine ⟨r,(hall r).mpr ?_,hall⟩
+    exact ⟨Int.mul_pos hn hprod,0,by simp⟩
+
 end NumberTheory.SimultaneousCongruences
