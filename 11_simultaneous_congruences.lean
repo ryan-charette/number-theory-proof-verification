@@ -365,4 +365,23 @@ theorem two_congruences_solvable (a b n m : Int) (hn : 0 < n) (hm : 0 < m) :
     · rw [Int.mul_neg]; omega
     · omega
 
+
+theorem congruence_from_solution (x a r n : Int) (hr : Congruent r a n) :
+    Congruent x a n ↔ n ∣ x-r := by
+  /-
+  Lemma: If r has remainder a modulo n, then x has that same
+  remainder exactly when n divides x-r.
+  Proof: Subtract the multiple equations for x-a and r-a to
+  obtain one for x-r. Conversely, add an equation for x-r to
+  the one for r-a to recover the equation for x-a. QED
+  -/
+  rcases hr with ⟨hn,q,hq⟩
+  constructor
+  · rintro ⟨_,p,hp⟩
+    refine ⟨p-q,?_⟩
+    rw [Int.mul_sub]; omega
+  · rintro ⟨p,hp⟩
+    refine ⟨hn,p+q,?_⟩
+    rw [Int.mul_add]; omega
+
 end NumberTheory.SimultaneousCongruences
