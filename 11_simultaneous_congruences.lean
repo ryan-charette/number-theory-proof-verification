@@ -469,4 +469,21 @@ theorem bezout_product (a b c : Int)
 
 
 
+
+theorem gcd_one_of_bezout (a b : Int) (ha : 0 < a)
+    (h : ∃ u v : Int, a*u+b*v=1) : gcd a b=1 := by
+  /-
+  Lemma: If a>0 and a*u+b*v=1, then gcd(a,b)=1.
+  Proof: The gcd divides both inputs and hence their linear
+  combination one. A divisor of one is at most one. The gcd is
+  positive because a is nonzero, so it must equal one. QED
+  -/
+  rcases h with ⟨u,v,he⟩
+  have hd := dvd_linear (gcd a b) a b u v
+    (gcd_data a b).2.1 (gcd_data a b).2.2.1
+  rw [he] at hd
+  have hle := divisor_le_positive (gcd a b) 1 (by decide) hd
+  have hpos := gcd_positive a b (Or.inl (by omega))
+  omega
+
 end NumberTheory.SimultaneousCongruences
