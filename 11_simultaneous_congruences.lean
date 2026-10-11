@@ -417,4 +417,33 @@ theorem product_divides (n m z : Int)
       rw [hk]
       simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
 
+
+theorem two_coprime_congruences (a b n m : Int) (hn : 0 < n) (hm : 0 < m)
+    (hcop : gcd n m=1) :
+    ∃ r : Int, ∀ x : Int,
+      (Congruent x a n ∧ Congruent x b m) ↔ Congruent x r (n*m) := by
+  /-
+  Theorem: For relatively prime positive moduli, two congruences
+  specify exactly one congruence class modulo their product.
+  Proof: Their gcd is one, which divides a-b, so choose a common
+  solution r. An integer x solves both congruences exactly when
+  both moduli divide x-r. Bezout coefficients for their gcd give
+  a linear combination equal to one. The product-divisibility
+  lemma therefore makes this equivalent to n*m dividing x-r.
+  This also proves uniqueness modulo n*m. QED
+  -/
+  have hd : gcd n m ∣ a-b := by
+    rw [hcop]; exact ⟨a-b,by rw [Int.one_mul]⟩
+  rcases (two_congruences_solvable a b n m hn hm).mpr hd with ⟨r,hrn,hrm⟩
+  have hb := bezout n m
+  rw [hcop] at hb
+  refine ⟨r,?_⟩
+  intro x
+  rw [congruence_from_solution x a r n hrn,congruence_from_solution x b r m hrm]
+  constructor
+  · intro h
+    exact ⟨Int.mul_pos hn hm,(product_divides n m (x-r) hb).mp h⟩
+  · intro h
+    exact (product_divides n m (x-r) hb).mpr h.2
+
 end NumberTheory.SimultaneousCongruences
