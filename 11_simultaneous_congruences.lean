@@ -340,4 +340,29 @@ theorem linear_solvable_iff (a b c : Int) :
     rw [← Int.mul_assoc, ← Int.mul_assoc, ← Int.add_mul, huv, ← ht]
 
 
+
+def Congruent (a b n : Int) : Prop := 0 < n ∧ n ∣ a-b
+
+theorem two_congruences_solvable (a b n m : Int) (hn : 0 < n) (hm : 0 < m) :
+    (∃ x : Int, Congruent x a n ∧ Congruent x b m) ↔ gcd n m ∣ a-b := by
+  /-
+  Theorem: Two prescribed remainders a modulo n and b modulo m
+  can occur together exactly when gcd(n,m) divides a-b.
+  Proof: A common solution gives x-a=n*u and x-b=m*v, hence
+  a-b=n*(-u)+m*v. The integer-equation criterion gives necessity.
+  Conversely, that criterion supplies n*u+m*v=a-b. Set x=a-n*u.
+  Then x-a=n*(-u) and x-b=m*v, proving both congruences. QED
+  -/
+  constructor
+  · rintro ⟨x,⟨_,u,hu⟩,⟨_,v,hv⟩⟩
+    apply (linear_solvable_iff n m (a-b)).mp
+    refine ⟨-u,v,?_⟩
+    rw [Int.mul_neg]
+    omega
+  · intro hd
+    rcases (linear_solvable_iff n m (a-b)).mpr hd with ⟨u,v,he⟩
+    refine ⟨a-n*u,⟨hn,-u,?_⟩,⟨hm,v,?_⟩⟩
+    · rw [Int.mul_neg]; omega
+    · omega
+
 end NumberTheory.SimultaneousCongruences
