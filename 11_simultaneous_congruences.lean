@@ -507,4 +507,26 @@ theorem modulus_product_positive (system : List (Int × Int))
     exact Int.mul_pos (hpos entry (List.mem_cons_self _ _))
       (ih (fun e he => hpos e (List.mem_cons_of_mem _ he)))
 
+
+theorem bezout_modulus_product (n : Int) (system : List (Int × Int))
+    (hcop : ∀ entry ∈ system, gcd n entry.2=1) :
+    ∃ u v : Int, n*u+modulusProduct system*v=1 := by
+  /-
+  Lemma: If n is relatively prime to every modulus in a finite
+  list, n and their product have a linear combination equal to one.
+  Proof: Induct on the list. For the empty product one, use
+  coefficients zero and one. For a nonempty list, Bezout supplies
+  coefficients for n and the first modulus. The induction hypothesis
+  supplies coefficients for n and the remaining product. Combining
+  these two identities by the product lemma completes the step.
+  QED
+  -/
+  induction system with
+  | nil => exact ⟨0,1,by simp [modulusProduct]⟩
+  | cons entry rest ih =>
+    have hfirst := bezout n entry.2
+    rw [hcop entry (List.mem_cons_self _ _)] at hfirst
+    exact bezout_product n entry.2 (modulusProduct rest) hfirst
+      (ih (fun e he => hcop e (List.mem_cons_of_mem _ he)))
+
 end NumberTheory.SimultaneousCongruences
