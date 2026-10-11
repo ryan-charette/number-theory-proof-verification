@@ -486,4 +486,25 @@ theorem gcd_one_of_bezout (a b : Int) (ha : 0 < a)
   have hpos := gcd_positive a b (Or.inl (by omega))
   omega
 
+
+/- Each entry stores a prescribed remainder and its modulus. -/
+def modulusProduct : List (Int × Int) → Int
+  | [] => 1
+  | entry :: rest => entry.2 * modulusProduct rest
+
+theorem modulus_product_positive (system : List (Int × Int))
+    (hpos : ∀ entry ∈ system, 0 < entry.2) : 0 < modulusProduct system := by
+  /-
+  Lemma: A finite product of positive moduli is positive.
+  Proof: Induct on the list of congruences. The empty product is
+  one. For a nonempty list, its first modulus and the product of
+  the remaining moduli are positive, so their product is positive.
+  QED
+  -/
+  induction system with
+  | nil => exact (by decide : (0 : Int) < 1)
+  | cons entry rest ih =>
+    exact Int.mul_pos (hpos entry (List.mem_cons_self _ _))
+      (ih (fun e he => hpos e (List.mem_cons_of_mem _ he)))
+
 end NumberTheory.SimultaneousCongruences
