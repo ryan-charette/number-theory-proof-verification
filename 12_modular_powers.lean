@@ -744,4 +744,27 @@ theorem power_add (a : Int) (i j : Nat) : a^(i+j)=a^i*a^j := by
   | succ j ih =>
     rw [Nat.add_succ,Int.pow_succ,ih,Int.pow_succ,Int.mul_assoc]
 
+theorem positive_power_one (a : Int) (n : Nat) (hn : 0 < n)
+    (hcop : gcd a n=1) : ∃ k : Nat, 0 < k ∧ Congruent (a^k) 1 n := by
+  /-
+  Theorem: A number relatively prime to a positive modulus has
+  a positive power congruent to one.
+  Proof: Choose i<j with a^i congruent to a^j. Reverse this
+  congruence and factor a^j=a^(j-i)*a^i. The power a^i is still
+  relatively prime to n, so it can be cancelled. This leaves
+  a^(j-i) congruent to one, and j-i is positive. QED
+  -/
+  rcases repeated_powers a n hn with ⟨i,j,_,hij,hc⟩
+  have he : a^j=a^(j-i)*a^i := by
+    rw [←power_add]
+    congr 1
+    omega
+  have hrev := modeq_symm _ _ n hc
+  rw [he] at hrev
+  have hcancel : Congruent (a^(j-i)*a^i) (1*a^i) n := by simpa using hrev
+  exact ⟨j-i,by omega,cancel_coprime (a^(j-i)) 1 (a^i) n
+    (coprime_power a n (by omega) hcop i) hcancel⟩
+
+
+
 end NumberTheory.ModularPowers
