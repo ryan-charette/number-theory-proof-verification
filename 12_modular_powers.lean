@@ -767,4 +767,36 @@ theorem positive_power_one (a : Int) (n : Nat) (hn : 0 < n)
 
 
 
+/- Order is the least positive exponent returning to one. Outside
+   the positive, coprime case we use zero solely to make it total. -/
+noncomputable def order (a : Int) (n : Nat) : Nat :=
+  if h : 0 < n ∧ gcd a n=1 then
+    Classical.choose (least_natural (fun k => 0 < k ∧ Congruent (a^k) 1 n)
+      (positive_power_one a n h.1 h.2))
+  else 0
+
+theorem order_spec (a : Int) (n : Nat) (hn : 0 < n) (hcop : gcd a n=1) :
+    0 < order a n ∧ Congruent (a^(order a n)) 1 n ∧
+      ∀ k : Nat, 0 < k → Congruent (a^k) 1 n → order a n ≤ k := by
+  /-
+  Theorem: The order is positive, its power is congruent to one,
+  and it is no larger than any other positive exponent with that
+  property.
+  Proof: The positive-power theorem makes the collection of such
+  exponents nonempty. Well-ordering supplies a least member. The
+  definition chooses that member, so it belongs to the collection
+  and is at most every other member. QED
+
+  Positivity is explicit because Lean's natural numbers include
+  zero. No claim about the default value outside these hypotheses
+  is needed to define order for the textbook's coprime inputs.
+  -/
+  have hs := Classical.choose_spec
+    (least_natural (fun k => 0 < k ∧ Congruent (a^k) 1 n)
+      (positive_power_one a n hn hcop))
+  unfold order
+  rw [dif_pos ⟨hn,hcop⟩]
+  exact ⟨hs.1.1,hs.1.2,fun k hk hc => hs.2 k ⟨hk,hc⟩⟩
+
+
 end NumberTheory.ModularPowers
