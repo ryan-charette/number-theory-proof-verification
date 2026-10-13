@@ -1260,4 +1260,23 @@ theorem nonzero_labels_perm (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) 
   omega
 
 
+
+def intProduct : List Int → Int
+  | [] => 1
+  | a::xs => a*intProduct xs
+
+theorem product_perm (xs ys : List Int) (h : xs.Perm ys) : intProduct xs=intProduct ys := by
+  /-
+  Lemma: Rearranging a finite list preserves its product.
+  Proof: The elementary rearrangement steps are keeping a common
+  head, swapping adjacent entries, and composing rearrangements.
+  Induction on these steps uses multiplication's associativity and
+  commutativity for a swap, and equality for the other steps. QED
+  -/
+  induction h with
+  | nil => rfl
+  | cons a h ih => simp only [intProduct,ih]
+  | swap a b xs => simp only [intProduct,Int.mul_left_comm]
+  | trans h₁ h₂ ih₁ ih₂ => exact ih₁.trans ih₂
+
 end NumberTheory.PowerCycles
