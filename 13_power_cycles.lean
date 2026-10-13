@@ -1383,4 +1383,37 @@ theorem fermat_coprime (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
       exact small_prime_coprime p i hp hib.1 hib.2)
   exact cancel_coprime (a^(p-1)) 1 _ p hprod (by simpa using h)
 
+
+theorem fermat_forms_equivalent (p : Nat) (hp : Prime p) :
+    (∀ a : Int, gcd a p=1 → Congruent (a^(p-1)) 1 p) ↔
+      (∀ a : Int, Congruent (a^p) a p) := by
+  /-
+  Theorem: The coprime and unrestricted forms of Fermat's theorem
+  imply each other. Proof: From the coprime form, multiply by a
+  when p does not divide a. If p divides a, both a and a^p are
+  congruent to zero; factor a^p=a^(p-1)*a to see this directly.
+  Conversely, for coprime a, factor a^p and cancel a from the
+  unrestricted congruence a^p congruent to a. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have he : p-1+1=p := by omega
+  have hpow : ∀ a : Int, a^p=a^(p-1)*a := by
+    intro a
+    rw [←Int.pow_succ,he]
+  constructor
+  · intro h a
+    by_cases ha : (p : Int) ∣ a
+    · have hz : Congruent a 0 p := ⟨by omega,by simpa using ha⟩
+      have hm := modeq_mult (a^(p-1)) (a^(p-1)) a 0 p
+        (modeq_refl _ _ (by omega)) hz
+      rw [←hpow,Int.mul_zero] at hm
+      exact modeq_trans _ _ _ p hm (modeq_symm _ _ p hz)
+    · have hm := modeq_mult _ 1 a a p (h a (prime_coprime a p hp ha))
+        (modeq_refl _ _ (by omega))
+      simpa only [←hpow,Int.one_mul] using hm
+  · intro h a hc
+    have hm := h a
+    rw [hpow] at hm
+    exact cancel_coprime (a^(p-1)) 1 a p hc (by simpa using hm)
+
 end NumberTheory.PowerCycles
