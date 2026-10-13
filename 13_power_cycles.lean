@@ -1161,4 +1161,25 @@ theorem nonzero_residues_mem (n i : Nat) : i ∈ nonzeroResidues n ↔ 0 < i ∧
   · rw [nonzeroResidues,List.mem_erase_of_ne hi,List.mem_range]
     omega
 
+
+theorem shifted_labels_injective (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1)
+    (i j : Nat) (hi : i < n) (hj : j < n)
+    (he : canonicalLabel (((i+1 : Nat) : Int)*a) n=
+      canonicalLabel (((j+1 : Nat) : Int)*a) n) : i=j := by
+  /-
+  Lemma: The n multiples a through n*a have distinct residue
+  labels. Proof: Equal labels allow cancellation of a. Subtracting
+  one from the two resulting representatives gives congruent
+  integers i and j between zero and n-1, hence equal integers. QED
+  -/
+  have h := cancel_coprime ((i+1 : Nat) : Int) ((j+1 : Nat) : Int) a n hc
+    ((canonicalLabel_eq_iff _ _ n hn).mp he)
+  have hd : Congruent (i : Int) j n := by
+    rcases h with ⟨hp,q,hq⟩
+    exact ⟨hp,q,by omega⟩
+  have hb := bounded_congruent_equal i j n (by omega) (by omega)
+    (by omega) (by omega) hd
+  omega
+
+
 end NumberTheory.PowerCycles
