@@ -1314,4 +1314,23 @@ theorem residue_product_congruent (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a
   exact h
 
 
+
+theorem scaled_product (xs : List Nat) (a : Int) :
+    intProduct (xs.map (fun i : Nat => (i : Int)*a))=
+      a^xs.length*intProduct (xs.map (fun i : Nat => (i : Int))) := by
+  /-
+  Lemma: Multiplying every entry by a inserts a factor a raised
+  to the number of entries into the total product.
+  Proof: Induct on the list. Empty products and a^0 are one.
+  Restoring one head inserts one more factor a. Reassociate and
+  commute the factors to obtain the successor power. QED
+  -/
+  induction xs with
+  | nil => simp [intProduct,Int.pow_zero]
+  | cons i xs ih =>
+    simp only [List.map_cons,List.length_cons,intProduct]
+    rw [ih,Int.pow_succ]
+    simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+
+
 end NumberTheory.PowerCycles
