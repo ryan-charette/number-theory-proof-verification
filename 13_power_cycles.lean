@@ -1182,4 +1182,46 @@ theorem shifted_labels_injective (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=
   omega
 
 
+
+theorem multiples_complete (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1) :
+    ∀ x : Int, ∃ i : Nat, 0 < i ∧ i ≤ n ∧ Congruent x ((i : Int)*a) n ∧
+      ∀ j : Nat, 0 < j → j ≤ n → Congruent x ((j : Int)*a) n → j=i := by
+  /-
+  Theorem: The multiples a,2*a,...,n*a form a complete residue
+  system when a is coprime to n; in particular this holds for a
+  prime modulus and an integer not divisible by it.
+  Proof: Their n labels are distinct and lie in the canonical list
+  of n residues. They therefore rearrange that list. Every integer's
+  label occurs, proving existence of a representative. Equal labels
+  force equal indices by the preceding cancellation argument,
+  proving uniqueness. QED
+  -/
+  let f : Nat → Nat := fun i => canonicalLabel (((i+1 : Nat) : Int)*a) n
+  have hnd : ((List.range n).map f).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ (List.nodup_range n)
+    intro i j hi hj hne he
+    exact hne (shifted_labels_injective a n hn hc i j
+      (List.mem_range.mp hi) (List.mem_range.mp hj) he)
+  have hs : ∀ r ∈ (List.range n).map f, r ∈ List.range n := by
+    intro r hr
+    rcases List.mem_map.mp hr with ⟨i,_,he⟩
+    subst r
+    exact List.mem_range.mpr (canonicalLabel_spec _ n hn).1
+  have hp := distinct_subset_perm _ _ hnd hs (by simp)
+  intro x
+  have hx : canonicalLabel x n ∈ (List.range n).map f :=
+    hp.mem_iff.mpr (List.mem_range.mpr (canonicalLabel_spec x n hn).1)
+  rcases List.mem_map.mp hx with ⟨i,hi,he⟩
+  have hib := List.mem_range.mp hi
+  refine ⟨i+1,by omega,by omega,(canonicalLabel_eq_iff _ _ n hn).mp he.symm,?_⟩
+  intro j hj hjn hjc
+  have heq : f (j-1)=f i := by
+    have hjid : j-1+1=j := by omega
+    change canonicalLabel (((j-1+1 : Nat) : Int)*a) n= _
+    rw [hjid]
+    exact ((canonicalLabel_eq_iff _ _ n hn).mpr hjc).symm.trans he.symm
+  have hij := shifted_labels_injective a n hn hc (j-1) i (by omega) hib heq
+  omega
+
 end NumberTheory.PowerCycles
