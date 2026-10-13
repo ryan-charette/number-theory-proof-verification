@@ -1416,4 +1416,14 @@ theorem fermat_forms_equivalent (p : Nat) (hp : Prime p) :
     rw [hpow] at hm
     exact cancel_coprime (a^(p-1)) 1 a p hc (by simpa using hm)
 
+
+theorem fermat_all (a : Int) (p : Nat) (hp : Prime p) : Congruent (a^p) a p := by
+  /-
+  Theorem: For every integer a and prime p, a^p is congruent to a.
+  Proof: The coprime form has been proved by rearranging residues
+  and cancelling their product. The forward implication of the
+  equivalence just proved supplies this unrestricted form. QED
+  -/
+  exact (fermat_forms_equivalent p hp).mp (fun b hb => fermat_coprime b p hp hb) a
+
 end NumberTheory.PowerCycles
