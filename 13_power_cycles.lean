@@ -1472,4 +1472,19 @@ theorem product_divides (n m z : Int)
 
 
 
+
+theorem combine_coprime_moduli (x a : Int) (n m : Nat)
+    (hc : gcd (n : Int) m=1) (hn : Congruent x a n) (hm : Congruent x a m) :
+    Congruent x a ((n : Int)*m) := by
+  /-
+  Theorem: Congruence to the same integer modulo two relatively
+  prime positive moduli implies congruence modulo their product.
+  Proof: Both moduli divide x-a. Their Bezout identity equals one,
+  so the product-divisibility lemma shows that their product
+  divides x-a. The product is positive, as required. QED
+  -/
+  have hb := bezout (n : Int) m
+  rw [hc] at hb
+  exact ⟨Int.mul_pos hn.1 hm.1,(product_divides n m (x-a) hb).mp ⟨hn.2,hm.2⟩⟩
+
 end NumberTheory.PowerCycles
