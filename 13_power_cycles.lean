@@ -1018,4 +1018,48 @@ theorem coprime_not_zero (a : Int) (n : Nat) (hn : 1 < n) (hc : gcd a n=1) :
   have hb := divisor_le_positive n 1 (by decide) hd
   omega
 
+
+theorem order_lt_modulus (a : Int) (n : Nat) (hn : 1 < n) (hc : gcd a n=1) :
+    order a n < n := by
+  /-
+  Theorem: The order is less than the modulus when n>1.
+  Proof: Label the powers from a^1 through a^k, where k is the
+  order, by their canonical remainders. Distinct powers in this
+  range have distinct labels. None has label zero, since powers
+  remain coprime to n. Thus the k distinct labels lie among the
+  n-1 nonzero canonical remainders. Counting gives k≤n-1. QED
+
+  The hypothesis n>1 corrects the exceptional modulus one: there
+  the least positive returning exponent is one, so a strict bound
+  by the modulus would be false.
+  -/
+  let f : Nat → Nat := fun i => canonicalLabel (a^(i+1)) n
+  have hnd : ((List.range (order a n)).map f).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ (List.nodup_range _)
+    intro i j hi hj hne he
+    have hi' := List.mem_range.mp hi
+    have hj' := List.mem_range.mp hj
+    have hp := (canonicalLabel_eq_iff (a^(i+1)) (a^(j+1)) n (by omega)).mp he
+    by_cases hij : i < j
+    · exact powers_distinct a n (by omega) hc (i+1) (j+1) (by omega) (by omega) (by omega) hp
+    · exact powers_distinct a n (by omega) hc (j+1) (i+1) (by omega) (by omega) (by omega)
+        (modeq_symm _ _ n hp)
+  have hsub : ∀ r ∈ (List.range (order a n)).map f, r ∈ (List.range n).erase 0 := by
+    intro r hr
+    rcases List.mem_map.mp hr with ⟨i,_,he⟩
+    subst r
+    have hs := canonicalLabel_spec (a^(i+1)) n (by omega)
+    have hz : f i ≠ 0 := by
+      intro hzero
+      have hz' : canonicalLabel (a^(i+1)) n=0 := hzero
+      rw [hz'] at hs
+      exact coprime_not_zero (a^(i+1)) n hn
+        (coprime_power a n (by omega) hc (i+1)) hs.2
+    exact (List.mem_erase_of_ne hz).mpr (List.mem_range.mpr hs.1)
+  have hb := distinct_length_bound _ _ hnd hsub
+  have he := List.length_erase_of_mem (by simp; omega : 0 ∈ List.range n)
+  simp only [List.length_map,List.length_range] at hb he
+  omega
+
 end NumberTheory.PowerCycles
