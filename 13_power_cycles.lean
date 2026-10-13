@@ -1426,4 +1426,16 @@ theorem fermat_all (a : Int) (p : Nat) (hp : Prime p) : Congruent (a^p) a p := b
   -/
   exact (fermat_forms_equivalent p hp).mp (fun b hb => fermat_coprime b p hp hb) a
 
+
+theorem order_dvd_prime_predecessor (a : Int) (p : Nat) (hp : Prime p)
+    (hc : gcd a p=1) : order a p ∣ p-1 := by
+  /-
+  Corollary: For a coprime input modulo a prime, the order divides
+  p-1. Proof: Fermat's coprime form says this exponent returns to
+  one. The exponent-divisibility characterization therefore applies.
+  QED
+  -/
+  exact (order_dvd_iff a p (by have := hp.1; omega) hc (p-1)).mp
+    (fermat_coprime a p hp hc)
+
 end NumberTheory.PowerCycles
