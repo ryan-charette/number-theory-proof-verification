@@ -909,4 +909,24 @@ theorem power_multiple_one (a : Int) (n k q : Nat)
     rw [Nat.mul_succ,power_add]
     simpa using modeq_mult _ 1 _ 1 n ih hk
 
+
+theorem power_remainder (a : Int) (n : Nat) (hn : 0 < n)
+    (hc : gcd a n=1) (m : Nat) :
+    Congruent (a^m) (a^(m % order a n)) n := by
+  /-
+  Lemma: Dividing an exponent by the order does not change its
+  power's congruence class when the exponent is replaced by its
+  remainder. Proof: Put k=order(a,n). Division gives m=r+k*q.
+  The power a^(k*q) is congruent to one, so
+  a^m=a^r*a^(k*q) is congruent to a^r. QED
+  -/
+  have hs := order_spec a n hn hc
+  have hp := power_multiple_one a n (order a n) (m / order a n) hs.2.1
+  have he := Nat.mod_add_div m (order a n)
+  have h := modeq_mult (a^(m % order a n)) (a^(m % order a n))
+    (a^(order a n*(m / order a n))) 1 n
+    (modeq_refl _ _ (by omega)) hp
+  rw [←power_add,he,Int.mul_one] at h
+  exact h
+
 end NumberTheory.PowerCycles
