@@ -981,4 +981,23 @@ theorem powers_distinct (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1)
   have hmin := (order_spec a n hn hc).2.2 (j-i) (by omega) hp
   omega
 
+
+theorem power_cycle (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1)
+    (m : Nat) : ∃ i : Nat, 0 < i ∧ i ≤ order a n ∧ Congruent (a^m) (a^i) n := by
+  /-
+  Theorem: Every power is congruent to one of the powers with
+  exponents one through the order. Proof: Reduce m to its remainder
+  r modulo the order k. If r>0, choose r, which is less than k.
+  If r=0, the power is congruent to one; choose k itself, whose
+  power is also congruent to one. QED
+  -/
+  have hs := order_spec a n hn hc
+  have hr := power_remainder a n hn hc m
+  by_cases hz : m % order a n=0
+  · rw [hz,Int.pow_zero] at hr
+    exact ⟨order a n,hs.1,Nat.le_refl _,
+      modeq_trans _ _ _ n hr (modeq_symm _ _ n hs.2.1)⟩
+  · have hlt := Nat.mod_lt m hs.1
+    exact ⟨m % order a n,by omega,by omega,hr⟩
+
 end NumberTheory.PowerCycles
