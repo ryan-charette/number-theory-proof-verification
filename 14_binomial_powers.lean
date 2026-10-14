@@ -655,4 +655,53 @@ theorem factorial_positive (n : Nat) : 0 < factorial n := by
   | zero => decide
   | succ n ih => exact Int.mul_pos (by omega) ih
 
+
+theorem coefficient_factorial (n i : Nat) (hi : i ≤ n) :
+    coefficient n i*factorial i*factorial (n-i)=factorial n := by
+  /-
+  Lemma: Multiplying a row coefficient by i! and (n-i)! gives n!.
+  Proof: Induct on n. The endpoint cases use coefficient one and
+  factorial zero equal to one. At an interior position in row n+1,
+  expand Pascal's sum. By the induction hypothesis, its two terms
+  become (i+1)*n! and (n-i)*n!, whose sum is (n+1)*n!.
+  This identity will identify the recursively defined coefficients
+  with the factorial quotient from the definition of binomial
+  coefficients. QED
+  -/
+  induction n generalizing i with
+  | zero =>
+    have he : i=0 := by omega
+    subst i
+    rfl
+  | succ n ih =>
+    cases i with
+    | zero => simp [coefficient,factorial]
+    | succ i =>
+      by_cases he : i=n
+      · subst i
+        rw [(coefficient_edges (n+1)).2,Nat.sub_self,factorial,Int.mul_one,Int.one_mul]
+      · have hi' : i+1 ≤ n := by omega
+        have h₁ := ih i (by omega)
+        have h₂ := ih (i+1) hi'
+        have hd : n-i=(n-(i+1))+1 := by omega
+        have hf : factorial (n-i)=(n-i : Nat)*factorial (n-(i+1)) := by
+          rw [hd,factorial]
+        have hsum : ((i+1 : Nat) : Int)+(n-i : Nat)=(n+1 : Nat) := by omega
+        rw [coefficient,Nat.succ_sub_succ]
+        calc
+          (coefficient n i+coefficient n (i+1))*factorial (i+1)*factorial (n-i)
+              = ((i+1 : Nat) : Int)*(coefficient n i*factorial i*factorial (n-i))+
+                (n-i : Nat)*(coefficient n (i+1)*factorial (i+1)*factorial (n-(i+1))) := by
+                  rw [Int.add_mul,Int.add_mul]
+                  congr 1
+                  · rw [factorial]
+                    simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+                  · rw [hf]
+                    simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+          _ = ((i+1 : Nat) : Int)*factorial n+(n-i : Nat)*factorial n := by rw [h₁,h₂]
+          _ = factorial (n+1) := by rw [←Int.add_mul,hsum,factorial]
+
+
+
+
 end NumberTheory.BinomialPowers
