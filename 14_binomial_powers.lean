@@ -704,4 +704,18 @@ theorem coefficient_factorial (n i : Nat) (hi : i ≤ n) :
 
 
 
+
+theorem coefficient_quotient (n i : Nat) (hi : i ≤ n) :
+    coefficient n i=factorial n/(factorial i*factorial (n-i)) := by
+  /-
+  Theorem: The recursively defined coefficient equals n!/(i!(n-i)!).
+  Proof: The denominator is positive. The preceding product identity
+  says it divides n! exactly with quotient equal to the coefficient.
+  Exact integer division therefore gives the claimed formula. QED
+  -/
+  have hp := Int.mul_pos (factorial_positive i) (factorial_positive (n-i))
+  have he := coefficient_factorial n i hi
+  rw [Int.mul_assoc] at he
+  rw [←he,Int.mul_ediv_cancel _ (by omega)]
+
 end NumberTheory.BinomialPowers
