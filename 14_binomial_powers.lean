@@ -796,4 +796,43 @@ theorem term_step (a b : Int) (n i : Nat) (hi : i ≤ n) :
     rw [hpow]
     simp only [Int.add_mul,Int.mul_add,Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
 
+
+theorem binomial_expansion (a b : Int) (n : Nat) :
+    (a+b)^n=sumTerms (binomialTerm a b n) (n+1) := by
+  /-
+  Theorem: (a+b)^n is the sum of coefficient(n,i)*a^(n-i)*b^i
+  for indices zero through n.
+  Proof: Induct on n. At zero both sides are one. Split the next
+  sum at its first term and apply the term recurrence to the rest.
+  The b-parts give b times the entire old sum. The a-parts give a
+  times the old sum without its first term, since the extra last
+  term is zero. Restoring the new first term a^(n+1) supplies the
+  missing a*a^n. The result is (a+b) times the old sum, exactly
+  the successor power. QED
+  -/
+  induction n with
+  | zero => simp [sumTerms,binomialTerm,coefficient,Int.pow_zero]
+  | succ n ih =>
+    let f := binomialTerm a b n
+    have hfirst := (term_edges a b n).1
+    have hlast := (term_edges a b n).2.2
+    have hshift := sum_shift f n
+    have htail : sumTerms (fun i => f (i+1)) (n+1)=sumTerms f (n+1)-a^n := by
+      rw [sumTerms]
+      change sumTerms (fun i => f (i+1)) n+binomialTerm a b n (n+1)=_
+      rw [hlast,Int.add_zero]
+      change sumTerms f (n+1)=f 0+sumTerms (fun i => f (i+1)) n at hshift
+      have hf : f 0=a^n := hfirst
+      rw [hf] at hshift
+      omega
+    have hterms := sum_congr (fun i => binomialTerm a b (n+1) (i+1))
+      (fun i => b*f i+a*f (i+1)) (n+1) (fun i hi => term_step a b n i (by omega))
+    rw [sum_shift,(term_edges a b (n+1)).1,hterms,sum_linear,htail]
+    change (a+b)^(n+1)=a^(n+1)+(b*sumTerms f (n+1)+a*(sumTerms f (n+1)-a^n))
+    have hi' : sumTerms f (n+1)=(a+b)^n := ih.symm
+    rw [hi',Int.pow_succ,Int.pow_succ,Int.mul_sub,Int.mul_add]
+    rw [Int.mul_comm ((a+b)^n) a,Int.mul_comm ((a+b)^n) b,Int.mul_comm (a^n) a]
+    omega
+
+
 end NumberTheory.BinomialPowers
