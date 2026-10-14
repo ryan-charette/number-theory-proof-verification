@@ -759,4 +759,19 @@ theorem sum_shift (f : Nat → Int) (n : Nat) :
   | zero => simp [sumTerms]
   | succ n ih => rw [sumTerms,ih,sumTerms,Int.add_assoc]
 
+
+def binomialTerm (a b : Int) (n i : Nat) : Int := coefficient n i*a^(n-i)*b^i
+
+theorem term_edges (a b : Int) (n : Nat) :
+    binomialTerm a b n 0=a^n ∧ binomialTerm a b n n=b^n ∧
+      binomialTerm a b n (n+1)=0 := by
+  /-
+  Lemma: The endpoint terms are a^n and b^n, and the next term is
+  zero. Proof: Use the endpoint coefficients one, the out-of-range
+  coefficient zero, and the rule that the zeroth power is one. QED
+  -/
+  simp only [binomialTerm,(coefficient_edges n).1,(coefficient_edges n).2,
+    coefficient_outside n (n+1) (by omega),Nat.sub_zero,Nat.sub_self,
+    Int.pow_zero,Int.one_mul,Int.mul_one,Int.zero_mul,and_self]
+
 end NumberTheory.BinomialPowers
