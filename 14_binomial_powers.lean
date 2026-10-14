@@ -868,4 +868,36 @@ theorem factorial_coprime (p k : Nat) (hp : Prime p) (hk : k < p) :
     exact coprime_multiply (k+1 : Nat) (factorial k) p hn
       (small_prime_coprime p (k+1) hp (by omega) hk) (ih (by omega))
 
+
+theorem prime_divides_coefficient (p i : Nat) (hp : Prime p)
+    (hi : 0 < i) (hip : i < p) : (p : Int) ∣ coefficient p i := by
+  /-
+  Theorem: A prime divides each interior coefficient in its row.
+  Proof: The factorial identity gives C(p,i)*i!*(p-i)!=p!.
+  Both denominator factorials are coprime to p because i and p-i
+  are below p. Their product can therefore be cancelled modulo p.
+  Since p!=p*(p-1)!, the right side is congruent to zero. Cancellation
+  leaves C(p,i) congruent to zero, proving divisibility. QED
+
+  The strict bounds exclude both endpoint coefficients, which are
+  one. Positivity of i expresses the textbook's natural-number
+  convention despite the coefficient definition also allowing zero.
+  -/
+  have hn : (0 : Int) < p := by have := hp.1; omega
+  have hd := coprime_multiply (factorial i) (factorial (p-i)) p hn
+    (factorial_coprime p i hp hip) (factorial_coprime p (p-i) hp (by omega))
+  have he := coefficient_factorial p i (by omega)
+  rw [Int.mul_assoc] at he
+  have hp' : p=p-1+1 := by have := hp.1; omega
+  have hf : factorial p=(p : Int)*factorial (p-1) := by
+    calc
+      factorial p=factorial (p-1+1) := congrArg factorial hp'
+      _ = (p : Int)*factorial (p-1) := by rw [factorial,←hp']
+  have hm : Congruent (coefficient p i*(factorial i*factorial (p-i)))
+      (0*(factorial i*factorial (p-i))) p := by
+    refine ⟨hn,factorial (p-1),?_⟩
+    rw [Int.zero_mul,Int.sub_zero,he,hf]
+  have hc := cancel_coprime (coefficient p i) 0 _ p hd hm
+  simpa using hc.2
+
 end NumberTheory.BinomialPowers
