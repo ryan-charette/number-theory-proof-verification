@@ -1019,4 +1019,25 @@ theorem fermat_natural (a p : Nat) (hp : Prime p) :
     exact modeq_trans _ _ _ p (by simpa using h) (by simpa using hnext)
 
 
+
+theorem fermat_integer (a : Int) (p : Nat) (hp : Prime p) :
+    Congruent (a^p) a p := by
+  /-
+  Theorem: For every integer a and prime p, a^p is congruent to a.
+  Proof: Divide a by p, obtaining a nonnegative remainder r<p.
+  Then a is congruent to r, and raising congruent integers to the
+  pth power preserves congruence. The natural-number induction
+  just proved gives r^p congruent to r. Combining these congruences
+  and reversing a congruent to r gives a^p congruent to a.
+  Thus negative inputs follow from the same binomial proof, without
+  assuming another version of Fermat's theorem. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  rcases integer_division_exists a p hn with ⟨q,r,he,hr,_⟩
+  have hc : Congruent a r p := ⟨by omega,q,by omega⟩
+  have hpow := modeq_pow a r p p hc
+  have hnat := fermat_natural r.toNat p hp
+  rw [Int.toNat_of_nonneg hr] at hnat
+  exact modeq_trans _ _ _ p hpow (modeq_trans _ _ _ p hnat (modeq_symm _ _ p hc))
+
 end NumberTheory.BinomialPowers
