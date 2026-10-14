@@ -912,4 +912,30 @@ theorem divides_sum (d : Int) (f : Nat → Int) (n : Nat)
   | zero => exact dvd_zero d
   | succ n ih => exact dvd_add d _ _ (ih (fun i hi => h i (by omega))) (h n (by omega))
 
+
+theorem prime_power_sum (a b : Int) (p : Nat) (hp : Prime p) :
+    Congruent ((a+b)^p) (a^p+b^p) p := by
+  /-
+  Theorem: Modulo a prime p, the pth power of a sum is congruent
+  to the sum of the pth powers.
+  Proof: Expand by the binomial theorem. The first and last terms
+  are a^p and b^p. Every interior term contains a coefficient
+  divisible by p, so their sum is divisible by p. Subtracting the
+  two endpoint terms therefore leaves a multiple of p. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hm : (p : Int) ∣ sumTerms (fun i => binomialTerm a b p (i+1)) (p-1) := by
+    apply divides_sum
+    intro i hi
+    have hd := prime_divides_coefficient p (i+1) hp (by omega) (by omega)
+    exact dvd_mult_of_dvd_left p _ (b^(i+1))
+      (dvd_mult_of_dvd_left p _ (a^(p-(i+1))) hd)
+  have hsplit := sum_shift (binomialTerm a b p) (p-1)
+  have he : p-1+1=p := by omega
+  rw [he,(term_edges a b p).1] at hsplit
+  have hex := binomial_expansion a b p
+  rw [sumTerms,(term_edges a b p).2.1,hsplit] at hex
+  rcases hm with ⟨q,hq⟩
+  exact ⟨by omega,q,by omega⟩
+
 end NumberTheory.BinomialPowers
