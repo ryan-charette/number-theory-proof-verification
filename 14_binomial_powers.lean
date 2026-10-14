@@ -604,4 +604,27 @@ theorem bezout_product (a b c : Int)
 
 
 
+
+def coefficient : Nat → Nat → Int
+  | 0, 0 => 1
+  | 0, _+1 => 0
+  | _+1, 0 => 1
+  | n+1, i+1 => coefficient n i+coefficient n (i+1)
+
+theorem coefficient_outside (n i : Nat) (h : n < i) : coefficient n i=0 := by
+  /-
+  Lemma: Coefficients beyond the end of a row are zero.
+  Proof: Induct on the row. In row zero every positive index is
+  zero. In the next row, both predecessors of an out-of-range
+  index are out of range, so their sum is zero. QED
+  -/
+  induction n generalizing i with
+  | zero => cases i with
+    | zero => omega
+    | succ i => rfl
+  | succ n ih =>
+    cases i with
+    | zero => omega
+    | succ i => simp only [coefficient,ih i (by omega),ih (i+1) (by omega),Int.add_zero]
+
 end NumberTheory.BinomialPowers
