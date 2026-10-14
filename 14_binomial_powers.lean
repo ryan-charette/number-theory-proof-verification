@@ -640,4 +640,19 @@ theorem coefficient_edges (n : Nat) : coefficient n 0=1 ∧ coefficient n n=1 :=
   | succ n ih =>
     exact ⟨rfl,by rw [coefficient,ih.2,coefficient_outside n (n+1) (by omega),Int.add_zero]⟩
 
+
+def factorial : Nat → Int
+  | 0 => 1
+  | n+1 => (n+1 : Nat)*factorial n
+
+theorem factorial_positive (n : Nat) : 0 < factorial n := by
+  /-
+  Lemma: Every factorial is positive, including 0!=1.
+  Proof: Induct on n. The successor factorial is the preceding
+  positive factorial multiplied by the positive integer n+1. QED
+  -/
+  induction n with
+  | zero => decide
+  | succ n ih => exact Int.mul_pos (by omega) ih
+
 end NumberTheory.BinomialPowers
