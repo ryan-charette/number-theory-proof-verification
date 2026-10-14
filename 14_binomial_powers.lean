@@ -900,4 +900,16 @@ theorem prime_divides_coefficient (p i : Nat) (hp : Prime p)
   have hc := cancel_coprime (coefficient p i) 0 _ p hd hm
   simpa using hc.2
 
+
+theorem divides_sum (d : Int) (f : Nat → Int) (n : Nat)
+    (h : ∀ i, i < n → d ∣ f i) : d ∣ sumTerms f n := by
+  /-
+  Lemma: A common divisor of all terms divides their finite sum.
+  Proof: Induct on the number of terms. Zero is a multiple of d;
+  the induction step adds two integers divisible by d. QED
+  -/
+  induction n with
+  | zero => exact dvd_zero d
+  | succ n ih => exact dvd_add d _ _ (ih (fun i hi => h i (by omega))) (h n (by omega))
+
 end NumberTheory.BinomialPowers
