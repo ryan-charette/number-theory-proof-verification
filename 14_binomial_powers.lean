@@ -718,4 +718,20 @@ theorem coefficient_quotient (n i : Nat) (hi : i ≤ n) :
   rw [Int.mul_assoc] at he
   rw [←he,Int.mul_ediv_cancel _ (by omega)]
 
+
+def sumTerms (f : Nat → Int) : Nat → Int
+  | 0 => 0
+  | n+1 => sumTerms f n+f n
+
+theorem sum_congr (f g : Nat → Int) (n : Nat) (h : ∀ i, i < n → f i=g i) :
+    sumTerms f n=sumTerms g n := by
+  /-
+  Lemma: Equal corresponding terms have equal finite sums.
+  Proof: Induct on the number of terms, using the hypothesis for
+  the final term and induction for all earlier terms. QED
+  -/
+  induction n with
+  | zero => rfl
+  | succ n ih => rw [sumTerms,sumTerms,ih (fun i hi => h i (by omega)),h n (by omega)]
+
 end NumberTheory.BinomialPowers
