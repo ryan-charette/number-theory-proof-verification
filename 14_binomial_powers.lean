@@ -627,4 +627,17 @@ theorem coefficient_outside (n i : Nat) (h : n < i) : coefficient n i=0 := by
     | zero => omega
     | succ i => simp only [coefficient,ih i (by omega),ih (i+1) (by omega),Int.add_zero]
 
+
+theorem coefficient_edges (n : Nat) : coefficient n 0=1 ∧ coefficient n n=1 := by
+  /-
+  Lemma: Both end coefficients of each row are one.
+  Proof: The first coefficient is one by definition. Induct on n
+  for the last: Pascal's recurrence adds the preceding last
+  coefficient to the zero coefficient beyond that row. QED
+  -/
+  induction n with
+  | zero => exact ⟨rfl,rfl⟩
+  | succ n ih =>
+    exact ⟨rfl,by rw [coefficient,ih.2,coefficient_outside n (n+1) (by omega),Int.add_zero]⟩
+
 end NumberTheory.BinomialPowers
