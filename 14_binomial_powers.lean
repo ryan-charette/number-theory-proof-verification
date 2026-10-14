@@ -994,4 +994,29 @@ theorem one_power (k : Nat) : (1 : Int)^k=1 := by
   | zero => rfl
   | succ k ih => rw [Int.pow_succ,ih,Int.mul_one]
 
+
+theorem fermat_natural (a p : Nat) (hp : Prime p) :
+    Congruent ((a : Int)^p) a p := by
+  /-
+  Theorem: For a natural number a and prime p, a^p is congruent
+  to a. Proof: Induct on a. At zero, the positive power is zero.
+  For the successor use the binomial prime-power congruence to
+  replace (a+1)^p by a^p+1. The induction hypothesis replaces a^p
+  by a, and adding one gives the desired successor. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  induction a with
+  | zero =>
+    have he : p=p-1+1 := by omega
+    have hz : (0 : Int)^p=0 := by rw [he,Int.pow_succ,Int.mul_zero]
+    change Congruent ((0 : Int)^p) 0 p
+    rw [hz]
+    exact modeq_refl 0 p (by omega)
+  | succ a ih =>
+    have h := prime_power_sum (a : Int) 1 p hp
+    rw [one_power] at h
+    have hnext := modeq_add _ _ 1 1 p ih (modeq_refl 1 p (by omega))
+    exact modeq_trans _ _ _ p (by simpa using h) (by simpa using hnext)
+
+
 end NumberTheory.BinomialPowers
