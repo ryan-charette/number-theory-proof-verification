@@ -835,4 +835,20 @@ theorem binomial_expansion (a b : Int) (n : Nat) :
     omega
 
 
+
+theorem coprime_multiply (a b n : Int) (hn : 0 < n)
+    (ha : gcd a n=1) (hb : gcd b n=1) : gcd (a*b) n=1 := by
+  /-
+  Lemma: Multiplying two integers coprime to n preserves coprimality.
+  Proof: Reverse their Bezout identities to put n first, combine
+  them by the product identity, then reverse the resulting identity
+  to show that a*b and n have gcd one. QED
+  -/
+  rcases bezout a n with ⟨u,v,hu⟩
+  rcases bezout b n with ⟨s,t,hs⟩
+  rw [ha] at hu
+  rw [hb] at hs
+  rcases bezout_product n a b ⟨v,u,by omega⟩ ⟨t,s,by omega⟩ with ⟨x,y,he⟩
+  exact gcd_one_right (a*b) n hn ⟨y,x,by omega⟩
+
 end NumberTheory.BinomialPowers
