@@ -734,4 +734,17 @@ theorem sum_congr (f g : Nat → Int) (n : Nat) (h : ∀ i, i < n → f i=g i) :
   | zero => rfl
   | succ n ih => rw [sumTerms,sumTerms,ih (fun i hi => h i (by omega)),h n (by omega)]
 
+
+theorem sum_linear (f g : Nat → Int) (a b : Int) (n : Nat) :
+    sumTerms (fun i => a*f i+b*g i) n=a*sumTerms f n+b*sumTerms g n := by
+  /-
+  Lemma: A fixed linear combination can be taken outside a finite
+  sum. Proof: Induct on its length. The zero case is immediate;
+  expand the final terms and distribute multiplication to obtain
+  the successor case. QED
+  -/
+  induction n with
+  | zero => simp [sumTerms]
+  | succ n ih => simp only [sumTerms,ih,Int.mul_add]; omega
+
 end NumberTheory.BinomialPowers
