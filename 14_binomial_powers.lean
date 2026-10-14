@@ -774,4 +774,26 @@ theorem term_edges (a b : Int) (n : Nat) :
     coefficient_outside n (n+1) (by omega),Nat.sub_zero,Nat.sub_self,
     Int.pow_zero,Int.one_mul,Int.mul_one,Int.zero_mul,and_self]
 
+
+theorem term_step (a b : Int) (n i : Nat) (hi : i ≤ n) :
+    binomialTerm a b (n+1) (i+1)=
+      b*binomialTerm a b n i+a*binomialTerm a b n (i+1) := by
+  /-
+  Lemma: An interior term in the next expansion combines b times
+  one old term and a times its successor. Proof: Expand Pascal's
+  recurrence and the successor power of b. For i<n, the relevant
+  powers of a differ by one, giving the claimed two products.
+  At i=n the extra term is zero and the equality is the last-term
+  power rule. QED
+  -/
+  by_cases he : i=n
+  · subst i
+    rw [(term_edges a b (n+1)).2.1,(term_edges a b n).2.1,
+      (term_edges a b n).2.2,Int.mul_zero,Int.add_zero,Int.pow_succ,Int.mul_comm]
+  · have hd : n-i=(n-(i+1))+1 := by omega
+    have hpow : a^(n-i)=a^(n-(i+1))*a := by rw [hd,Int.pow_succ]
+    simp only [binomialTerm,coefficient,Nat.succ_sub_succ,Int.pow_succ]
+    rw [hpow]
+    simp only [Int.add_mul,Int.mul_add,Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+
 end NumberTheory.BinomialPowers
