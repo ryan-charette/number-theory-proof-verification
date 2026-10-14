@@ -851,4 +851,21 @@ theorem coprime_multiply (a b n : Int) (hn : 0 < n)
   rcases bezout_product n a b ⟨v,u,by omega⟩ ⟨t,s,by omega⟩ with ⟨x,y,he⟩
   exact gcd_one_right (a*b) n hn ⟨y,x,by omega⟩
 
+
+theorem factorial_coprime (p k : Nat) (hp : Prime p) (hk : k < p) :
+    gcd (factorial k) p=1 := by
+  /-
+  Lemma: The factorial of an integer below a prime p is coprime
+  to p. Proof: Induct on k. The empty product is one. In the
+  successor case, k+1 is positive and below p, hence coprime to p;
+  multiplying it by the preceding coprime factorial preserves this.
+  QED
+  -/
+  have hn : (0 : Int) < p := by have := hp.1; omega
+  induction k with
+  | zero => exact gcd_one_right 1 p hn ⟨1,0,by simp⟩
+  | succ k ih =>
+    exact coprime_multiply (k+1 : Nat) (factorial k) p hn
+      (small_prime_coprime p (k+1) hp (by omega) hk) (ih (by omega))
+
 end NumberTheory.BinomialPowers
