@@ -938,4 +938,60 @@ theorem prime_power_sum (a b : Int) (p : Nat) (hp : Prime p) :
   rcases hm with ⟨q,hq⟩
   exact ⟨by omega,q,by omega⟩
 
+theorem modeq_add (a b c d n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : c ≡ d [MOD n]) : a + c ≡ b + d [MOD n] := by
+  /-
+  Theorem: Congruences can be added.
+  Proof: We must show that n divides (a + c) - (b + d).
+  Rearranging the additions and subtractions gives
+
+    (a + c) - (b + d) = (a - b) + (c - d).
+
+  By hypothesis, n divides each term on the right. Our theorem on
+  divisibility of sums shows that n divides the left side as well. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h := dvd_add n (a - b) (c - d) h₀.2 h₁.2
+    have heq : (a + c) - (b + d) = (a - b) + (c - d) := by
+      simp only [Int.sub_eq_add_neg, Int.neg_add, Int.add_assoc]
+      rw [Int.add_left_comm c (-b)]
+    rw [heq]
+    exact h
+
+theorem integer_division_exists (a : Int) (n : Nat) (hn : 0 < n) :
+    ∃ q r : Int, a=(n : Int)*q+r ∧ 0 ≤ r ∧ r < n := by
+  /-
+  Lemma: Every integer has a quotient and a nonnegative remainder
+  less than a positive natural divisor n.
+  Proof: Let t=|a|. Since n≥1, a+n*t≥a+|a|≥0. Divide this
+  nonnegative integer by n using the well-ordering construction.
+  If a+n*t=n*q+r, then a=n*(q-t)+r, with the same remainder bounds.
+  QED
+  -/
+  let t : Int := a.natAbs
+  have ht : 0 ≤ t := by dsimp [t]; omega
+  have ha : -a ≤ t := by
+    have h : -a ≤ (-a).natAbs := Int.le_natAbs
+    simpa only [Int.natAbs_neg] using h
+  have hmul := Int.mul_le_mul_of_nonneg_right (by omega : (1 : Int) ≤ n) ht
+  rw [Int.one_mul] at hmul
+  have hnonneg : 0 ≤ a+(n : Int)*t := by omega
+  rcases division_exists (a+(n : Int)*t).toNat n hn with ⟨q,r,he,hr,hrn⟩
+  rw [Int.toNat_of_nonneg hnonneg] at he
+  refine ⟨q-t,r,?_,hr,hrn⟩
+  rw [Int.mul_sub]
+  omega
+
+
+
+theorem one_power (k : Nat) : (1 : Int)^k=1 := by
+  /-
+  Lemma: Every power of one is one. Proof: At exponent zero this
+  is the definition. Each successor multiplies one by one. QED
+  -/
+  induction k with
+  | zero => rfl
+  | succ k ih => rw [Int.pow_succ,ih,Int.mul_one]
+
 end NumberTheory.BinomialPowers
