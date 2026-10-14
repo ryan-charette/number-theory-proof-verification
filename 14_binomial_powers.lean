@@ -747,4 +747,16 @@ theorem sum_linear (f g : Nat → Int) (a b : Int) (n : Nat) :
   | zero => simp [sumTerms]
   | succ n ih => simp only [sumTerms,ih,Int.mul_add]; omega
 
+
+theorem sum_shift (f : Nat → Int) (n : Nat) :
+    sumTerms f (n+1)=f 0+sumTerms (fun i => f (i+1)) n := by
+  /-
+  Lemma: A sum can be split at its first term instead of its last.
+  Proof: Induct on the number of terms after the first. In the
+  successor step, both sides append the same last term. QED
+  -/
+  induction n with
+  | zero => simp [sumTerms]
+  | succ n ih => rw [sumTerms,ih,sumTerms,Int.add_assoc]
+
 end NumberTheory.BinomialPowers
