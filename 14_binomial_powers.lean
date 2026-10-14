@@ -984,4 +984,14 @@ theorem integer_division_exists (a : Int) (n : Nat) (hn : 0 < n) :
   omega
 
 
+
+theorem one_power (k : Nat) : (1 : Int)^k=1 := by
+  /-
+  Lemma: Every power of one is one. Proof: At exponent zero this
+  is the definition. Each successor multiplies one by one. QED
+  -/
+  induction k with
+  | zero => rfl
+  | succ k ih => rw [Int.pow_succ,ih,Int.mul_one]
+
 end NumberTheory.BinomialPowers
