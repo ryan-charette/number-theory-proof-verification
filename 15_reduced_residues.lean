@@ -1394,4 +1394,20 @@ theorem paired_product (p : Nat) (hp : Prime p) (xs : List Nat) (hnd : xs.Nodup)
       simpa only [List.map_cons,intProduct,Int.mul_assoc,Int.one_mul] using hm
 
 
+
+def interiorResidues (p : Nat) : List Nat := ((nonzeroResidues p).erase 1).erase (p-1)
+
+theorem interior_mem (p i : Nat) : i ∈ interiorResidues p ↔ 1 < i ∧ i < p-1 := by
+  /-
+  Lemma: Removing one and p-1 from the positive representatives
+  below p leaves exactly the interior representatives. Proof:
+  The original entries satisfy 0<i<p. Distinctness means erasing
+  an endpoint excludes it completely. The remaining inequalities
+  are precisely 1<i<p-1. QED
+  -/
+  have hnd : (nonzeroResidues p).Nodup := (List.nodup_range p).erase 0
+  unfold interiorResidues
+  rw [(hnd.erase 1).mem_erase_iff,hnd.mem_erase_iff,nonzero_residues_mem]
+  omega
+
 end NumberTheory.ReducedResidues
