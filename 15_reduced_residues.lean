@@ -897,4 +897,36 @@ theorem gcd_one_combination (a n : Int) (h : ∃ u v : Int, a*u+n*v=1) : gcd a n
     omega
   omega
 
+
+theorem coprime_multiply (a b n : Int) (ha : gcd a n=1) (hb : gcd b n=1) : gcd (a*b) n=1 := by
+  /-
+  Theorem: Multiplying two integers relatively prime to n preserves
+  that property. Proof: Reverse their Bezout identities, combine
+  them over the product, and reverse the resulting identity to
+  identify the gcd as one. The argument includes all integer n.
+  QED
+  -/
+  rcases bezout a n with ⟨u,v,hu⟩
+  rcases bezout b n with ⟨s,t,hs⟩
+  rw [ha] at hu
+  rw [hb] at hs
+  rcases bezout_product n a b ⟨v,u,by omega⟩ ⟨t,s,by omega⟩ with ⟨x,y,he⟩
+  exact gcd_one_combination (a*b) n ⟨y,x,by omega⟩
+
+
+theorem positive_congruent_equal (a b n : Int) (ha : 0 < a) (han : a ≤ n)
+    (hb : 0 < b) (hbn : b ≤ n) (h : Congruent a b n) : a=b := by
+  /-
+  Lemma: Congruent representatives in the interval from one to n
+  are equal. Proof: Subtract one from each. Their difference is
+  unchanged, and both now lie between zero and n-1. The bounded
+  remainder uniqueness theorem makes them equal. QED
+  -/
+  have hc : Congruent (a-1) (b-1) n := by
+    rcases h with ⟨hn,q,hq⟩
+    exact ⟨hn,q,by omega⟩
+  have he := bounded_congruent_equal (a-1) (b-1) n (by omega) (by omega)
+    (by omega) (by omega) hc
+  omega
+
 end NumberTheory.ReducedResidues
