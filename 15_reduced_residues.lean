@@ -1270,4 +1270,16 @@ theorem self_inverse_endpoints (p : Nat) (a : Int) (hp : Prime p) (ha : 0 < a)
     have he := positive_congruent_equal (a+1) p p (by omega) (by omega) (by omega) (by omega) hc
     exact Or.inr (by omega)
 
+
+theorem interior_inverses_distinct (p : Nat) (a b : Int) (hp : Prime p)
+    (ha : 1 < a) (hap : a < (p : Int)-1) (h : Congruent (a*b) 1 p) : a ≠ b := by
+  /-
+  Theorem: An interior representative cannot equal its inverse.
+  Proof: Equality would make it self-inverse. Such a representative
+  is either one or p-1, both excluded by the strict bounds. QED
+  -/
+  intro he
+  subst b
+  rcases self_inverse_endpoints p a hp (by omega) (by omega) h with h₁ | h₂ <;> omega
+
 end NumberTheory.ReducedResidues
