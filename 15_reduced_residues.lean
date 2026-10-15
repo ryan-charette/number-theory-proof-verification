@@ -1567,4 +1567,44 @@ theorem divides_factorial (d k : Nat) (hd : 0 < d) (hdk : d ≤ k) : (d : Int) �
       simp only [factorial,hq]
       rw [← Int.mul_assoc,Int.mul_comm ((k+1 : Nat) : Int) d,Int.mul_assoc]
 
+
+theorem wilson_converse (n : Nat) (hn : 1 < n)
+    (h : Congruent (factorial (n-1)) (-1) n) : Prime n := by
+  /-
+  Theorem: If n>1 and (n-1)! is congruent to -1 modulo n,
+  then n is prime. The hypothesis n>1 is necessary: modulo one
+  the congruence holds, but one is not prime.
+  Proof: Let d divide n. If d is neither one nor n, positivity
+  and the divisor bound give 1<d<n. Thus d divides (n-1)!.
+  The congruence says (n-1)!+1=n*q for some integer q.
+  Since d divides n as well, it divides n*q-(n-1)!=1.
+  A positive divisor of one is at most one, contradicting d>1.
+  Hence every divisor is one or n, proving primality. QED
+  -/
+  refine ⟨hn,?_⟩
+  intro d hd
+  by_cases hd1 : d=1
+  · exact Or.inl hd1
+  · by_cases hdn : d=n
+    · exact Or.inr hdn
+    · have hdpos : 0 < d := by
+        by_cases hz : d=0
+        · subst d
+          rcases hd with ⟨q,hq⟩
+          simp only [Nat.zero_mul] at hq
+          omega
+        · omega
+      have hdi : (d : Int) ∣ (n : Int) := Int.ofNat_dvd.mpr hd
+      have hbound := divisor_le_positive d n (by omega) hdi
+      have hdf := divides_factorial d (n-1) hdpos (by omega)
+      rcases h.2 with ⟨q,hq⟩
+      have hone := dvd_linear d n (factorial (n-1)) q (-1) hdi hdf
+      have he : (n : Int)*q+factorial (n-1)*(-1)=1 := by
+        simp only [Int.mul_neg,Int.mul_one]
+        omega
+      rw [he] at hone
+      have hdle := divisor_le_positive d 1 (by decide) hone
+      omega
+
+
 end NumberTheory.ReducedResidues
