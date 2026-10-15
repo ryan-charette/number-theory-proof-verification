@@ -1548,4 +1548,23 @@ theorem wilson (p : Nat) (hp : Prime p) : Congruent (factorial (p-1)) (-1) p := 
     have hm := modeq_mult _ (-1) _ 1 p hend (interior_product p hp hp2)
     simpa only [Int.mul_one] using hm
 
+
+theorem divides_factorial (d k : Nat) (hd : 0 < d) (hdk : d ≤ k) : (d : Int) ∣ factorial k := by
+  /-
+  Lemma: A positive integer at most k divides k!. Proof: Induct
+  on k. The zero case is excluded by positivity. If d=k+1,
+  the recursive factorial exhibits the quotient k!. Otherwise
+  d≤k and the inductive divisibility persists after multiplying
+  by k+1. QED
+  -/
+  induction k with
+  | zero => omega
+  | succ k ih =>
+    by_cases he : d=k+1
+    · subst d; exact ⟨factorial k,rfl⟩
+    · rcases ih (by omega) with ⟨q,hq⟩
+      refine ⟨((k+1 : Nat) : Int)*q,?_⟩
+      simp only [factorial,hq]
+      rw [← Int.mul_assoc,Int.mul_comm ((k+1 : Nat) : Int) d,Int.mul_assoc]
+
 end NumberTheory.ReducedResidues
