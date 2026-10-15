@@ -1465,4 +1465,31 @@ theorem factorial_product (n : Nat) :
       product_append,intProduct,Int.mul_one]
     rw [ih,Int.mul_comm]
 
+
+theorem factorial_residues (p : Nat) (hp : 0 < p) :
+    factorial (p-1)=intProduct ((nonzeroResidues p).map (fun i : Nat => (i : Int))) := by
+  /-
+  Lemma: The factorial of p-1 is the product of all positive
+  representatives below p. Proof: The list 1,...,p-1 has no
+  repeats, and its membership condition is exactly 0<i<p.
+  It therefore rearranges the nonzero residue list. Products
+  are unchanged by a rearrangement. QED
+  -/
+  have hnd : ((List.range (p-1)).map (fun i => i+1)).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range (p-1))
+    intro i j hij he
+    exact hij (by omega)
+  have hperm : ((List.range (p-1)).map (fun i => i+1)).Perm (nonzeroResidues p) := by
+    apply same_members_perm _ _ hnd ((List.nodup_range p).erase 0)
+    intro i
+    change i ∈ (List.range (p-1)).map (fun j => j+1) ↔ i ∈ nonzeroResidues p
+    simp only [List.mem_map,List.mem_range,nonzero_residues_mem]
+    constructor
+    · rintro ⟨j,hj,he⟩; omega
+    · rintro ⟨hi,hip⟩
+      exact ⟨i-1,by omega,by omega⟩
+  rw [factorial_product]
+  exact product_perm _ _ (hperm.map (fun i : Nat => (i : Int)))
+
 end NumberTheory.ReducedResidues
