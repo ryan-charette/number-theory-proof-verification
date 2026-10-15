@@ -1163,4 +1163,16 @@ theorem phi_prime (p : Nat) (hp : Prime p) : phi p=p-1 := by
   exact he.trans hl
 
 
+
+theorem fermat_from_euler (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
+    Congruent (a^(p-1)) 1 p := by
+  /-
+  Corollary: Fermat's congruence follows from Euler's theorem.
+  Proof: For a prime the reduced-residue count is p-1. Substitute
+  this count into Euler's exponent. QED
+  -/
+  have h := euler_power a p (by have := hp.1; omega) hc
+  rw [phi_prime p hp] at h
+  exact h
+
 end NumberTheory.ReducedResidues
