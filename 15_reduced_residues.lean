@@ -1529,4 +1529,23 @@ theorem factorial_interior (p : Nat) (hp : 2 < p) :
 
 
 
+
+theorem wilson (p : Nat) (hp : Prime p) : Congruent (factorial (p-1)) (-1) p := by
+  /-
+  Theorem: For a prime p, the factorial of p-1 is congruent to -1.
+  Proof: If p=2, the factorial is one and its difference from -1
+  is two. Otherwise the interior factors pair to give one modulo
+  p. The endpoints contribute 1*(p-1), which is congruent to -1.
+  Multiplying these congruences proves the assertion. QED
+  -/
+  have hp1 := hp.1
+  by_cases he : p=2
+  · subst p
+    exact ⟨by decide,1,by decide⟩
+  · have hp2 : 2 < p := by omega
+    rw [factorial_interior p hp2]
+    have hend : Congruent ((p : Int)-1) (-1) p := ⟨by omega,1,by omega⟩
+    have hm := modeq_mult _ (-1) _ 1 p hend (interior_product p hp hp2)
+    simpa only [Int.mul_one] using hm
+
 end NumberTheory.ReducedResidues
