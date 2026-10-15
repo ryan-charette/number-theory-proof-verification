@@ -712,4 +712,29 @@ theorem modeq_mult (a b c d n : Int)
 
 
 
+def Prime (p : Nat) : Prop := 1 < p ∧ ∀ d : Nat, d ∣ p → d=1 ∨ d=p
+
+theorem prime_coprime (a : Int) (p : Nat) (hp : Prime p) (ha : ¬ (p : Int) ∣ a) :
+    gcd a p=1 := by
+  /-
+  Lemma: An integer not divisible by a prime is relatively prime
+  to it. Proof: The positive gcd d divides p, so primality makes
+  d either one or p. The latter would imply p divides a, which
+  is excluded. Hence d=1. QED
+  -/
+  have hd := gcd_positive a p (Or.inr (by have := hp.1; omega))
+  have hcast := Int.toNat_of_nonneg (Int.le_of_lt hd)
+  have hdiv : (gcd a p).toNat ∣ p := by
+    apply Int.ofNat_dvd.mp
+    rw [hcast]
+    exact (gcd_data a p).2.2.1
+  rcases hp.2 _ hdiv with h | h
+  · omega
+  · have he : gcd a p=(p : Int) := by omega
+    have had := (gcd_data a p).2.1
+    rw [he] at had
+    exact False.elim (ha had)
+
+
+
 end NumberTheory.ReducedResidues
