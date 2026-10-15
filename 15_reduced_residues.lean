@@ -603,4 +603,24 @@ theorem bezout_product (a b c : Int)
 
 
 
+theorem gcd_one_right (a n : Int) (hn : 0 < n)
+    (h : ∃ u v : Int, a*u+n*v=1) : gcd a n=1 := by
+  /-
+  Lemma: A positive modulus n and a linear combination a*u+n*v=1
+  imply gcd(a,n)=1, even when a is zero or negative.
+  Proof: The positive gcd divides this linear combination, so it
+  divides one and is at most one. Positivity makes it exactly one.
+  QED
+  -/
+  rcases h with ⟨u,v,he⟩
+  have hd := dvd_linear (gcd a n) a n u v
+    (gcd_data a n).2.1 (gcd_data a n).2.2.1
+  rw [he] at hd
+  have hle := divisor_le_positive (gcd a n) 1 (by decide) hd
+  have hp := gcd_positive a n (Or.inr (by omega))
+  omega
+
+
+
+
 end NumberTheory.ReducedResidues
