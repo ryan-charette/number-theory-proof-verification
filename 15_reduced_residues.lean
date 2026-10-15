@@ -1038,4 +1038,29 @@ theorem reduced_labels_perm (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1) :
   exact ⟨hs.1,hs.2.1,congruent_coprime _ _ _
     (coprime_multiply i a n ((reduced_mem n i).mp hi).2.2 hc) hs.2.2⟩
 
+
+theorem euler_power (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1) :
+    Congruent (a^(phi n)) 1 n := by
+  /-
+  Theorem: A coprime integer raised to phi(n) is congruent to one.
+  Proof: Multiply all reduced representatives to obtain P. Their
+  scaled product is a^phi(n)*P. Replacing the scaled entries by
+  their labels preserves the product modulo n, and those labels
+  rearrange the original list. Thus a^phi(n)*P is congruent to P.
+  Every factor of P is coprime to n, so P is too. Cancel P. QED
+  -/
+  have hp := product_congruent (reducedResidues n) (fun i => (i : Int)*a)
+    (fun i => (positiveLabel ((i : Int)*a) n : Int)) n (by omega)
+    (fun i _ => (positiveLabel_spec _ n hn).2.2)
+  have he := product_perm _ _ ((reduced_labels_perm a n hn hc).map (fun i : Nat => (i : Int)))
+  simp only [List.map_map,Function.comp_def] at he
+  rw [he,scaled_product] at hp
+  have hprod := coprime_product ((reducedResidues n).map (fun i : Nat => (i : Int))) n
+    (by omega) (by
+      intro x hx
+      rcases List.mem_map.mp hx with ⟨i,hi,he⟩
+      subst x
+      exact ((reduced_mem n i).mp hi).2.2)
+  exact cancel_coprime (a^(phi n)) 1 _ n hprod (by simpa [phi] using hp)
+
 end NumberTheory.ReducedResidues
