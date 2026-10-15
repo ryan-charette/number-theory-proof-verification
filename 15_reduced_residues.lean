@@ -1109,4 +1109,23 @@ theorem same_members_perm (xs ys : List Nat) (hx : xs.Nodup) (hy : ys.Nodup)
   have h₂ := distinct_length_bound ys xs hy (fun i hi => (h i).mpr hi)
   exact distinct_subset_perm xs ys hx (fun i hi => (h i).mp hi) (by omega)
 
+
+theorem phi_one : phi 1=1 := by
+  /-
+  Lemma: The count at modulus one is one. Proof: The only positive
+  representative at most one is one itself, and its gcd with one
+  is one. Thus the reduced list has exactly this one member. QED
+  -/
+  have hp : (reducedResidues 1).Perm [1] := by
+    apply same_members_perm _ _ (reduced_nodup 1) (by simp)
+    intro i
+    rw [reduced_mem]
+    simp only [List.mem_singleton]
+    constructor
+    · intro h; omega
+    · intro h
+      subst i
+      exact ⟨by decide,by decide,gcd_one_combination 1 1 ⟨1,0,by decide⟩⟩
+  exact hp.length_eq
+
 end NumberTheory.ReducedResidues
