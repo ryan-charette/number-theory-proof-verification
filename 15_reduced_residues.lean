@@ -27,4 +27,15 @@ theorem dvd_linear (d a b x y : Int) (ha : d ∣ a) (hb : d ∣ b) :
 
 
 
+theorem dvd_refl (a : Int) : a ∣ a := by
+  /-
+  Theorem: Every integer divides itself.
+  Proof: a = a * 1, so choose the integer 1. QED
+  -/
+  exists 1
+  rw [Int.mul_one]
+
+
+
+
 end NumberTheory.ReducedResidues
