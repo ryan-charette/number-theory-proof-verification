@@ -1429,4 +1429,19 @@ theorem interior_product (p : Nat) (hp : Prime p) (hp2 : 2 < p) :
     rcases interior_inverse_exists p a hp h.1 h.2 with ⟨b,hb,hbp,hba,hab⟩
     exact ⟨b,(interior_mem p b).mpr ⟨hb,hbp⟩,hba,hab⟩
 
+
+theorem product_append (xs ys : List Int) : intProduct (xs++ys)=intProduct xs*intProduct ys := by
+  /-
+  Lemma: The product of two joined lists is the product of their
+  products. Proof: Induct on the first list. Its empty product is
+  one; in the next case, use induction on the tail and reassociate
+  the leading factor. QED
+  -/
+  induction xs with
+  | nil => simp [intProduct]
+  | cons a xs ih =>
+    change a*intProduct (xs++ys)=(a*intProduct xs)*intProduct ys
+    rw [ih,Int.mul_assoc]
+
+
 end NumberTheory.ReducedResidues
