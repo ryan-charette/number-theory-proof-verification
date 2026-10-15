@@ -975,4 +975,18 @@ theorem reduced_mem (n i : Nat) : i ∈ reducedResidues n ↔ 0 < i ∧ i ≤ n 
 
 
 
+
+theorem reduced_nodup (n : Nat) : (reducedResidues n).Nodup := by
+  /-
+  Lemma: The reduced residue list has no repeated entries.
+  Proof: The initial range is distinct, adding one preserves
+  distinctness, and filtering can only remove entries. QED
+  -/
+  have h : ((List.range n).map (fun i => i+1)).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range n)
+    intro i j hij he
+    exact hij (by omega)
+  exact h.filter _
+
 end NumberTheory.ReducedResidues
