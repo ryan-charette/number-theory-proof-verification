@@ -1159,4 +1159,24 @@ theorem prime_shifted_power (W : Int) (p k : Nat) (hp : Prime p) :
     rw [Nat.mul_comm (p-1) k] at hm
     simpa only [Int.one_mul] using modeq_mult _ 1 W W p hm (modeq_refl _ _ hn)
 
+
+theorem two_prime_power_recovery (W : Int) (p q k : Nat) (hp : Prime p) (hq : Prime q)
+    (hne : p ≠ q) : Congruent (W^(1+k*((p-1)*(q-1)))) W ((p : Int)*q) := by
+  /-
+  Theorem: Raising W to 1+k(p-1)(q-1) returns W modulo pq.
+  Proof: The exponent is one plus a multiple of p-1 and also
+  one plus a multiple of q-1. Apply the prime shifted-power
+  result separately, including when a prime divides W, and
+  combine the congruences. No bound on W is needed for this
+  congruence; a bound is needed later to recover the exact message.
+  QED
+  -/
+  have h1 := prime_shifted_power W p (k*(q-1)) hp
+  have h2 := prime_shifted_power W q (k*(p-1)) hq
+  have he1 : (k*(q-1))*(p-1)=k*((p-1)*(q-1)) := by
+    rw [Nat.mul_assoc,Nat.mul_comm (q-1) (p-1)]
+  rw [he1] at h1
+  rw [Nat.mul_assoc] at h2
+  exact combine_coprime_moduli _ W p q (distinct_primes_coprime p q hp hq hne) h1 h2
+
 end NumberTheory.PowerRecovery
