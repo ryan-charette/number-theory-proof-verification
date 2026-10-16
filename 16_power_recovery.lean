@@ -509,4 +509,31 @@ theorem canonical_residue (a : Int) (n : Nat) (hn : 0 < n) :
 
 
 
+noncomputable def canonicalLabel (a : Int) (n : Nat) : Nat :=
+  if h : 0 < n then (Classical.choose (canonical_residue a n h)).toNat else 0
+
+theorem canonicalLabel_spec (a : Int) (n : Nat) (hn : 0 < n) :
+    canonicalLabel a n < n ∧ a ≡ (canonicalLabel a n : Int) [MOD (n : Int)] := by
+  /-
+  Lemma: The canonical label is less than n and represents its input.
+  Proof: Choose the unique representative already proved to exist.
+  It is nonnegative, so conversion to a natural number preserves its
+  value and both stated properties. At modulus zero the definition
+  is total by convention, but the lemma requires positive modulus.
+  QED
+  -/
+  have h := Classical.choose_spec (canonical_residue a n hn)
+  have hcast := Int.toNat_of_nonneg h.1
+  unfold canonicalLabel
+  rw [dif_pos hn]
+  constructor
+  · omega
+  · rw [Int.toNat_of_nonneg h.1]
+    exact h.2.2.1
+
+
+
+
+
+
 end NumberTheory.PowerRecovery
