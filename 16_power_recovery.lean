@@ -1296,4 +1296,31 @@ theorem decode_representative (p q W E D y : Nat) (c : Int)
     (by omega) (by omega) (by omega) (by omega) he
   omega
 
+
+theorem decoding_from_factors (p q E : Nat) (hp : Prime p) (hq : Prime q)
+    (hne : p ≠ q) (hE : 0 < E) (hc : gcd (E : Int) ((p-1)*(q-1) : Nat)=1) :
+    ∃ D : Nat, 0 < D ∧ ∀ W : Nat, W < p*q →
+      canonicalLabel (((canonicalLabel ((W : Int)^E) (p*q)) : Int)^D) (p*q)=W := by
+  /-
+  Theorem: Knowing the two prime factors permits a single decoding
+  exponent that recovers every message in range. Proof: From the
+  factors, form (p-1)(q-1) and use the Bezout construction to obtain
+  positive D and y with ED=1+y(p-1)(q-1). Encode W by taking the
+  canonical representative c of W^E modulo pq. By definition c
+  is congruent to W^E. The preceding recovery result shows that
+  reducing c^D modulo pq gives W itself. The chosen D works for
+  every W in the range, including zero and multiples of either
+  prime. This verifies the mathematical encoding and decoding
+  procedure and explains recovery when the factors are known.
+  QED
+  -/
+  rcases decoding_exponent_exists p q E hp hq hE hc with ⟨D,y,hD,_,hED⟩
+  refine ⟨D,hD,?_⟩
+  intro W hW
+  have hn : 0 < p*q := Nat.mul_pos (by have := hp.1; omega) (by have := hq.1; omega)
+  have hs := (canonicalLabel_spec ((W : Int)^E) (p*q) hn).2
+  apply decode_representative p q W E D y _ hp hq hne hW hED
+  have hs' := modeq_symm _ _ _ hs
+  simpa only [Int.natCast_mul] using hs'
+
 end NumberTheory.PowerRecovery
