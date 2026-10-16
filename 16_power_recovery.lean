@@ -1114,4 +1114,25 @@ theorem coprime_factor (a n m : Int) (hn : 0 < n) (hc : gcd a (n*m)=1) : gcd a n
   rw [hc,Int.mul_assoc] at he
   exact gcd_one_right a n hn ⟨u,m*v,he⟩
 
+
+theorem two_prime_power_one (W : Int) (p q : Nat) (hp : Prime p) (hq : Prime q)
+    (hne : p ≠ q) (hc : gcd W ((p : Int)*q)=1) :
+    Congruent (W^((p-1)*(q-1))) 1 ((p : Int)*q) := by
+  /-
+  Theorem: A number coprime to pq raised to (p-1)(q-1) is one
+  modulo pq, for distinct primes p and q. Proof: It is coprime
+  to each prime. Fermat's theorem modulo p, raised to the power
+  q-1, gives one; the same argument modulo q uses power p-1.
+  Since p and q are coprime, the two congruences combine modulo
+  pq. The proof permits every integer W, including positive inputs.
+  QED
+  -/
+  have hwp := coprime_factor W p q (by have := hp.1; omega) hc
+  have hwq := coprime_factor W q p (by have := hq.1; omega)
+    (by simpa only [Int.mul_comm] using hc)
+  have h1 := power_multiple_one W p (p-1) (q-1) (fermat_coprime W p hp hwp)
+  have h2 := power_multiple_one W q (q-1) (p-1) (fermat_coprime W q hq hwq)
+  rw [Nat.mul_comm (q-1) (p-1)] at h2
+  exact combine_coprime_moduli _ 1 p q (distinct_primes_coprime p q hp hq hne) h1 h2
+
 end NumberTheory.PowerRecovery
