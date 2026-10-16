@@ -1245,4 +1245,18 @@ theorem decoding_exponent_exists (p q E : Nat) (hp : Prime p) (hq : Prime q)
   exact positive_inverse_exponents E ((p-1)*(q-1)) hE
     (Nat.mul_pos (by omega) (by omega)) hc
 
+
+theorem exponent_product_recovery (W : Int) (p q E D y : Nat)
+    (hp : Prime p) (hq : Prime q) (hne : p ≠ q)
+    (hED : E*D=1+y*((p-1)*(q-1))) :
+    Congruent (W^(E*D)) W ((p : Int)*q) := by
+  /-
+  Theorem: The product of encoding and decoding exponents returns
+  the original message modulo pq. Proof: Substitute the identity
+  ED=1+y(p-1)(q-1) into the two-prime power recovery theorem.
+  The result holds even when a prime divides the message. QED
+  -/
+  rw [hED]
+  exact two_prime_power_recovery W p q y hp hq hne
+
 end NumberTheory.PowerRecovery
