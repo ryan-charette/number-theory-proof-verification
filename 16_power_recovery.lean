@@ -1228,4 +1228,21 @@ theorem positive_inverse_exponents (E n : Nat) (hE : 0 < E) (hn : 0 < n)
   omega
 
 
+
+theorem decoding_exponent_exists (p q E : Nat) (hp : Prime p) (hq : Prime q)
+    (hE : 0 < E) (hc : gcd (E : Int) ((p-1)*(q-1) : Nat)=1) :
+    ∃ D y : Nat, 0 < D ∧ 0 < y ∧ E*D=1+y*((p-1)*(q-1)) := by
+  /-
+  Theorem: An encoding exponent coprime to (p-1)(q-1) has a
+  positive decoding exponent. Proof: Both prime predecessors
+  are positive, so their product is positive. Apply the positive
+  inverse construction to that product. Distinctness of the
+  primes is not needed for this particular existence statement.
+  QED
+  -/
+  have hp1 := hp.1
+  have hq1 := hq.1
+  exact positive_inverse_exponents E ((p-1)*(q-1)) hE
+    (Nat.mul_pos (by omega) (by omega)) hc
+
 end NumberTheory.PowerRecovery
