@@ -1271,4 +1271,29 @@ theorem power_mul (a : Int) (i j : Nat) : (a^i)^j=a^(i*j) := by
   | zero => simp [Int.pow_zero]
   | succ j ih => rw [Int.pow_succ,ih,Nat.mul_succ,power_add]
 
+
+theorem decode_representative (p q W E D y : Nat) (c : Int)
+    (hp : Prime p) (hq : Prime q) (hne : p ≠ q) (hW : W < p*q)
+    (hED : E*D=1+y*((p-1)*(q-1)))
+    (hc : Congruent c ((W : Int)^E) ((p : Int)*q)) :
+    canonicalLabel (c^D) (p*q)=W := by
+  /-
+  Lemma: Decoding any representative of the encoded power gives
+  the original bounded message. Proof: Raise the encoding
+  congruence to D. The exponent identity and the recovery theorem
+  show that c^D is congruent to W. Its canonical representative
+  and W are both between zero and pq-1. Uniqueness of bounded
+  representatives therefore makes them equal. QED
+  -/
+  have hn : 0 < p*q := Nat.mul_pos (by have := hp.1; omega) (by have := hq.1; omega)
+  have hm := modeq_pow c ((W : Int)^E) ((p : Int)*q) D hc
+  rw [power_mul] at hm
+  have hr := modeq_trans _ _ _ ((p : Int)*q) hm (exponent_product_recovery W p q E D y hp hq hne hED)
+  have hs := canonicalLabel_spec (c^D) (p*q) hn
+  have hr' : Congruent (c^D) W (p*q : Nat) := by simpa only [Int.natCast_mul] using hr
+  have he := modeq_trans _ _ _ (p*q : Nat) (modeq_symm _ _ _ hs.2) hr'
+  have heq := bounded_congruent_equal (canonicalLabel (c^D) (p*q)) W (p*q : Nat)
+    (by omega) (by omega) (by omega) (by omega) he
+  omega
+
 end NumberTheory.PowerRecovery
