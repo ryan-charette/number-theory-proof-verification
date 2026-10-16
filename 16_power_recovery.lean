@@ -1102,4 +1102,16 @@ theorem distinct_primes_coprime (p q : Nat) (hp : Prime p) (hq : Prime q)
   · have := hq.1; omega
   · exact hne h.symm
 
+
+theorem coprime_factor (a n m : Int) (hn : 0 < n) (hc : gcd a (n*m)=1) : gcd a n=1 := by
+  /-
+  Lemma: Coprimality with a product implies coprimality with either
+  factor. Proof: A Bezout identity a*u+(n*m)*v=1 can be written
+  a*u+n*(m*v)=1. This identity shows that the gcd with n is one.
+  Interchanging the two factors gives the other case. QED
+  -/
+  rcases bezout a (n*m) with ⟨u,v,he⟩
+  rw [hc,Int.mul_assoc] at he
+  exact gcd_one_right a n hn ⟨u,m*v,he⟩
+
 end NumberTheory.PowerRecovery
