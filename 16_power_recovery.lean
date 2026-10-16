@@ -1135,4 +1135,28 @@ theorem two_prime_power_one (W : Int) (p q : Nat) (hp : Prime p) (hq : Prime q)
   rw [Nat.mul_comm (q-1) (p-1)] at h2
   exact combine_coprime_moduli _ 1 p q (distinct_primes_coprime p q hp hq hne) h1 h2
 
+
+theorem prime_shifted_power (W : Int) (p k : Nat) (hp : Prime p) :
+    Congruent (W^(1+k*(p-1))) W p := by
+  /-
+  Lemma: Exponents one greater than a multiple of p-1 return W
+  modulo a prime p. Proof: If p divides W, the positive power
+  W^(k*(p-1))*W and W are both zero modulo p. Otherwise W is
+  coprime to p. Fermat's theorem, raised to power k, makes the
+  first factor one modulo p. Multiplying by W proves the claim.
+  This also includes k=0 and W=0. QED
+  -/
+  have hn : 0 < (p : Int) := by have := hp.1; omega
+  have he : W^(1+k*(p-1))=W^(k*(p-1))*W := by
+    rw [Nat.add_comm,Int.pow_succ]
+  rw [he]
+  by_cases hd : (p : Int) ∣ W
+  · have hz : Congruent W 0 p := ⟨hn,by simpa using hd⟩
+    have hm := modeq_mult _ (W^(k*(p-1))) W 0 p (modeq_refl _ _ hn) hz
+    simp only [Int.mul_zero] at hm
+    exact modeq_trans _ _ _ p hm (modeq_symm _ _ p hz)
+  · have hm := power_multiple_one W p (p-1) k (fermat_coprime W p hp (prime_coprime W p hp hd))
+    rw [Nat.mul_comm (p-1) k] at hm
+    simpa only [Int.one_mul] using modeq_mult _ 1 W W p hm (modeq_refl _ _ hn)
+
 end NumberTheory.PowerRecovery
