@@ -309,4 +309,28 @@ theorem bezout (a b : Int) : ∃ x y : Int, a * x + b * y = gcd a b := by
 
 
 
+def Congruent (a b n : Int) : Prop := 0 < n ∧ n ∣ a-b
+
+local notation:50 a " ≡ " b " [MOD " n "]" => Congruent a b n
+
+theorem modeq_symm (a b n : Int) (h : a ≡ b [MOD n]) : b ≡ a [MOD n] := by
+  /-
+  Theorem: Reversing a congruence preserves it.
+  Proof: By the definition of congruence, n is positive and
+  a - b = n * k for some integer k. Then
+
+    b - a = -(a - b) = -(n * k) = n * (-k).
+
+  Use -k as the witness. QED
+  -/
+  rcases h with ⟨hn, k, hk⟩
+  constructor
+  · exact hn
+  · exists -k
+    rw [← Int.neg_sub a b, hk, Int.mul_neg]
+
+
+
+
+
 end NumberTheory.PolynomialRoots
