@@ -404,4 +404,42 @@ theorem prime_product_divides (p : Nat) (a b : Int) (hp : Prime p)
 
 
 
+
+def evaluate : List Int → Int → Int
+  | [], _ => 0
+  | a :: cs, x => a+x*evaluate cs x
+
+def quotient (r : Int) : List Int → List Int
+  | [] => []
+  | [_] => []
+  | _ :: b :: cs => evaluate (b :: cs) r :: quotient r (b :: cs)
+
+theorem division_identity (cs : List Int) (r x : Int) :
+    evaluate cs x=(x-r)*evaluate (quotient r cs) x+evaluate cs r := by
+  /-
+  Lemma: Dividing an integer polynomial f by x-r leaves remainder
+  f(r). Coefficient lists run from the constant term upward.
+  Proof: Use induction on the coefficient list. Constants have
+  zero quotient. Write the next polynomial as a+x*h(x). If
+  h(x)=(x-r)*q(x)+h(r), then
+
+    a+x*h(x)=(x-r)*(h(r)+x*q(x))+(a+r*h(r)).
+
+  The last term is f(r), and h(r)+x*q(x) is the quotient given
+  by the recursion. All its coefficients are integers. QED
+  -/
+  induction cs with
+  | nil => simp [evaluate,quotient]
+  | cons a cs ih =>
+    cases cs with
+    | nil => simp [evaluate,quotient]
+    | cons b cs =>
+      change a+x*evaluate (b::cs) x =
+        (x-r)*(evaluate (b::cs) r+x*evaluate (quotient r (b::cs)) x)+
+          (a+r*evaluate (b::cs) r)
+      rw [ih]
+      simp only [Int.mul_add,Int.add_mul,Int.sub_mul,Int.mul_sub,
+        Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+      omega
+
 end NumberTheory.PolynomialRoots
