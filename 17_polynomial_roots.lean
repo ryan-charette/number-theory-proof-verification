@@ -624,4 +624,32 @@ theorem root_count (cs : List Int) (p : Nat) (hp : Prime p)
       simp only [List.length_cons]
       omega
 
+
+theorem polynomial_root_bound (cs : List Int) (n p : Nat) (hp : Prime p)
+    (hdegree : cs.length=n+1) (hleading : ¬ (p : Int) ∣ leading cs)
+    (roots : List Int) (hdist : roots.Pairwise (fun r s => ¬ Congruent r s p))
+    (hroots : ∀ r ∈ roots, Congruent (evaluate cs r) 0 p) : roots.length ≤ n := by
+  /-
+  Theorem: A degree-n integer polynomial whose leading coefficient
+  is not divisible by the prime p has at most n incongruent roots
+  modulo p. We express the bound for every finite list of pairwise
+  incongruent solutions, so no choice of representatives is needed.
+  Proof: Each root congruence says that p divides the polynomial
+  value. Apply the coefficient-list root count and substitute
+  length=n+1 to obtain the bound n. This includes constant
+  polynomials, which have no roots under the stated hypothesis.
+
+  The leading coefficient must be nonzero modulo p, not merely
+  nonzero as an integer. Without this hypothesis, the polynomial
+  p*x has degree one but every residue class is a root. The
+  hypothesis here is the approved correction of that omission.
+  QED
+  -/
+  have h := root_count cs p hp hleading roots hdist (by
+    intro r hr
+    have hd := (hroots r hr).2
+    simpa only [Int.sub_zero] using hd)
+  rw [hdegree] at h
+  omega
+
 end NumberTheory.PolynomialRoots
