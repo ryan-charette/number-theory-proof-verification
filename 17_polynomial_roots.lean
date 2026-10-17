@@ -491,4 +491,31 @@ theorem quotient_leading (cs : List Int) (r : Int) (h : 2 ≤ cs.length) :
         have he := ih (by simp)
         simpa only [quotient,leading] using he
 
+
+theorem integer_factor (cs : List Int) (r : Int) (hdeg : 2 ≤ cs.length)
+    (hl : leading cs ≠ 0) :
+    evaluate cs r=0 ↔ ∃ g : List Int,
+      g.length+1=cs.length ∧ leading g ≠ 0 ∧
+        ∀ x : Int, evaluate cs x=(x-r)*evaluate g x := by
+  /-
+  Theorem: An integer r is a root of a positive-degree integer
+  polynomial exactly when x-r is a factor with integer quotient
+  of degree one less. A nonzero final coefficient makes a list
+  of length n+1 a polynomial of degree n.
+  Proof: If f(r)=0, the division identity has zero remainder.
+  The quotient loses one coefficient and keeps the nonzero leading
+  coefficient, so its degree is exactly one less. Conversely,
+  evaluating a factorization f(x)=(x-r)g(x) at r gives zero. QED
+  -/
+  constructor
+  · intro hr
+    refine ⟨quotient r cs,quotient_length cs r (by intro he; subst cs; simp at hdeg),?_,?_⟩
+    · rw [quotient_leading cs r hdeg]; exact hl
+    · intro x
+      have he := division_identity cs r x
+      simpa only [hr,Int.add_zero] using he
+  · rintro ⟨g,_,_,he⟩
+    have h := he r
+    simpa only [Int.sub_self,Int.zero_mul] using h
+
 end NumberTheory.PolynomialRoots
