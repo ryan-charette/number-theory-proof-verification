@@ -518,4 +518,38 @@ theorem integer_factor (cs : List Int) (r : Int) (hdeg : 2 ≤ cs.length)
     have h := he r
     simpa only [Int.sub_self,Int.zero_mul] using h
 
+
+theorem modular_factor (a : Int) (cs : List Int) (r : Int) (p : Nat)
+    (hdeg : 1 ≤ cs.length) (hl : leading (a::cs) ≠ 0) (hp : Prime p)
+    (hr : Congruent (evaluate (a::cs) r) 0 p) :
+    ∃ g : List Int, ∃ b : Int,
+      g.length=cs.length ∧ leading g ≠ 0 ∧ Congruent a b p ∧
+        ∀ x : Int, evaluate (b::cs) x=(x-r)*evaluate g x := by
+  /-
+  Theorem: A root modulo p permits division by x-r after changing
+  only the constant coefficient to a congruent integer.
+  Proof: Take the synthetic quotient g and set b=a-f(r).
+  The difference a-b=f(r) is divisible by p. Replacing a by b
+  subtracts f(r) from the whole polynomial, so the division
+  identity gives (x-r)g(x). The quotient has one fewer coefficient
+  and the same nonzero leading coefficient, as required. QED
+  -/
+  refine ⟨quotient r (a::cs),a-evaluate (a::cs) r,?_,?_,?_,?_⟩
+  · have he := quotient_length (a::cs) r (by simp)
+    simp only [List.length_cons] at he
+    omega
+  · rw [quotient_leading (a::cs) r (by simp; omega)]
+    exact hl
+  · refine ⟨by have := hp.1; omega,?_⟩
+    have hd := hr.2
+    have he : a-(a-evaluate (a::cs) r)=evaluate (a::cs) r := by omega
+    rw [he]
+    simpa only [Int.sub_zero] using hd
+  · intro x
+    have he := division_identity (a::cs) r x
+    change a+x*evaluate cs x = _ at he
+    change (a-evaluate (a::cs) r)+x*evaluate cs x = _
+    omega
+
+
 end NumberTheory.PolynomialRoots
