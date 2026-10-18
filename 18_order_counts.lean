@@ -1070,4 +1070,22 @@ theorem distinct_subset_perm (xs ys : List Nat) (hnd : xs.Nodup)
 
 
 
+theorem scaled_labels_injective (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1)
+    (i j : Nat) (hi : i < n) (hj : j < n)
+    (he : canonicalLabel ((i : Int)*a) n=canonicalLabel ((j : Int)*a) n) : i=j := by
+  /-
+  Lemma: Multiplication by a coprime integer gives distinct residue
+  labels to distinct canonical representatives. Proof: Equal labels
+  give i*a congruent to j*a. Cancel a; the representatives i and j
+  lie between zero and n-1, so their congruence makes them equal.
+  QED
+  -/
+  have h := (canonicalLabel_eq_iff _ _ n hn).mp he
+  have hcancel := cancel_coprime i j a n hc h
+  have hb := bounded_congruent_equal i j n (by omega) (by omega)
+    (by omega) (by omega) hcancel
+  omega
+
+
+
 end NumberTheory.OrderCounts
