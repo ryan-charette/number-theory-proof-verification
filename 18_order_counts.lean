@@ -1622,4 +1622,15 @@ theorem monomial_evaluate (k : Nat) (x : Int) : evaluate (monomial k) x=x^k := b
   | zero => simp [monomial,evaluate,Int.pow_zero]
   | succ k ih => simp only [monomial,evaluate,Int.zero_add,ih,Int.pow_succ,Int.mul_comm]
 
+
+theorem monomial_length (k : Nat) : (monomial k).length=k+1 := by
+  /-
+  Lemma: The coefficient list for x^k has length k+1.
+  Proof: It starts with one coefficient. Each recursive step
+  adds one zero to the front, increasing the length by one. QED
+  -/
+  induction k with
+  | zero => rfl
+  | succ k ih => simp only [monomial,List.length_cons,ih]
+
 end NumberTheory.OrderCounts
