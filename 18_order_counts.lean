@@ -1773,4 +1773,56 @@ theorem equal_order_index (a b : Int) (p : Nat) (hp : Prime p)
   have hcop := equal_power_order_coprime a p i hn ha (horder.symm.trans he)
   exact ⟨i,hi,hid,hcop,hbi⟩
 
+
+noncomputable def phi (n : Nat) : Nat := (reducedResidues n).length
+
+theorem order_count (p d : Nat) (hp : Prime p) (xs : List Int)
+    (hpair : xs.Pairwise (fun a b => ¬ Congruent a b p))
+    (horders : ∀ a ∈ xs, gcd a p=1 ∧ order a p=d) : xs.length ≤ phi d := by
+  /-
+  Theorem: At most phi(d) incongruent integers have order d modulo
+  a prime. Proof: If the list is empty, there is nothing to count.
+  Otherwise fix its first element a. Each element b is congruent
+  to a^i for some 1≤i≤d coprime to d. Choose such an exponent
+  for each b. Two elements assigned the same exponent would be
+  congruent, which is excluded. Thus the chosen exponents form a
+  distinct list drawn from the reduced representatives counted
+  by phi(d). The elementary distinct-list bound gives the result.
+  Coprimality makes the order meaningful; d=0 consequently admits
+  no such elements, and is harmless in this formulation. QED
+  -/
+  cases xs with
+  | nil => exact Nat.zero_le _
+  | cons a xs =>
+    have ha := horders a (by simp)
+    have hspec : ∀ b ∈ a::xs, ∃ i : Nat, 0 < i ∧ i ≤ d ∧ gcd (i : Int) d=1 ∧ Congruent b (a^i) p := by
+      intro b hb
+      have hs := horders b hb
+      have he := equal_order_index a b p hp ha.1 hs.1 (hs.2.trans ha.2.symm)
+      simpa only [ha.2] using he
+    let index (b : Int) : Nat := if h : b ∈ a::xs then Classical.choose (hspec b h) else 0
+    have hindex : ∀ b (_hb : b ∈ a::xs),
+        0 < index b ∧ index b ≤ d ∧ gcd (index b : Int) d=1 ∧ Congruent b (a^(index b)) p := by
+      intro b hb
+      dsimp only [index]
+      rw [dif_pos hb]
+      exact Classical.choose_spec (hspec b hb)
+    have hnd : ((a::xs).map index).Nodup := by
+      apply List.pairwise_map.mpr
+      apply List.Pairwise.imp_of_mem ?_ hpair
+      intro b c hb hc hbc he
+      have hs := (hindex b hb).2.2.2
+      have ht := (hindex c hc).2.2.2
+      rw [he] at hs
+      exact hbc (modeq_trans _ _ _ p hs (modeq_symm _ _ p ht))
+    have hsub : ∀ i ∈ (a::xs).map index, i ∈ reducedResidues d := by
+      intro i hi
+      rcases List.mem_map.mp hi with ⟨b,hb,he⟩
+      subst i
+      have hs := hindex b hb
+      exact (reduced_mem d _).mpr ⟨hs.1,hs.2.1,hs.2.2.1⟩
+    have hb := distinct_length_bound _ _ hnd hsub
+    change (a::xs).length ≤ (reducedResidues d).length
+    simpa only [List.length_map] using hb
+
 end NumberTheory.OrderCounts
