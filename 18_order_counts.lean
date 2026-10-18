@@ -1606,4 +1606,20 @@ theorem equal_power_order_coprime (a : Int) (n i : Nat) (hn : 0 < n)
   rw [hg1] at hgcast
   exact hgcast.symm
 
+
+def monomial : Nat → List Int
+  | 0 => [1]
+  | k+1 => 0 :: monomial k
+
+theorem monomial_evaluate (k : Nat) (x : Int) : evaluate (monomial k) x=x^k := by
+  /-
+  Lemma: A coefficient one preceded by k zeros represents x^k.
+  Proof: At k=0 the polynomial is one. Each added zero shifts
+  the coefficients by one position and multiplies the value by x.
+  Induction therefore gives x^k. QED
+  -/
+  induction k with
+  | zero => simp [monomial,evaluate,Int.pow_zero]
+  | succ k ih => simp only [monomial,evaluate,Int.zero_add,ih,Int.pow_succ,Int.mul_comm]
+
 end NumberTheory.OrderCounts
