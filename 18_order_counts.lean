@@ -273,4 +273,21 @@ theorem modeq_symm (a b n : Int) (h : a ≡ b [MOD n]) : b ≡ a [MOD n] := by
 
 
 
+theorem gcd_data (a b : Int) :
+    0 ≤ gcd a b ∧ gcd a b ∣ a ∧ gcd a b ∣ b ∧
+      ∃ x y : Int, a * x + b * y = gcd a b := by
+  /-
+  Theorem: The constructed gcd is nonnegative, divides both inputs,
+  and is an integer linear combination of them.
+  Proof: These are exactly the properties supplied by the Euclidean
+  construction used in its definition. QED
+  -/
+  constructor
+  · unfold gcd
+    omega
+  · exact Classical.choose_spec (euclid_integer a b)
+
+
+
+
 end NumberTheory.OrderCounts
