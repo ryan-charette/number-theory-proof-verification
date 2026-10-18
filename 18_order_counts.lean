@@ -1041,4 +1041,33 @@ theorem coprime_not_zero (a : Int) (n : Nat) (hn : 1 < n) (hc : gcd a n=1) :
 
 
 
+theorem distinct_subset_perm (xs ys : List Nat) (hnd : xs.Nodup)
+    (hsub : ∀ x ∈ xs, x ∈ ys) (hlen : xs.length=ys.length) : xs.Perm ys := by
+  /-
+  Lemma: Distinct entries drawn from a list of the same length
+  rearrange that list. Proof: Induct on the first list. Remove its
+  head from both lists. Distinctness ensures its tail still lies
+  in the second list after removal, and lengths remain equal.
+  Apply induction, then restore the head. The empty case follows
+  because the second list also has length zero. QED
+  -/
+  letI : BEq Nat := instBEqOfDecidableEq
+  induction xs generalizing ys with
+  | nil =>
+    have hy : ys=[] := List.length_eq_zero.mp (by simpa using hlen.symm)
+    subst ys; exact List.Perm.refl []
+  | cons a xs ih =>
+    have hh := List.nodup_cons.mp hnd
+    have ha := hsub a (by simp)
+    have ht : ∀ b ∈ xs, b ∈ ys.erase a := by
+      intro b hb
+      have hne : b ≠ a := by intro he; subst b; exact hh.1 hb
+      exact (List.mem_erase_of_ne hne).mpr (hsub b (by simp [hb]))
+    have he := List.length_erase_of_mem ha
+    have hp := ih (ys.erase a) hh.2 ht (by simp only [List.length_cons] at hlen; omega)
+    exact (hp.cons a).trans (List.perm_cons_erase ha).symm
+
+
+
+
 end NumberTheory.OrderCounts
