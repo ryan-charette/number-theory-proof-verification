@@ -809,4 +809,19 @@ theorem modeq_refl (a n : Int) (hn : 0 < n) : a ≡ a [MOD n] := by
 
 
 
+theorem dvd_mult_of_dvd_left (a b c : Int) (h : a ∣ b) : a ∣ b * c := by
+  /-
+  Theorem: If a divides b, then a divides b * c for any integer c.
+  Proof: If b = a * m, then
+
+    b * c = (a * m) * c = a * (m * c).
+
+  Use m * c as the witness. QED
+  -/
+  rcases h with ⟨m, hm⟩
+  exists m * c
+  rw [hm, Int.mul_assoc]
+
+
+
 end NumberTheory.OrderCounts
