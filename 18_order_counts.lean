@@ -1709,4 +1709,17 @@ theorem cycle_distinct (a : Int) (n : Nat) (hn : 0 < n) (ha : gcd a n=1) :
   simp only [List.mem_range] at hi hj
   exact powers_distinct a n hn ha (i+1) (j+1) (by omega) (by omega) (by omega)
 
+
+theorem cycle_power_one (a : Int) (n : Nat) (hn : 0 < n) (ha : gcd a n=1)
+    (x : Int) (hx : x ∈ cyclePowers a (order a n)) : Congruent (x^(order a n)) 1 n := by
+  /-
+  Lemma: Every power in the cycle solves x^d=1, where d is the
+  order. Proof: Write x=a^(j+1). Raising it to d gives a power
+  whose exponent d*(j+1) is a multiple of the order. QED
+  -/
+  rcases List.mem_map.mp hx with ⟨j,_,he⟩
+  subst x
+  rw [power_mul,Nat.mul_comm (j+1) (order a n)]
+  exact power_multiple_one a n (order a n) (j+1) (order_spec a n hn ha).2.1
+
 end NumberTheory.OrderCounts
