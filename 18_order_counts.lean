@@ -1005,4 +1005,21 @@ theorem small_prime_coprime (p i : Nat) (hp : Prime p) (hi : 0 < i) (hip : i < p
 
 
 
+def nonzeroResidues (n : Nat) : List Nat := (List.range n).erase 0
+
+theorem nonzero_residues_mem (n i : Nat) : i ∈ nonzeroResidues n ↔ 0 < i ∧ i < n := by
+  /-
+  Lemma: Removing zero from the canonical list leaves exactly the
+  positive integers below n. Proof: Membership in the range means
+  i<n. Its entries are distinct, so erasing zero removes precisely
+  zero. For i≠0 membership is unchanged. QED
+  -/
+  by_cases hi : i=0
+  · subst i
+    simp [nonzeroResidues,List.Nodup.not_mem_erase (List.nodup_range n)]
+  · rw [nonzeroResidues,List.mem_erase_of_ne hi,List.mem_range]
+    omega
+
+
+
 end NumberTheory.OrderCounts
