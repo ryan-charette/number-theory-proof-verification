@@ -1531,4 +1531,35 @@ theorem congruent_orders (a b : Int) (n : Nat) (hn : 0 < n)
     (modeq_pow b a n (order a n) (modeq_symm _ _ n h)) hs.2.1)
   omega
 
+
+theorem coprime_exponent_order (a : Int) (n i : Nat) (hn : 0 < n)
+    (ha : gcd a n=1) (hi : gcd (i : Int) (order a n)=1) : order (a^i) n=order a n := by
+  /-
+  Theorem: A power a^i has the same order as a when i is coprime
+  to that order. Proof: Write d=ord(a) and e=ord(a^i). Since
+  (a^i)^e=a^(i*e) is one, d divides i*e. Coprime cancellation
+  gives d dividing e, hence d≤e. Conversely (a^i)^d is one,
+  since its exponent i*d is a multiple of d. Minimality gives
+  e≤d. The two orders are equal. The argument holds for any
+  positive modulus, and in particular for a prime modulus. QED
+  -/
+  have hp := coprime_power a n (by omega) ha i
+  have hs := order_spec a n hn ha
+  have ht := order_spec (a^i) n hn hp
+  have hm : Congruent (a^(i*order (a^i) n)) 1 n := by rw [← power_mul]; exact ht.2.1
+  have hd := (order_dvd_iff a n hn ha _).mp hm
+  have hcancel : Congruent ((order (a^i) n : Int)*i) (0*i) (order a n) := by
+    refine ⟨by omega,?_⟩
+    have hdi := Int.ofNat_dvd.mpr hd
+    simpa only [Int.natCast_mul,Int.zero_mul,Int.sub_zero,Int.mul_comm] using hdi
+  have hc := cancel_coprime (order (a^i) n) 0 i (order a n) hi hcancel
+  have hde : order a n ∣ order (a^i) n := Int.ofNat_dvd.mp (by simpa using hc.2)
+  have hle := Nat.le_of_dvd ht.1 hde
+  have hreturn := power_multiple_one a n (order a n) i hs.2.1
+  have hret : Congruent ((a^i)^(order a n)) 1 n := by
+    rw [power_mul,Nat.mul_comm i (order a n)]
+    exact hreturn
+  have hge := ht.2.2 _ hs.1 hret
+  omega
+
 end NumberTheory.OrderCounts
