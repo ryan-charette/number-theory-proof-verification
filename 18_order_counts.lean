@@ -1022,4 +1022,23 @@ theorem nonzero_residues_mem (n i : Nat) : i ∈ nonzeroResidues n ↔ 0 < i ∧
 
 
 
+theorem coprime_not_zero (a : Int) (n : Nat) (hn : 1 < n) (hc : gcd a n=1) :
+    ¬ Congruent a 0 n := by
+  /-
+  Lemma: A number coprime to a modulus greater than one cannot be
+  congruent to zero. Proof: Otherwise n divides a and n. It then
+  divides the Bezout combination one, forcing n≤1, a contradiction.
+  QED
+  -/
+  intro h
+  have ha : (n : Int) ∣ a := by simpa using h.2
+  rcases bezout a n with ⟨u,v,he⟩
+  rw [hc] at he
+  have hd := dvd_linear n a n u v ha (dvd_refl n)
+  rw [he] at hd
+  have hb := divisor_le_positive n 1 (by decide) hd
+  omega
+
+
+
 end NumberTheory.OrderCounts
