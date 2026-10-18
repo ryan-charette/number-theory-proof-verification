@@ -677,4 +677,45 @@ theorem distinct_length_bound (xs ys : List Nat) (h : xs.Nodup)
 
 
 
+theorem repeated_powers (a : Int) (n : Nat) (hn : 0 < n) :
+    ∃ i j : Nat, 0 < i ∧ i < j ∧ Congruent (a^i) (a^j) n := by
+  /-
+  Theorem: Two distinct positive powers of any integer are congruent
+  modulo a positive n.
+  Proof: Label the n+1 powers a^1 through a^(n+1) by their canonical
+  remainders. If no two powers were congruent, all these labels
+  would be distinct. They lie in the list 0 through n-1, which
+  has only n entries. The elementary bound for distinct lists
+  would then give n+1≤n, a contradiction. QED
+  -/
+  apply Classical.byContradiction
+  intro hnot
+  let f : Nat → Nat := fun i => canonicalLabel (a^(i+1)) n
+  have hinj : ∀ i j : Nat, f i=f j → i=j := by
+    intro i j he
+    have hc := (canonicalLabel_eq_iff (a^(i+1)) (a^(j+1)) n hn).mp he
+    by_cases hij : i < j
+    · exact False.elim (hnot ⟨i+1,j+1,by omega,by omega,hc⟩)
+    · by_cases hji : j < i
+      · exact False.elim (hnot ⟨j+1,i+1,by omega,by omega,
+          modeq_symm _ _ n hc⟩)
+      · omega
+  have hnd : ((List.range (n+1)).map f).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range _)
+    intro i j hij he
+    exact hij (hinj i j he)
+  have hsub : ∀ r ∈ (List.range (n+1)).map f, r ∈ List.range n := by
+    intro r hr
+    rcases List.mem_map.mp hr with ⟨i,_,he⟩
+    subst r
+    exact List.mem_range.mpr (canonicalLabel_spec (a^(i+1)) n hn).1
+  have hb := distinct_length_bound _ _ hnd hsub
+  simp only [List.length_map,List.length_range] at hb
+  omega
+
+
+
+
+
 end NumberTheory.OrderCounts
