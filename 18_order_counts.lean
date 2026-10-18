@@ -1825,4 +1825,53 @@ theorem order_count (p d : Nat) (hp : Prime p) (xs : List Int)
     change (a::xs).length ≤ (reducedResidues d).length
     simpa only [List.length_map] using hb
 
+
+def PrimitiveRoot (a : Int) (p : Nat) : Prop := gcd a p=1 ∧ order a p=p-1
+
+theorem primitive_residues (a : Int) (p : Nat) (hp : Prime p) (ha : PrimitiveRoot a p) :
+    (0::cyclePowers a (p-1)).Pairwise (fun r s => ¬ Congruent r s p) ∧
+      ∀ x : Int, ∃ r ∈ 0::cyclePowers a (p-1), Congruent x r p := by
+  /-
+  Theorem: Zero together with a,a^2,...,a^(p-1) forms a complete
+  residue system when a is a primitive root modulo p.
+  Proof: The powers are pairwise incongruent because the order
+  is p-1. Every power is coprime to p, so none is congruent to
+  zero. For any integer x, if p divides x, use the representative
+  zero. Otherwise Fermat's theorem gives x^(p-1) congruent to one.
+  The full cycle of a exhausts these roots, so x is congruent to
+  one of its powers. This proves both distinctness and coverage.
+
+  Primitive-root existence is deliberately deferred to the later
+  counting argument, following the textbook's proof order. Nothing
+  in this theorem assumes that such a root has been constructed.
+  QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hpair := cycle_distinct a p hn ha.1
+  rw [ha.2] at hpair
+  constructor
+  · apply List.pairwise_cons.mpr
+    refine ⟨?_,hpair⟩
+    intro x hx hz
+    rcases List.mem_map.mp hx with ⟨i,_,he⟩
+    subst x
+    have hcop := coprime_power a p (by omega) ha.1 (i+1)
+    exact coprime_not_zero (a^(i+1)) p hp.1 hcop (modeq_symm _ _ p hz)
+  · intro x
+    by_cases hx : (p : Int) ∣ x
+    · exact ⟨0,by simp,⟨by omega,by simpa only [Int.sub_zero] using hx⟩⟩
+    · have hcop := prime_coprime x p hp hx
+      have hroot := fermat_coprime x p hp hcop
+      rw [← ha.2] at hroot
+      rcases power_root_in_cycle a x p hp ha.1 hroot with ⟨i,hi,hip,hxi⟩
+      refine ⟨a^i,?_,hxi⟩
+      apply List.mem_cons_of_mem
+      apply List.mem_map.mpr
+      refine ⟨i-1,?_,?_⟩
+      · apply List.mem_range.mpr
+        rw [ha.2] at hip
+        omega
+      · congr 1
+        omega
+
 end NumberTheory.OrderCounts
