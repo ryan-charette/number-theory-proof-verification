@@ -1254,4 +1254,35 @@ theorem fermat_coprime (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
 
 
 
+def evaluate : List Int → Int → Int
+  | [], _ => 0
+  | a :: cs, x => a+x*evaluate cs x
+
+def quotient (r : Int) : List Int → List Int
+  | [] => []
+  | [_] => []
+  | _ :: b :: cs => evaluate (b :: cs) r :: quotient r (b :: cs)
+
+theorem quotient_length (cs : List Int) (r : Int) (h : cs ≠ []) :
+    (quotient r cs).length+1=cs.length := by
+  /-
+  Lemma: Dividing a nonempty coefficient list by x-r removes
+  exactly one coefficient. Proof: A singleton has empty quotient.
+  For a longer list the recursion adds one coefficient to the
+  quotient of its tail. Apply induction to that nonempty tail.
+  QED
+  -/
+  induction cs with
+  | nil => exact False.elim (h rfl)
+  | cons a cs ih =>
+    cases cs with
+    | nil => rfl
+    | cons b cs =>
+      have he := ih (by simp)
+      simp only [quotient,List.length_cons]
+      simp only [List.length_cons] at he
+      omega
+
+
+
 end NumberTheory.OrderCounts
