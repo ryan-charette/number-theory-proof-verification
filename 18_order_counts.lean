@@ -388,4 +388,33 @@ theorem gcd_one_right (a n : Int) (hn : 0 < n)
 
 
 
+theorem coprime_power (a n : Int) (hn : 0 < n) (hcop : gcd a n=1) (j : Nat) :
+    gcd (a^j) n=1 := by
+  /-
+  Theorem: Every nonnegative power of a number relatively prime
+  to n remains relatively prime to n.
+  Proof: Bezout gives a*u+n*v=1. We prove by induction that n and
+  a^j have a linear combination equal to one. For j=0, a^0=1.
+  At the induction step, combine the identities for n with a^j
+  and with a to get an identity for n with a^j*a. Reorder its
+  terms and use the preceding lemma to identify the gcd as one.
+  This proof permits all integer bases, extending the positive-base
+  statement, and also includes exponent zero. QED
+  -/
+  rcases bezout a n with ⟨u,v,he⟩
+  rw [hcop] at he
+  have hb : ∃ s t : Int, n*s+a*t=1 := ⟨v,u,by omega⟩
+  have hp : ∀ k : Nat, ∃ s t : Int, n*s+a^k*t=1 := by
+    intro k
+    induction k with
+    | zero => exact ⟨0,1,by simp [Int.pow_zero]⟩
+    | succ k ih =>
+      simpa only [Int.pow_succ] using bezout_product n (a^k) a ih hb
+  rcases hp j with ⟨s,t,ht⟩
+  exact gcd_one_right (a^j) n hn ⟨t,s,by omega⟩
+
+
+
+
+
 end NumberTheory.OrderCounts
