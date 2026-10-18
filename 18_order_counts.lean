@@ -1562,4 +1562,48 @@ theorem coprime_exponent_order (a : Int) (n i : Nat) (hn : 0 < n)
   have hge := ht.2.2 _ hs.1 hret
   omega
 
+
+theorem equal_power_order_coprime (a : Int) (n i : Nat) (hn : 0 < n)
+    (ha : gcd a n=1) (he : order (a^i) n=order a n) : gcd (i : Int) (order a n)=1 := by
+  /-
+  Lemma: If a^i has the full order d of a, then i is coprime
+  to d. Proof: Let g=gcd(i,d), and write i=g*u and d=g*v.
+  Since d>0, both g and v are positive. The identity i*v=d*u
+  makes (a^i)^v congruent to one. Its order d is therefore at
+  most v. But d=g*v, so g cannot exceed one. Thus g=1. QED
+  -/
+  have hs := order_spec a n hn ha
+  have ht := order_spec (a^i) n hn (coprime_power a n (by omega) ha i)
+  let d := order a n
+  let g := (gcd (i : Int) d).toNat
+  have hgdata := gcd_data (i : Int) d
+  have hgcast : (g : Int)=gcd (i : Int) d := Int.toNat_of_nonneg hgdata.1
+  have hgpositive := gcd_positive (i : Int) d (Or.inr (by dsimp [d]; omega))
+  have hgpos : 0 < g := by omega
+  have hgi : g ∣ i := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.1)
+  have hgd : g ∣ d := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.2.1)
+  rcases hgi with ⟨u,hu⟩
+  rcases hgd with ⟨v,hv⟩
+  have hvpos : 0 < v := by
+    by_cases hz : v=0
+    · rw [hz,Nat.mul_zero] at hv
+      dsimp [d] at hv
+      omega
+    · omega
+  have hmul : i*v=d*u := by
+    rw [hu,hv]
+    simp only [Nat.mul_assoc,Nat.mul_left_comm,Nat.mul_comm]
+  have hm := power_multiple_one a n d u hs.2.1
+  have hreturn : Congruent ((a^i)^v) 1 n := by rw [power_mul,hmul]; exact hm
+  have hbound := ht.2.2 v hvpos hreturn
+  rw [he] at hbound
+  have hg1 : g=1 := by
+    by_cases h : g=1
+    · exact h
+    · have h2 := Nat.mul_le_mul_right v (by omega : 2 ≤ g)
+      change d ≤ v at hbound
+      omega
+  rw [hg1] at hgcast
+  exact hgcast.symm
+
 end NumberTheory.OrderCounts
