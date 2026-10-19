@@ -953,4 +953,19 @@ theorem bounded_congruent_equal (r s m : Int) (hr : 0 ≤ r) (hrm : r < m)
   exact (division_unique r m 0 r q s h.1 (by simp) (by omega)
     hr hrm hs hsm).2
 
+theorem dvd_add (a b c : Int) (h₀ : a ∣ b) (h₁ : a ∣ c) : a ∣ b + c := by
+  /-
+  Theorem: A common divisor divides the sum.
+  Proof: Write b = a * m and c = a * n. Then
+
+    b + c = a * m + a * n    [Substitution]
+          = a * (m + n)      [Distributivity]
+
+  The integer m + n is the required witness. QED
+  -/
+  rcases h₀ with ⟨m, hm⟩
+  rcases h₁ with ⟨n, hn⟩
+  exists m + n
+  rw [hm, hn, Int.mul_add]
+
 end NumberTheory.DivisorCounts
