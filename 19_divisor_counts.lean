@@ -1114,4 +1114,26 @@ theorem power_add (a : Int) (i j : Nat) : a^(i+j)=a^i*a^j := by
   | succ j ih =>
     rw [Nat.add_succ,Int.pow_succ,ih,Int.pow_succ,Int.mul_assoc]
 
+theorem cancel_coprime (a b c n : Int) (hcop : gcd c n=1)
+    (h : Congruent (a*c) (b*c) n) : Congruent a b n := by
+  /-
+  Theorem: A factor relatively prime to the modulus can be cancelled
+  from a congruence.
+  Proof: Write (a-b)*c=n*q and c*u+n*v=1. Multiplying the latter
+  identity by a-b and substituting the former gives
+  a-b=n*(q*u+(a-b)*v). This witness proves the desired congruence.
+  QED
+  -/
+  rcases bezout c n with ⟨u,v,he⟩
+  rw [hcop] at he
+  rcases h.2 with ⟨q,hq⟩
+  have hd : (a-b)*c=n*q := by rw [Int.sub_mul]; exact hq
+  refine ⟨h.1,q*u+(a-b)*v,?_⟩
+  calc
+    a-b = (a-b)*1 := by rw [Int.mul_one]
+    _ = (a-b)*(c*u+n*v) := congrArg (fun z => (a-b)*z) he.symm
+    _ = ((a-b)*c)*u+n*((a-b)*v) := by
+      rw [Int.mul_add,←Int.mul_assoc,Int.mul_left_comm (a-b) n v]
+    _ = n*(q*u+(a-b)*v) := by rw [hd,Int.mul_add,Int.mul_assoc]
+
 end NumberTheory.DivisorCounts
