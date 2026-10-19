@@ -1668,4 +1668,34 @@ theorem cycle_power_one (a : Int) (n : Nat) (hn : 0 < n) (ha : gcd a n=1)
   rw [power_mul,Nat.mul_comm (j+1) (order a n)]
   exact power_multiple_one a n (order a n) (j+1) (order_spec a n hn ha).2.1
 
+theorem power_root_in_cycle (a x : Int) (p : Nat) (hp : Prime p) (ha : gcd a p=1)
+    (hx : Congruent (x^(order a p)) 1 p) :
+    ∃ i : Nat, 0 < i ∧ i ≤ order a p ∧ Congruent x (a^i) p := by
+  /-
+  Lemma: Every solution of x^d=1 is congruent to a power of an
+  element a of order d. Proof: The d cycle powers are distinct
+  solutions. If x were incongruent to all of them, adjoining x
+  would give d+1 incongruent solutions. The power root bound
+  excludes this. Hence x matches one of the powers a through a^d.
+  QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hd := (order_spec a p hn ha).1
+  apply Classical.byContradiction
+  intro hnone
+  have hsep : ∀ y ∈ cyclePowers a (order a p), ¬ Congruent x y p := by
+    intro y hy hxy
+    rcases List.mem_map.mp hy with ⟨j,hj,he⟩
+    have hjb := List.mem_range.mp hj
+    apply hnone
+    exact ⟨j+1,by omega,by omega,by simpa only [he] using hxy⟩
+  have hpair := List.pairwise_cons.mpr ⟨hsep,cycle_distinct a p hn ha⟩
+  have hb := power_root_count p (order a p) hp hd (x::cyclePowers a (order a p)) hpair (by
+    intro y hy
+    rcases List.mem_cons.mp hy with he | hy
+    · subst y; exact hx
+    · exact cycle_power_one a p hn ha y hy)
+  simp only [cyclePowers,List.length_cons,List.length_map,List.length_range] at hb
+  omega
+
 end NumberTheory.DivisorCounts
