@@ -776,4 +776,15 @@ theorem sum_on_zero (ds : List Nat) : sumOn ds (fun _ => 0)=0 := by
   | nil => rfl
   | cons _d ds ih => simp only [sumOn,ih,Nat.zero_add]
 
+theorem sum_on_add (ds : List Nat) (f g : Nat → Nat) :
+    sumOn ds (fun d => f d+g d)=sumOn ds f+sumOn ds g := by
+  /-
+  Lemma: A sum of pairwise sums separates into the two sums.
+  Proof: Expand the first summands and use induction. Associating
+  and commuting addition puts the f and g terms together. QED
+  -/
+  induction ds with
+  | nil => rfl
+  | cons d ds ih => simp only [sumOn,ih]; omega
+
 end NumberTheory.DivisorCounts
