@@ -427,4 +427,63 @@ theorem expanded_fraction_gcd (n d i : Nat) (hn : 0 < n)
   rw [hi,Int.mul_one] at he
   simpa only [← Int.natCast_mul,hq.2] using he
 
+noncomputable def reducedResidues (n : Nat) : List Nat := by
+  exact ((List.range n).map (fun i => i+1)).filter (fun i => decide (gcd (i : Int) n=1))
+
+theorem reduced_mem (n i : Nat) : i ∈ reducedResidues n ↔ 0 < i ∧ i ≤ n ∧ gcd (i : Int) n=1 := by
+  /-
+  Lemma: The reduced residue list consists exactly of the positive
+  integers at most n that are coprime to n. Proof: Its initial
+  list is 1,...,n; the filter keeps exactly the coprime entries.
+  Its length defines the counting function phi, including n=1.
+  QED
+  -/
+  simp only [reducedResidues,List.mem_filter,List.mem_map,List.mem_range,decide_eq_true_eq]
+  constructor
+  · rintro ⟨⟨j,hj,he⟩,hc⟩
+    exact ⟨by omega,by omega,hc⟩
+  · rintro ⟨hi,hin,hc⟩
+    exact ⟨⟨i-1,by omega,by omega⟩,hc⟩
+
+theorem reduced_fraction_expansion (n k : Nat) (hn : 0 < n)
+    (hk : 0 < k) (hkn : k ≤ n) :
+    ∃ d i : Nat, 0 < d ∧ d ∣ n ∧ i ∈ reducedResidues d ∧ k=(n/d)*i := by
+  /-
+  Lemma: Every fraction k/n with 1≤k≤n is obtained by expanding
+  a reduced fraction i/d, where d divides n and 1≤i≤d.
+  Proof: Let g=gcd(k,n), which is positive, and write k=g*i and
+  n=g*d. Positivity and k≤n give 1≤i≤d. Scaling the gcd shows
+  g*gcd(i,d)=g; cancellation gives gcd(i,d)=1. Finally n/d=g,
+  so expansion recovers exactly k. QED
+  -/
+  let g := (gcd (k : Int) n).toNat
+  have hgdata := gcd_data (k : Int) n
+  have hgcast : (g : Int)=gcd (k : Int) n := Int.toNat_of_nonneg hgdata.1
+  have hgpositive := gcd_positive (k : Int) n (Or.inr (by omega))
+  have hgp : 0 < g := by omega
+  have hgk : g ∣ k := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.1)
+  have hgn : g ∣ n := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.2.1)
+  rcases hgk with ⟨i,hki⟩
+  rcases hgn with ⟨d,hnd⟩
+  have hd : 0 < d := by
+    by_cases hz : d=0
+    · rw [hz,Nat.mul_zero] at hnd; omega
+    · omega
+  have hi : 0 < i := by
+    by_cases hz : i=0
+    · rw [hz,Nat.mul_zero] at hki; omega
+    · omega
+  have hid : i ≤ d := by
+    by_cases h : i ≤ d
+    · exact h
+    · have := Nat.mul_lt_mul_of_pos_left (by omega : d<i) hgp
+      omega
+  have hscale := gcd_scale (i : Int) d g hgp (Or.inr (by omega))
+  have hcop : gcd (i : Int) d=1 := by
+    apply Int.eq_of_mul_eq_mul_left (a := (g : Int)) (by omega)
+    rw [← hscale,← Int.natCast_mul,← Int.natCast_mul,← hki,← hnd,← hgcast,Int.mul_one]
+  have hquot : n/d=g := by rw [hnd]; exact Nat.mul_div_cancel g hd
+  refine ⟨d,i,hd,⟨g,by rw [hnd,Nat.mul_comm]⟩,(reduced_mem d i).mpr ⟨hi,hid,hcop⟩,?_⟩
+  rw [hquot]; exact hki
+
 end NumberTheory.DivisorCounts
