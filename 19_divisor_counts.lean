@@ -36,4 +36,18 @@ theorem positive_range_nodup (n : Nat) : (positiveRange n).Nodup := by
   intro i j h he
   exact h (by omega)
 
+def divisors (n : Nat) : List Nat := (positiveRange n).filter (fun d => decide (d ∣ n))
+
+theorem divisors_mem (n d : Nat) (hn : 0 < n) :
+    d ∈ divisors n ↔ 0 < d ∧ d ∣ n := by
+  /-
+  Lemma: Our divisor list contains precisely the positive divisors.
+  Proof: A positive divisor of positive n is at most n, so filtering
+  the interval from one to n loses no divisor. QED
+  -/
+  simp only [divisors,List.mem_filter,decide_eq_true_eq,positive_range_mem]
+  constructor
+  · intro h; exact ⟨h.1.1,h.2⟩
+  · intro h; exact ⟨⟨h.1,Nat.le_of_dvd hn h.2⟩,h.2⟩
+
 end NumberTheory.DivisorCounts
