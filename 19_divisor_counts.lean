@@ -755,4 +755,16 @@ theorem divisor_sum_multiply (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
   rw [totient_divisor_sum m hm,totient_divisor_sum n hn,
     totient_divisor_sum (m*n) (Nat.mul_pos hm hn)]
 
+theorem sum_on_congr (ds : List Nat) (f g : Nat → Nat)
+    (h : ∀ d ∈ ds, f d=g d) : sumOn ds f=sumOn ds g := by
+  /-
+  Lemma: Equal summands give equal finite sums.
+  Proof: Match the first summands, then apply induction to the
+  remaining list. QED
+  -/
+  induction ds with
+  | nil => rfl
+  | cons d ds ih =>
+    simp only [sumOn,h d (by simp),ih (fun e he => h e (by simp [he]))]
+
 end NumberTheory.DivisorCounts
