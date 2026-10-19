@@ -2169,4 +2169,22 @@ theorem order_class_total (p : Nat) (hp : Prime p) :
         (order_dvd_iff a p hn hc (p-1)).mp (fermat_coprime a p hp hc)⟩)
   simpa only [orderClass,positiveRange,List.length_map,List.length_range] using h
 
+theorem exact_order_count (p d : Nat) (hp : Prime p) (hd : 0 < d)
+    (hdp : d ∣ p-1) : (orderClass p d).length=phi d := by
+  /-
+  Theorem: For every positive divisor d of p-1 there are exactly
+  phi(d) residue classes of order d modulo p.
+  Proof: Each order count is at most phi(d). Their sum is p-1,
+  and the sum of phi(d) over the same divisors is also p-1.
+  A strict inequality for any one term would make the total
+  strictly smaller. Thus all the individual bounds are equalities.
+  QED
+  -/
+  have hn : 0 < p-1 := by have := hp.1; omega
+  apply equal_sum_forces_equal_terms (divisors (p-1))
+    (fun e => (orderClass p e).length) phi (fun e _ => order_class_bound p e hp)
+  · rw [order_class_total p hp]
+    exact (totient_divisor_sum (p-1) hn).symm
+  · exact (divisors_mem (p-1) d hn).mpr ⟨hd,hdp⟩
+
 end NumberTheory.DivisorCounts
