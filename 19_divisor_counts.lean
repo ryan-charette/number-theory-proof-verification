@@ -1794,4 +1794,23 @@ theorem equal_power_order_coprime (a : Int) (n i : Nat) (hn : 0 < n)
   rw [hg1] at hgcast
   exact hgcast.symm
 
+theorem equal_order_index (a b : Int) (p : Nat) (hp : Prime p)
+    (ha : gcd a p=1) (hb : gcd b p=1) (he : order b p=order a p) :
+    ∃ i : Nat, 0 < i ∧ i ≤ order a p ∧ gcd (i : Int) (order a p)=1 ∧ Congruent b (a^i) p := by
+  /-
+  Lemma: Every element with the same order d as a is represented
+  by a power a^i with 1≤i≤d and gcd(i,d)=1. Proof: Its d-th
+  power is one, so the full cycle exhausts the possible roots
+  and supplies i. Congruence preserves order, so a^i has order d.
+  The preceding necessity argument makes i coprime to d. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hroot : Congruent (b^(order a p)) 1 p := by
+    rw [← he]
+    exact (order_spec b p hn hb).2.1
+  rcases power_root_in_cycle a b p hp ha hroot with ⟨i,hi,hid,hbi⟩
+  have horder := congruent_orders b (a^i) p hn hb (coprime_power a p (by omega) ha i) hbi
+  have hcop := equal_power_order_coprime a p i hn ha (horder.symm.trans he)
+  exact ⟨i,hi,hid,hcop,hbi⟩
+
 end NumberTheory.DivisorCounts
