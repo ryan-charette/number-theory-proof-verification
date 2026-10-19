@@ -1862,4 +1862,17 @@ theorem order_count (p d : Nat) (hp : Prime p) (xs : List Int)
     change (a::xs).length ≤ (reducedResidues d).length
     simpa only [List.length_map] using hb
 
+theorem small_prime_coprime (p i : Nat) (hp : Prime p) (hi : 0 < i) (hip : i < p) :
+    gcd (i : Int) p=1 := by
+  /-
+  Lemma: Each positive integer below p is relatively prime to p.
+  Proof: If p divided i, the divisor bound for positive i would
+  force p≤i. This contradicts i<p, so the preceding lemma applies.
+  QED
+  -/
+  apply prime_coprime i p hp
+  intro h
+  have hb := divisor_le_positive p i (by omega) h
+  omega
+
 end NumberTheory.DivisorCounts
