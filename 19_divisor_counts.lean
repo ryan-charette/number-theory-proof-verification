@@ -2187,4 +2187,17 @@ theorem exact_order_count (p d : Nat) (hp : Prime p) (hd : 0 < d)
     exact (totient_divisor_sum (p-1) hn).symm
   · exact (divisors_mem (p-1) d hn).mpr ⟨hd,hdp⟩
 
+theorem phi_positive (n : Nat) (hn : 0 < n) : 0 < phi n := by
+  /-
+  Lemma: Phi of a positive integer is positive.
+  Proof: One lies in the interval from one to n and is coprime
+  to n, as the combination 1*1+n*0=1 shows. Thus at least this
+  one representative is counted. QED
+  -/
+  have hc : gcd 1 (n : Int)=1 := gcd_one_right 1 n (by omega) ⟨1,0,by simp⟩
+  have hm : 1 ∈ reducedResidues n := (reduced_mem n 1).mpr ⟨by omega,hn,hc⟩
+  cases h : reducedResidues n with
+  | nil => simp [h] at hm
+  | cons a xs => simp only [phi,h,List.length_cons]; omega
+
 end NumberTheory.DivisorCounts
