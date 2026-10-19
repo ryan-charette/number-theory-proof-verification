@@ -2200,4 +2200,23 @@ theorem phi_positive (n : Nat) (hn : 0 < n) : 0 < phi n := by
   | nil => simp [h] at hm
   | cons a xs => simp only [phi,h,List.length_cons]; omega
 
+def PrimitiveRoot (a : Int) (p : Nat) : Prop := gcd a p=1 ∧ order a p=p-1
+
+theorem primitive_class_mem (p a : Nat) (hp : Prime p) :
+    a ∈ orderClass p (p-1) ↔ 0 < a ∧ a < p ∧ PrimitiveRoot a p := by
+  /-
+  Lemma: The representatives of order p-1 are exactly the
+  primitive-root representatives. Proof: Every positive integer
+  below a prime is coprime to it. The remaining defining condition
+  is that its order be p-1, which is exactly the filter condition.
+  QED
+  -/
+  constructor
+  · intro ha
+    have h := (order_class_mem p (p-1) a).mp ha
+    have hap : a < p := by have := hp.1; omega
+    exact ⟨h.1,hap,small_prime_coprime p a hp h.1 hap,h.2.2⟩
+  · intro ha
+    exact (order_class_mem p (p-1) a).mpr ⟨ha.1,by omega,ha.2.2.2⟩
+
 end NumberTheory.DivisorCounts
