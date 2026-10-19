@@ -1292,4 +1292,18 @@ theorem powers_distinct (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1)
   have hmin := (order_spec a n hn hc).2.2 (j-i) (by omega) hp
   omega
 
+theorem cycle_distinct (a : Int) (n : Nat) (hn : 0 < n) (ha : gcd a n=1) :
+    (cyclePowers a (order a n)).Pairwise (fun r s => ¬ Congruent r s n) := by
+  /-
+  Lemma: The list a,a^2,...,a^d for d=ord(a) is pairwise
+  incongruent. Proof: The exponents occur in strictly increasing
+  order between one and d. Congruence of two such powers would
+  contradict the minimal positive returning exponent. QED
+  -/
+  apply List.pairwise_map.mpr
+  apply List.Pairwise.imp_of_mem ?_ (List.pairwise_lt_range (order a n))
+  intro i j hi hj hij
+  simp only [List.mem_range] at hi hj
+  exact powers_distinct a n hn ha (i+1) (j+1) (by omega) (by omega) (by omega)
+
 end NumberTheory.DivisorCounts
