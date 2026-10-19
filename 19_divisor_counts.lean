@@ -1136,4 +1136,23 @@ theorem cancel_coprime (a b c n : Int) (hcop : gcd c n=1)
       rw [Int.mul_add,←Int.mul_assoc,Int.mul_left_comm (a-b) n v]
     _ = n*(q*u+(a-b)*v) := by rw [hd,Int.mul_add,Int.mul_assoc]
 
+theorem bezout_product (a b c : Int)
+    (hb : ∃ u v : Int, a*u+b*v=1) (hc : ∃ u v : Int, a*u+c*v=1) :
+    ∃ u v : Int, a*u+(b*c)*v=1 := by
+  /-
+  Lemma: If a has a linear combination equal to one with each of
+  b and c, it also has one with b*c.
+  Proof: Write a*u+b*v=1 and a*p+c*q=1. Multiply the second
+  equality by b*v and substitute for b*v in the first. We obtain
+  a*(u+b*v*p)+(b*c)*(v*q)=1. These are the required coefficients.
+  QED
+  -/
+  rcases hb with ⟨u,v,hu⟩
+  rcases hc with ⟨p,q,hp⟩
+  refine ⟨u+b*v*p,v*q,?_⟩
+  have he := congrArg (fun t => t*(b*v)) hp
+  simp only [Int.add_mul,Int.mul_add,Int.one_mul,Int.mul_assoc,
+    Int.mul_left_comm,Int.mul_comm,Int.mul_one] at he ⊢
+  omega
+
 end NumberTheory.DivisorCounts
