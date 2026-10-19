@@ -1451,4 +1451,21 @@ theorem prime_coprime (a : Int) (p : Nat) (hp : Prime p) (ha : ¬ (p : Int) ∣ 
     rw [he] at had
     exact False.elim (ha had)
 
+theorem prime_product_divides (p : Nat) (a b : Int) (hp : Prime p)
+    (h : (p : Int) ∣ a*b) : (p : Int) ∣ a ∨ (p : Int) ∣ b := by
+  /-
+  Lemma: If a prime divides a product, it divides a factor.
+  Proof: If it does not divide a, then a is coprime to p.
+  Cancel a from b*a congruent to zero to obtain b congruent to
+  zero. This says p divides b. QED
+  -/
+  by_cases ha : (p : Int) ∣ a
+  · exact Or.inl ha
+  · have hc := prime_coprime a p hp ha
+    have hm : Congruent (b*a) (0*a) p := by
+      refine ⟨by have := hp.1; omega,?_⟩
+      simpa [Int.mul_comm] using h
+    have hb := cancel_coprime b 0 a p hc hm
+    exact Or.inr (by simpa using hb.2)
+
 end NumberTheory.DivisorCounts
