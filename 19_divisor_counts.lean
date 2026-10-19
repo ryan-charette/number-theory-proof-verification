@@ -730,4 +730,15 @@ theorem prime_power_divisor_sum (p k : Nat) (hp : Prime p) :
   apply totient_divisor_sum
   exact Nat.pow_pos (by have := hp.1; omega)
 
+theorem two_prime_divisor_sum (p q : Nat) (hp : Prime p) (hq : Prime q)
+    (_hne : p ≠ q) : divisorSum (p*q)=p*q := by
+  /-
+  Lemma: For distinct primes p,q, the totient sum over divisors
+  of pq is pq. Proof: The product is positive, so counting its
+  reduced fractions gives the formula. Distinctness is retained
+  to state the two-prime case, though the counting proof does not
+  require it. QED
+  -/
+  exact totient_divisor_sum _ (Nat.mul_pos (by have := hp.1; omega) (by have := hq.1; omega))
+
 end NumberTheory.DivisorCounts
