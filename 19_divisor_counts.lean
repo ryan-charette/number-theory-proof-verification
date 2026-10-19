@@ -710,4 +710,14 @@ theorem totient_divisor_sum (n : Nat) (hn : 0 < n) : divisorSum n=n := by
   rw [expanded_fractions_length] at h
   simpa only [divisorSum,positiveRange,List.length_map,List.length_range] using h
 
+def Prime (p : Nat) : Prop := 1 < p ∧ ∀ d : Nat, d ∣ p → d=1 ∨ d=p
+
+theorem prime_divisor_sum (p : Nat) (hp : Prime p) : divisorSum p=p := by
+  /-
+  Lemma: The totient sum over divisors of a prime p is p.
+  Proof: The fraction-counting identity applies to positive p.
+  This includes the prime case of the divisor-sum formula. QED
+  -/
+  exact totient_divisor_sum p (by have := hp.1; omega)
+
 end NumberTheory.DivisorCounts
