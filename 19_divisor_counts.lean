@@ -72,4 +72,12 @@ theorem divisor_factor (n d : Nat) (hn : 0 < n) (hd : d ∣ n) :
   · rw [hz,Nat.zero_mul] at he; omega
   · exact Nat.pos_of_ne_zero hz
 
+theorem dvd_refl (a : Int) : a ∣ a := by
+  /-
+  Theorem: Every integer divides itself.
+  Proof: a = a * 1, so choose the integer 1. QED
+  -/
+  exists 1
+  rw [Int.mul_one]
+
 end NumberTheory.DivisorCounts
