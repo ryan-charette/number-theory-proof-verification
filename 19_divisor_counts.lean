@@ -577,4 +577,33 @@ theorem expanded_fractions_nodup (n : Nat) (hn : 0 < n) (ds : List Nat)
         ((reduced_mem d i).mp hi).2.2 ((reduced_mem e j).mp hj).2.2 (by omega)
       exact hp.1 e he hde
 
+theorem distinct_length_bound (xs ys : List Nat) (h : xs.Nodup)
+    (hsub : ∀ a ∈ xs, a ∈ ys) : xs.length ≤ ys.length := by
+  /-
+  Lemma: A list of distinct entries drawn from a list of available
+  values cannot be longer than that list.
+  Proof: Induct on the list of distinct entries. The empty case is
+  immediate. Remove the first entry from both lists. No entry in the
+  first tail equals the removed entry, so all its entries remain
+  available. Induction bounds the tail length. Restoring the removed
+  entry adds one to each length and proves the required bound. QED
+  -/
+  induction xs generalizing ys with
+  | nil => simp
+  | cons a xs ih =>
+    have hh := List.nodup_cons.mp h
+    have ha := hsub a (by simp)
+    have ht : ∀ b ∈ xs, b ∈ ys.erase a := by
+      intro b hb
+      have hne : b ≠ a := by intro he; subst b; exact hh.1 hb
+      exact (List.mem_erase_of_ne hne).mpr (hsub b (by simp [hb]))
+    have hb := ih (ys.erase a) hh.2 ht
+    have hl := List.length_erase_of_mem ha
+    have hn : 0 < ys.length := by
+      cases ys with
+      | nil => cases ha
+      | cons b bs => simp
+    simp only [List.length_cons]
+    omega
+
 end NumberTheory.DivisorCounts
