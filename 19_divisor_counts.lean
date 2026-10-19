@@ -486,4 +486,32 @@ theorem reduced_fraction_expansion (n k : Nat) (hn : 0 < n)
   refine ⟨d,i,hd,⟨g,by rw [hnd,Nat.mul_comm]⟩,(reduced_mem d i).mpr ⟨hi,hid,hcop⟩,?_⟩
   rw [hquot]; exact hki
 
+noncomputable def expandedFractions (n : Nat) : List Nat → List Nat
+  | [] => []
+  | d::ds => ((reducedResidues d).map (fun i => (n/d)*i)) ++ expandedFractions n ds
+
+theorem expanded_fractions_mem (n k : Nat) (ds : List Nat) :
+    k ∈ expandedFractions n ds ↔
+      ∃ d ∈ ds, ∃ i ∈ reducedResidues d, k=(n/d)*i := by
+  /-
+  Lemma: The expanded list consists of the numerators obtained by
+  expanding each reduced fraction with a listed denominator.
+  Proof: Induct on the denominator list. Its first row consists
+  exactly of the scaled reduced numerators; append adds the rows
+  belonging to the remaining denominators. QED
+  -/
+  induction ds with
+  | nil => simp [expandedFractions]
+  | cons d ds ih =>
+    simp only [expandedFractions,List.mem_append,List.mem_map,ih,List.mem_cons]
+    constructor
+    · intro h
+      rcases h with h | ⟨e,he,i,hi,hk⟩
+      · rcases h with ⟨i,hi,hk⟩; exact ⟨d,Or.inl rfl,i,hi,hk.symm⟩
+      · exact ⟨e,Or.inr he,i,hi,hk⟩
+    · rintro ⟨e,he,i,hi,hk⟩
+      rcases he with he | he
+      · subst e; exact Or.inl ⟨i,hi,hk.symm⟩
+      · exact Or.inr ⟨e,he,i,hi,hk⟩
+
 end NumberTheory.DivisorCounts
