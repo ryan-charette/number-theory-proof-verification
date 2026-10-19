@@ -720,4 +720,14 @@ theorem prime_divisor_sum (p : Nat) (hp : Prime p) : divisorSum p=p := by
   -/
   exact totient_divisor_sum p (by have := hp.1; omega)
 
+theorem prime_power_divisor_sum (p k : Nat) (hp : Prime p) :
+    divisorSum (p^k)=p^k := by
+  /-
+  Lemma: The totient sum over divisors of p^k equals p^k.
+  Proof: A prime is positive, so every power is positive, including
+  p^0=1. Apply the reduced-fraction count at this denominator. QED
+  -/
+  apply totient_divisor_sum
+  exact Nat.pow_pos (by have := hp.1; omega)
+
 end NumberTheory.DivisorCounts
