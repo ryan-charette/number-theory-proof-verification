@@ -872,4 +872,377 @@ theorem equal_sum_forces_equal_terms (ds : List Nat) (f g : Nat → Nat)
     · subst d; exact hfirsteq
     · exact ih htail hresteq d hd
 
+def Congruent (a b n : Int) : Prop := 0 < n ∧ n ∣ a-b
+
+local notation:50 a " ≡ " b " [MOD " n "]" => Congruent a b n
+
+theorem integer_division_exists (a : Int) (n : Nat) (hn : 0 < n) :
+    ∃ q r : Int, a=(n : Int)*q+r ∧ 0 ≤ r ∧ r < n := by
+  /-
+  Lemma: Every integer has a quotient and a nonnegative remainder
+  less than a positive natural divisor n.
+  Proof: Let t=|a|. Since n≥1, a+n*t≥a+|a|≥0. Divide this
+  nonnegative integer by n using the well-ordering construction.
+  If a+n*t=n*q+r, then a=n*(q-t)+r, with the same remainder bounds.
+  QED
+  -/
+  let t : Int := a.natAbs
+  have ht : 0 ≤ t := by dsimp [t]; omega
+  have ha : -a ≤ t := by
+    have h : -a ≤ (-a).natAbs := Int.le_natAbs
+    simpa only [Int.natAbs_neg] using h
+  have hmul := Int.mul_le_mul_of_nonneg_right (by omega : (1 : Int) ≤ n) ht
+  rw [Int.one_mul] at hmul
+  have hnonneg : 0 ≤ a+(n : Int)*t := by omega
+  rcases division_exists (a+(n : Int)*t).toNat n hn with ⟨q,r,he,hr,hrn⟩
+  rw [Int.toNat_of_nonneg hnonneg] at he
+  refine ⟨q-t,r,?_,hr,hrn⟩
+  rw [Int.mul_sub]
+  omega
+
+theorem division_unique (m n q r q' r' : Int) (hn : 0 < n)
+    (h : m = n * q + r) (h' : m = n * q' + r')
+    (hr : 0 ≤ r) (hrn : r < n) (hr' : 0 ≤ r') (hrn' : r' < n) :
+    q = q' ∧ r = r' := by
+  /-
+  Theorem: Two decompositions with the same positive divisor and
+  remainders between zero and n - 1 have equal quotients and remainders.
+  We allow any integer m, which also covers natural-number dividends.
+
+  Proof: Suppose m = n * q + r = n * q' + r'. If q < q', the
+  quotients are integers, so q + 1 ≤ q'. Multiplying by positive n,
+
+    n * q + n ≤ n * q'.
+
+  But r < n and r' ≥ 0 give
+
+    m = n * q + r < n * q + n ≤ n * q' ≤ n * q' + r' = m.
+
+  This is impossible. Interchanging the two decompositions rules out
+  q' < q in exactly the same way. Therefore q = q'. Substituting into
+  the original equations and cancelling n * q gives r = r'. QED
+  -/
+  have hnot : ¬ q < q' := by
+    intro hlt
+    have hstep : q + 1 ≤ q' := by omega
+    have hmul := Int.mul_le_mul_of_nonneg_left hstep (Int.le_of_lt hn)
+    rw [Int.mul_add, Int.mul_one] at hmul
+    -- The remainder bounds would force m < m.
+    omega
+  have hnot' : ¬ q' < q := by
+    intro hlt
+    have hstep : q' + 1 ≤ q := by omega
+    have hmul := Int.mul_le_mul_of_nonneg_left hstep (Int.le_of_lt hn)
+    rw [Int.mul_add, Int.mul_one] at hmul
+    omega
+  have hq : q = q' := by omega
+  constructor
+  · exact hq
+  · rw [hq] at h
+    omega
+
+theorem bounded_congruent_equal (r s m : Int) (hr : 0 ≤ r) (hrm : r < m)
+    (hs : 0 ≤ s) (hsm : s < m) (h : r ≡ s [MOD m]) : r=s := by
+  /-
+  Lemma: Two congruent integers between zero and m-1 are equal.
+  Proof: Write r-s=m*q. Then r=m*q+s and also r=m*0+r.
+  Both remainders satisfy the required bounds, so uniqueness of
+  quotient and remainder makes r=s. QED
+  -/
+  rcases h.2 with ⟨q,hq⟩
+  exact (division_unique r m 0 r q s h.1 (by simp) (by omega)
+    hr hrm hs hsm).2
+
+theorem dvd_add (a b c : Int) (h₀ : a ∣ b) (h₁ : a ∣ c) : a ∣ b + c := by
+  /-
+  Theorem: A common divisor divides the sum.
+  Proof: Write b = a * m and c = a * n. Then
+
+    b + c = a * m + a * n    [Substitution]
+          = a * (m + n)      [Distributivity]
+
+  The integer m + n is the required witness. QED
+  -/
+  rcases h₀ with ⟨m, hm⟩
+  rcases h₁ with ⟨n, hn⟩
+  exists m + n
+  rw [hm, hn, Int.mul_add]
+
+theorem modeq_trans (a b c n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : b ≡ c [MOD n]) : a ≡ c [MOD n] := by
+  /-
+  Theorem: Two consecutive congruences combine.
+  Proof: The hypotheses tell us that n divides a - b and b - c.
+  Therefore n divides their sum. Adding the differences gives:
+
+    (a - b) + (b - c) = a - c.
+
+  Both differences are divisible by n, so their sum is too. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h := dvd_add n (a - b) (b - c) h₀.2 h₁.2
+    rw [← Int.add_sub_assoc, Int.sub_add_cancel] at h
+    exact h
+
+theorem modeq_symm (a b n : Int) (h : a ≡ b [MOD n]) : b ≡ a [MOD n] := by
+  /-
+  Theorem: Reversing a congruence preserves it.
+  Proof: By the definition of congruence, n is positive and
+  a - b = n * k for some integer k. Then
+
+    b - a = -(a - b) = -(n * k) = n * (-k).
+
+  Use -k as the witness. QED
+  -/
+  rcases h with ⟨hn, k, hk⟩
+  constructor
+  · exact hn
+  · exists -k
+    rw [← Int.neg_sub a b, hk, Int.mul_neg]
+
+theorem canonical_residue (a : Int) (n : Nat) (hn : 0 < n) :
+    ∃ r : Int, 0 ≤ r ∧ r < n ∧ a ≡ r [MOD (n : Int)] ∧
+      ∀ s : Int, 0 ≤ s → s < n → a ≡ s [MOD (n : Int)] → s=r := by
+  /-
+  Theorem: Every integer is congruent to exactly one integer among
+  zero through n-1, for positive n.
+  Proof: Division gives a=n*q+r with 0≤r<n, so a-r=n*q proves
+  congruence. If s is another such representative, reverse the
+  congruence a≡s and combine it with a≡r to get s≡r. Bounded
+  congruent representatives are equal. QED
+  -/
+  rcases integer_division_exists a n hn with ⟨q,r,he,hr,hrn⟩
+  have hcong : a ≡ r [MOD (n : Int)] := ⟨by omega,q,by omega⟩
+  refine ⟨r,hr,hrn,hcong,?_⟩
+  intro s hs hsn hsc
+  exact bounded_congruent_equal s r n hs hsn hr hrn
+    (modeq_trans s a r n (modeq_symm a s n hsc) hcong)
+
+noncomputable def canonicalLabel (a : Int) (n : Nat) : Nat :=
+  if h : 0 < n then (Classical.choose (canonical_residue a n h)).toNat else 0
+
+theorem canonicalLabel_spec (a : Int) (n : Nat) (hn : 0 < n) :
+    canonicalLabel a n < n ∧ a ≡ (canonicalLabel a n : Int) [MOD (n : Int)] := by
+  /-
+  Lemma: The canonical label is less than n and represents its input.
+  Proof: Choose the unique representative already proved to exist.
+  It is nonnegative, so conversion to a natural number preserves its
+  value and both stated properties. At modulus zero the definition
+  is total by convention, but the lemma requires positive modulus.
+  QED
+  -/
+  have h := Classical.choose_spec (canonical_residue a n hn)
+  have hcast := Int.toNat_of_nonneg h.1
+  unfold canonicalLabel
+  rw [dif_pos hn]
+  constructor
+  · omega
+  · rw [Int.toNat_of_nonneg h.1]
+    exact h.2.2.1
+
+theorem canonicalLabel_eq_iff (a b : Int) (n : Nat) (hn : 0 < n) :
+    canonicalLabel a n = canonicalLabel b n ↔ a ≡ b [MOD (n : Int)] := by
+  /-
+  Lemma: Two inputs have the same canonical label exactly when they
+  are congruent. Proof: Equal labels give a common representative;
+  transitivity yields congruence of the inputs. Conversely, congruent
+  inputs have congruent labels by symmetry and transitivity. Both
+  labels lie between zero and n-1, so they are equal. QED
+  -/
+  have ha := canonicalLabel_spec a n hn
+  have hb := canonicalLabel_spec b n hn
+  constructor
+  · intro he
+    have hac := ha.2
+    rw [he] at hac
+    exact modeq_trans a (canonicalLabel b n) b n hac (modeq_symm b _ n hb.2)
+  · intro h
+    have hlabels := modeq_trans (canonicalLabel a n) a (canonicalLabel b n) n
+      (modeq_symm a _ n ha.2) (modeq_trans a b _ n h hb.2)
+    have he := bounded_congruent_equal (canonicalLabel a n) (canonicalLabel b n) n
+      (by omega) (by omega) (by omega) (by omega) hlabels
+    omega
+
+theorem repeated_powers (a : Int) (n : Nat) (hn : 0 < n) :
+    ∃ i j : Nat, 0 < i ∧ i < j ∧ Congruent (a^i) (a^j) n := by
+  /-
+  Theorem: Two distinct positive powers of any integer are congruent
+  modulo a positive n.
+  Proof: Label the n+1 powers a^1 through a^(n+1) by their canonical
+  remainders. If no two powers were congruent, all these labels
+  would be distinct. They lie in the list 0 through n-1, which
+  has only n entries. The elementary bound for distinct lists
+  would then give n+1≤n, a contradiction. QED
+  -/
+  apply Classical.byContradiction
+  intro hnot
+  let f : Nat → Nat := fun i => canonicalLabel (a^(i+1)) n
+  have hinj : ∀ i j : Nat, f i=f j → i=j := by
+    intro i j he
+    have hc := (canonicalLabel_eq_iff (a^(i+1)) (a^(j+1)) n hn).mp he
+    by_cases hij : i < j
+    · exact False.elim (hnot ⟨i+1,j+1,by omega,by omega,hc⟩)
+    · by_cases hji : j < i
+      · exact False.elim (hnot ⟨j+1,i+1,by omega,by omega,
+          modeq_symm _ _ n hc⟩)
+      · omega
+  have hnd : ((List.range (n+1)).map f).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range _)
+    intro i j hij he
+    exact hij (hinj i j he)
+  have hsub : ∀ r ∈ (List.range (n+1)).map f, r ∈ List.range n := by
+    intro r hr
+    rcases List.mem_map.mp hr with ⟨i,_,he⟩
+    subst r
+    exact List.mem_range.mpr (canonicalLabel_spec (a^(i+1)) n hn).1
+  have hb := distinct_length_bound _ _ hnd hsub
+  simp only [List.length_map,List.length_range] at hb
+  omega
+
+theorem power_add (a : Int) (i j : Nat) : a^(i+j)=a^i*a^j := by
+  /-
+  Lemma: Adding exponents multiplies the corresponding powers.
+  Proof: Induct on j. At zero the second factor is one. In the
+  successor step, the recursive rule for powers appends one factor
+  a. Apply the induction hypothesis and reassociate the product.
+  QED
+  -/
+  induction j with
+  | zero => simp [Int.pow_zero]
+  | succ j ih =>
+    rw [Nat.add_succ,Int.pow_succ,ih,Int.pow_succ,Int.mul_assoc]
+
+theorem cancel_coprime (a b c n : Int) (hcop : gcd c n=1)
+    (h : Congruent (a*c) (b*c) n) : Congruent a b n := by
+  /-
+  Theorem: A factor relatively prime to the modulus can be cancelled
+  from a congruence.
+  Proof: Write (a-b)*c=n*q and c*u+n*v=1. Multiplying the latter
+  identity by a-b and substituting the former gives
+  a-b=n*(q*u+(a-b)*v). This witness proves the desired congruence.
+  QED
+  -/
+  rcases bezout c n with ⟨u,v,he⟩
+  rw [hcop] at he
+  rcases h.2 with ⟨q,hq⟩
+  have hd : (a-b)*c=n*q := by rw [Int.sub_mul]; exact hq
+  refine ⟨h.1,q*u+(a-b)*v,?_⟩
+  calc
+    a-b = (a-b)*1 := by rw [Int.mul_one]
+    _ = (a-b)*(c*u+n*v) := congrArg (fun z => (a-b)*z) he.symm
+    _ = ((a-b)*c)*u+n*((a-b)*v) := by
+      rw [Int.mul_add,←Int.mul_assoc,Int.mul_left_comm (a-b) n v]
+    _ = n*(q*u+(a-b)*v) := by rw [hd,Int.mul_add,Int.mul_assoc]
+
+theorem bezout_product (a b c : Int)
+    (hb : ∃ u v : Int, a*u+b*v=1) (hc : ∃ u v : Int, a*u+c*v=1) :
+    ∃ u v : Int, a*u+(b*c)*v=1 := by
+  /-
+  Lemma: If a has a linear combination equal to one with each of
+  b and c, it also has one with b*c.
+  Proof: Write a*u+b*v=1 and a*p+c*q=1. Multiply the second
+  equality by b*v and substitute for b*v in the first. We obtain
+  a*(u+b*v*p)+(b*c)*(v*q)=1. These are the required coefficients.
+  QED
+  -/
+  rcases hb with ⟨u,v,hu⟩
+  rcases hc with ⟨p,q,hp⟩
+  refine ⟨u+b*v*p,v*q,?_⟩
+  have he := congrArg (fun t => t*(b*v)) hp
+  simp only [Int.add_mul,Int.mul_add,Int.one_mul,Int.mul_assoc,
+    Int.mul_left_comm,Int.mul_comm,Int.mul_one] at he ⊢
+  omega
+
+theorem gcd_one_right (a n : Int) (hn : 0 < n)
+    (h : ∃ u v : Int, a*u+n*v=1) : gcd a n=1 := by
+  /-
+  Lemma: A positive modulus n and a linear combination a*u+n*v=1
+  imply gcd(a,n)=1, even when a is zero or negative.
+  Proof: The positive gcd divides this linear combination, so it
+  divides one and is at most one. Positivity makes it exactly one.
+  QED
+  -/
+  rcases h with ⟨u,v,he⟩
+  have hd := dvd_linear (gcd a n) a n u v
+    (gcd_data a n).2.1 (gcd_data a n).2.2.1
+  rw [he] at hd
+  have hle := divisor_le_positive (gcd a n) 1 (by decide) hd
+  have hp := gcd_positive a n (Or.inr (by omega))
+  omega
+
+theorem coprime_power (a n : Int) (hn : 0 < n) (hcop : gcd a n=1) (j : Nat) :
+    gcd (a^j) n=1 := by
+  /-
+  Theorem: Every nonnegative power of a number relatively prime
+  to n remains relatively prime to n.
+  Proof: Bezout gives a*u+n*v=1. We prove by induction that n and
+  a^j have a linear combination equal to one. For j=0, a^0=1.
+  At the induction step, combine the identities for n with a^j
+  and with a to get an identity for n with a^j*a. Reorder its
+  terms and use the preceding lemma to identify the gcd as one.
+  This proof permits all integer bases, extending the positive-base
+  statement, and also includes exponent zero. QED
+  -/
+  rcases bezout a n with ⟨u,v,he⟩
+  rw [hcop] at he
+  have hb : ∃ s t : Int, n*s+a*t=1 := ⟨v,u,by omega⟩
+  have hp : ∀ k : Nat, ∃ s t : Int, n*s+a^k*t=1 := by
+    intro k
+    induction k with
+    | zero => exact ⟨0,1,by simp [Int.pow_zero]⟩
+    | succ k ih =>
+      simpa only [Int.pow_succ] using bezout_product n (a^k) a ih hb
+  rcases hp j with ⟨s,t,ht⟩
+  exact gcd_one_right (a^j) n hn ⟨t,s,by omega⟩
+
+theorem positive_power_one (a : Int) (n : Nat) (hn : 0 < n)
+    (hcop : gcd a n=1) : ∃ k : Nat, 0 < k ∧ Congruent (a^k) 1 n := by
+  /-
+  Theorem: A number relatively prime to a positive modulus has
+  a positive power congruent to one.
+  Proof: Choose i<j with a^i congruent to a^j. Reverse this
+  congruence and factor a^j=a^(j-i)*a^i. The power a^i is still
+  relatively prime to n, so it can be cancelled. This leaves
+  a^(j-i) congruent to one, and j-i is positive. QED
+  -/
+  rcases repeated_powers a n hn with ⟨i,j,_,hij,hc⟩
+  have he : a^j=a^(j-i)*a^i := by
+    rw [←power_add]
+    congr 1
+    omega
+  have hrev := modeq_symm _ _ n hc
+  rw [he] at hrev
+  have hcancel : Congruent (a^(j-i)*a^i) (1*a^i) n := by simpa using hrev
+  exact ⟨j-i,by omega,cancel_coprime (a^(j-i)) 1 (a^i) n
+    (coprime_power a n (by omega) hcop i) hcancel⟩
+
+
+
+/- Order is the least positive exponent returning to one. Outside
+   the positive, coprime case we use zero solely to make it total. -/
+
+noncomputable def order (a : Int) (n : Nat) : Nat :=
+  if h : 0 < n ∧ gcd a n=1 then
+    Classical.choose (least_natural (fun k => 0 < k ∧ Congruent (a^k) 1 n)
+      (positive_power_one a n h.1 h.2))
+  else 0
+
+noncomputable def orderClass (p d : Nat) : List Nat :=
+  (positiveRange (p-1)).filter (fun a => decide (order (a : Int) p=d))
+
+theorem order_class_mem (p d a : Nat) :
+    a ∈ orderClass p d ↔ 0 < a ∧ a ≤ p-1 ∧ order (a : Int) p=d := by
+  /-
+  Lemma: The list for order d contains exactly the positive
+  representatives below p with that order.
+  Proof: Its filter tests the order equality on the positive
+  interval ending at p-1. QED
+  -/
+  simp only [orderClass,List.mem_filter,decide_eq_true_eq,positive_range_mem]
+  constructor
+  · intro h; exact ⟨h.1.1,h.1.2,h.2⟩
+  · intro h; exact ⟨⟨h.1,h.2.1⟩,h.2.2⟩
+
 end NumberTheory.DivisorCounts
