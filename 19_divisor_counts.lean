@@ -50,4 +50,12 @@ theorem divisors_mem (n d : Nat) (hn : 0 < n) :
   · intro h; exact ⟨h.1.1,h.2⟩
   · intro h; exact ⟨⟨h.1,Nat.le_of_dvd hn h.2⟩,h.2⟩
 
+theorem divisors_nodup (n : Nat) : (divisors n).Nodup := by
+  /-
+  Lemma: Each divisor is listed only once.
+  Proof: Filtering a list without repetitions cannot introduce one.
+  QED
+  -/
+  exact (positive_range_nodup n).filter _
+
 end NumberTheory.DivisorCounts
