@@ -1698,4 +1698,15 @@ theorem power_root_in_cycle (a x : Int) (p : Nat) (hp : Prime p) (ha : gcd a p=1
   simp only [cyclePowers,List.length_cons,List.length_map,List.length_range] at hb
   omega
 
+theorem modeq_pow_step (a b n : Int) (k : Nat)
+    (h : a ≡ b [MOD n]) (hk : a ^ k ≡ b ^ k [MOD n]) :
+    a ^ (k + 1) ≡ b ^ (k + 1) [MOD n] := by
+  /-
+  Theorem: Advance an exponent by one.
+  Proof: a ^ (k + 1) = a ^ k * a, and likewise for b.
+  Multiply the two assumed congruences. QED
+  -/
+  rw [Int.pow_succ, Int.pow_succ]
+  exact modeq_mult (a ^ k) (b ^ k) a b n hk h
+
 end NumberTheory.DivisorCounts
