@@ -741,4 +741,18 @@ theorem two_prime_divisor_sum (p q : Nat) (hp : Prime p) (hq : Prime q)
   -/
   exact totient_divisor_sum _ (Nat.mul_pos (by have := hp.1; omega) (by have := hq.1; omega))
 
+theorem divisor_sum_multiply (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
+    divisorSum m * divisorSum n=divisorSum (m*n) := by
+  /-
+  Lemma: The divisor sum is multiplicative, in particular for
+  relatively prime positive inputs. Proof: The reduced-fraction
+  proof evaluates the two sums on the left as m and n, and the
+  sum on the right as mn. Hence both sides are mn. This proves
+  the stated coprime case and also shows that this particular
+  sum does not require coprimality. No multiplicativity formula
+  for phi itself is used. QED
+  -/
+  rw [totient_divisor_sum m hm,totient_divisor_sum n hn,
+    totient_divisor_sum (m*n) (Nat.mul_pos hm hn)]
+
 end NumberTheory.DivisorCounts
