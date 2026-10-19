@@ -577,4 +577,103 @@ theorem expanded_fractions_nodup (n : Nat) (hn : 0 < n) (ds : List Nat)
         ((reduced_mem d i).mp hi).2.2 ((reduced_mem e j).mp hj).2.2 (by omega)
       exact hp.1 e he hde
 
+theorem distinct_length_bound (xs ys : List Nat) (h : xs.Nodup)
+    (hsub : ∀ a ∈ xs, a ∈ ys) : xs.length ≤ ys.length := by
+  /-
+  Lemma: A list of distinct entries drawn from a list of available
+  values cannot be longer than that list.
+  Proof: Induct on the list of distinct entries. The empty case is
+  immediate. Remove the first entry from both lists. No entry in the
+  first tail equals the removed entry, so all its entries remain
+  available. Induction bounds the tail length. Restoring the removed
+  entry adds one to each length and proves the required bound. QED
+  -/
+  induction xs generalizing ys with
+  | nil => simp
+  | cons a xs ih =>
+    have hh := List.nodup_cons.mp h
+    have ha := hsub a (by simp)
+    have ht : ∀ b ∈ xs, b ∈ ys.erase a := by
+      intro b hb
+      have hne : b ≠ a := by intro he; subst b; exact hh.1 hb
+      exact (List.mem_erase_of_ne hne).mpr (hsub b (by simp [hb]))
+    have hb := ih (ys.erase a) hh.2 ht
+    have hl := List.length_erase_of_mem ha
+    have hn : 0 < ys.length := by
+      cases ys with
+      | nil => cases ha
+      | cons b bs => simp
+    simp only [List.length_cons]
+    omega
+
+theorem distinct_subset_perm (xs ys : List Nat) (hnd : xs.Nodup)
+    (hsub : ∀ x ∈ xs, x ∈ ys) (hlen : xs.length=ys.length) : xs.Perm ys := by
+  /-
+  Lemma: Distinct entries drawn from a list of the same length
+  rearrange that list. Proof: Induct on the first list. Remove its
+  head from both lists. Distinctness ensures its tail still lies
+  in the second list after removal, and lengths remain equal.
+  Apply induction, then restore the head. The empty case follows
+  because the second list also has length zero. QED
+  -/
+  letI : BEq Nat := instBEqOfDecidableEq
+  induction xs generalizing ys with
+  | nil =>
+    have hy : ys=[] := List.length_eq_zero.mp (by simpa using hlen.symm)
+    subst ys; exact List.Perm.refl []
+  | cons a xs ih =>
+    have hh := List.nodup_cons.mp hnd
+    have ha := hsub a (by simp)
+    have ht : ∀ b ∈ xs, b ∈ ys.erase a := by
+      intro b hb
+      have hne : b ≠ a := by intro he; subst b; exact hh.1 hb
+      exact (List.mem_erase_of_ne hne).mpr (hsub b (by simp [hb]))
+    have he := List.length_erase_of_mem ha
+    have hp := ih (ys.erase a) hh.2 ht (by simp only [List.length_cons] at hlen; omega)
+    exact (hp.cons a).trans (List.perm_cons_erase ha).symm
+
+theorem same_members_perm (xs ys : List Nat) (hx : xs.Nodup) (hy : ys.Nodup)
+    (h : ∀ i, i ∈ xs ↔ i ∈ ys) : xs.Perm ys := by
+  /-
+  Lemma: Two distinct lists with the same members are rearrangements.
+  Proof: Each list is drawn from the other, so the distinct-list
+  bound gives both length inequalities. The equal-length selection
+  theorem then gives the rearrangement. QED
+  -/
+  have h₁ := distinct_length_bound xs ys hx (fun i hi => (h i).mp hi)
+  have h₂ := distinct_length_bound ys xs hy (fun i hi => (h i).mpr hi)
+  exact distinct_subset_perm xs ys hx (fun i hi => (h i).mp hi) (by omega)
+
+theorem reduced_fraction_correspondence (n : Nat) (hn : 0 < n) :
+    (expandedFractions n (divisors n)).Perm (positiveRange n) := by
+  /-
+  Theorem: Reducing 1/n,...,n/n gives a one-to-one correspondence
+  with the reduced fractions i/d for positive divisors d of n.
+  Proof: Reduction supplies every numerator in the original range.
+  Conversely expansion of 1≤i≤d gives 1≤(n/d)*i≤n. Distinct
+  reduced fractions have distinct expansions, as just proved.
+  Thus the two lists contain the same entries without repetitions.
+  The fractions are represented by integer numerator-denominator
+  pairs, so no rational-number machinery is required. QED
+  -/
+  apply same_members_perm _ _
+    (expanded_fractions_nodup n hn _ (divisors_nodup n)
+      (fun d hd => (divisors_mem n d hn).mp hd)) (positive_range_nodup n)
+  intro k
+  constructor
+  · intro hk
+    rcases (expanded_fractions_mem n k _).mp hk with ⟨d,hd,i,hi,hk⟩
+    have hd' := (divisors_mem n d hn).mp hd
+    have hi' := (reduced_mem d i).mp hi
+    have hq := divisor_factor n d hn hd'.2
+    apply (positive_range_mem n k).mpr
+    constructor
+    · rw [hk]; exact Nat.mul_pos hq.1 hi'.1
+    · have := Nat.mul_le_mul_left (n/d) hi'.2.1
+      omega
+  · intro hk
+    have hk' := (positive_range_mem n k).mp hk
+    rcases reduced_fraction_expansion n k hn hk'.1 hk'.2 with ⟨d,i,hd,hdn,hi,hki⟩
+    exact (expanded_fractions_mem n k _).mpr ⟨d,(divisors_mem n d hn).mpr ⟨hd,hdn⟩,i,hi,hki⟩
+
 end NumberTheory.DivisorCounts
