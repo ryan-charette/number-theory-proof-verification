@@ -1101,4 +1101,17 @@ theorem repeated_powers (a : Int) (n : Nat) (hn : 0 < n) :
   simp only [List.length_map,List.length_range] at hb
   omega
 
+theorem power_add (a : Int) (i j : Nat) : a^(i+j)=a^i*a^j := by
+  /-
+  Lemma: Adding exponents multiplies the corresponding powers.
+  Proof: Induct on j. At zero the second factor is one. In the
+  successor step, the recursive rule for powers appends one factor
+  a. Apply the induction hypothesis and reassociate the product.
+  QED
+  -/
+  induction j with
+  | zero => simp [Int.pow_zero]
+  | succ j ih =>
+    rw [Nat.add_succ,Int.pow_succ,ih,Int.pow_succ,Int.mul_assoc]
+
 end NumberTheory.DivisorCounts
