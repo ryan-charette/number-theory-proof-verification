@@ -848,4 +848,28 @@ theorem sum_on_le (ds : List Nat) (f g : Nat → Nat)
     have hrest := ih (fun e he => h e (by simp [he]))
     simp only [sumOn]; omega
 
+theorem equal_sum_forces_equal_terms (ds : List Nat) (f g : Nat → Nat)
+    (hle : ∀ d ∈ ds, f d ≤ g d) (he : sumOn ds f=sumOn ds g) :
+    ∀ d ∈ ds, f d=g d := by
+  /-
+  Lemma: If each term is bounded above and the totals are equal,
+  every term attains its bound. Proof: The first term and the
+  remaining sum are both bounded above. Equality of their sum
+  forces equality in both bounds. Repeat on the remaining list.
+  QED
+  -/
+  induction ds with
+  | nil => intro d hd; simp at hd
+  | cons a ds ih =>
+    have hfirst := hle a (by simp)
+    have htail : ∀ d ∈ ds, f d ≤ g d := fun d hd => hle d (by simp [hd])
+    have hrest := sum_on_le ds f g htail
+    simp only [sumOn] at he
+    have hfirsteq : f a=g a := by omega
+    have hresteq : sumOn ds f=sumOn ds g := by omega
+    intro d hd
+    rcases List.mem_cons.mp hd with hd | hd
+    · subst d; exact hfirsteq
+    · exact ih htail hresteq d hd
+
 end NumberTheory.DivisorCounts
