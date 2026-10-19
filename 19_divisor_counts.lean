@@ -1245,4 +1245,663 @@ theorem order_class_mem (p d a : Nat) :
   · intro h; exact ⟨h.1.1,h.1.2,h.2⟩
   · intro h; exact ⟨⟨h.1,h.2.1⟩,h.2.2⟩
 
+theorem order_spec (a : Int) (n : Nat) (hn : 0 < n) (hcop : gcd a n=1) :
+    0 < order a n ∧ Congruent (a^(order a n)) 1 n ∧
+      ∀ k : Nat, 0 < k → Congruent (a^k) 1 n → order a n ≤ k := by
+  /-
+  Theorem: The order is positive, its power is congruent to one,
+  and it is no larger than any other positive exponent with that
+  property.
+  Proof: The positive-power theorem makes the collection of such
+  exponents nonempty. Well-ordering supplies a least member. The
+  definition chooses that member, so it belongs to the collection
+  and is at most every other member. QED
+
+  Positivity is explicit because Lean's natural numbers include
+  zero. No claim about the default value outside these hypotheses
+  is needed to define order for the textbook's coprime inputs.
+  -/
+  have hs := Classical.choose_spec
+    (least_natural (fun k => 0 < k ∧ Congruent (a^k) 1 n)
+      (positive_power_one a n hn hcop))
+  unfold order
+  rw [dif_pos ⟨hn,hcop⟩]
+  exact ⟨hs.1.1,hs.1.2,fun k hk hc => hs.2 k ⟨hk,hc⟩⟩
+
+def cyclePowers (a : Int) (d : Nat) : List Int := (List.range d).map (fun j => a^(j+1))
+
+theorem powers_distinct (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1)
+    (i j : Nat) (hi : 0 < i) (hij : i < j) (hj : j ≤ order a n) :
+    ¬ Congruent (a^i) (a^j) n := by
+  /-
+  Theorem: The powers with exponents one through the order are
+  pairwise incongruent. Proof: Suppose i<j in this range gave equal
+  residues. Factor a^j=a^(j-i)*a^i and cancel the coprime factor
+  a^i. Then a^(j-i) is congruent to one. But 0<j-i<order(a,n),
+  contradicting the order's minimality. QED
+  -/
+  intro h
+  have he : a^j=a^(j-i)*a^i := by
+    rw [←power_add]
+    congr 1
+    omega
+  have hr := modeq_symm _ _ n h
+  rw [he] at hr
+  have hp := cancel_coprime (a^(j-i)) 1 (a^i) n
+    (coprime_power a n (by omega) hc i) (by simpa using hr)
+  have hmin := (order_spec a n hn hc).2.2 (j-i) (by omega) hp
+  omega
+
+theorem cycle_distinct (a : Int) (n : Nat) (hn : 0 < n) (ha : gcd a n=1) :
+    (cyclePowers a (order a n)).Pairwise (fun r s => ¬ Congruent r s n) := by
+  /-
+  Lemma: The list a,a^2,...,a^d for d=ord(a) is pairwise
+  incongruent. Proof: The exponents occur in strictly increasing
+  order between one and d. Congruence of two such powers would
+  contradict the minimal positive returning exponent. QED
+  -/
+  apply List.pairwise_map.mpr
+  apply List.Pairwise.imp_of_mem ?_ (List.pairwise_lt_range (order a n))
+  intro i j hi hj hij
+  simp only [List.mem_range] at hi hj
+  exact powers_distinct a n hn ha (i+1) (j+1) (by omega) (by omega) (by omega)
+
+def monomial : Nat → List Int
+  | 0 => [1]
+  | k+1 => 0 :: monomial k
+
+theorem monomial_length (k : Nat) : (monomial k).length=k+1 := by
+  /-
+  Lemma: The coefficient list for x^k has length k+1.
+  Proof: It starts with one coefficient. Each recursive step
+  adds one zero to the front, increasing the length by one. QED
+  -/
+  induction k with
+  | zero => rfl
+  | succ k ih => simp only [monomial,List.length_cons,ih]
+
+def leading : List Int → Int
+  | [] => 0
+  | [a] => a
+  | _ :: b :: cs => leading (b :: cs)
+
+theorem monomial_leading (k : Nat) : leading (monomial k)=1 := by
+  /-
+  Lemma: A monomial has leading coefficient one. Proof: The
+  constant monomial is [1]. Adding a zero in front of a nonempty
+  list leaves its final coefficient unchanged. Apply induction.
+  QED
+  -/
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    have hl := monomial_length k
+    cases he : monomial k with
+    | nil => rw [he] at hl; simp at hl
+    | cons b cs => simpa only [monomial,he,leading] using ih
+
+def evaluate : List Int → Int → Int
+  | [], _ => 0
+  | a :: cs, x => a+x*evaluate cs x
+
+theorem monomial_evaluate (k : Nat) (x : Int) : evaluate (monomial k) x=x^k := by
+  /-
+  Lemma: A coefficient one preceded by k zeros represents x^k.
+  Proof: At k=0 the polynomial is one. Each added zero shifts
+  the coefficients by one position and multiplies the value by x.
+  Induction therefore gives x^k. QED
+  -/
+  induction k with
+  | zero => simp [monomial,evaluate,Int.pow_zero]
+  | succ k ih => simp only [monomial,evaluate,Int.zero_add,ih,Int.pow_succ,Int.mul_comm]
+
+def quotient (r : Int) : List Int → List Int
+  | [] => []
+  | [_] => []
+  | _ :: b :: cs => evaluate (b :: cs) r :: quotient r (b :: cs)
+
+theorem quotient_length (cs : List Int) (r : Int) (h : cs ≠ []) :
+    (quotient r cs).length+1=cs.length := by
+  /-
+  Lemma: Dividing a nonempty coefficient list by x-r removes
+  exactly one coefficient. Proof: A singleton has empty quotient.
+  For a longer list the recursion adds one coefficient to the
+  quotient of its tail. Apply induction to that nonempty tail.
+  QED
+  -/
+  induction cs with
+  | nil => exact False.elim (h rfl)
+  | cons a cs ih =>
+    cases cs with
+    | nil => rfl
+    | cons b cs =>
+      have he := ih (by simp)
+      simp only [quotient,List.length_cons]
+      simp only [List.length_cons] at he
+      omega
+
+theorem quotient_leading (cs : List Int) (r : Int) (h : 2 ≤ cs.length) :
+    leading (quotient r cs)=leading cs := by
+  /-
+  Lemma: The quotient of a positive-degree polynomial by x-r has
+  the same leading coefficient. Proof: For a linear polynomial,
+  the quotient is its leading coefficient. For a longer list,
+  both leading coefficients lie in the corresponding tails.
+  Apply induction. Thus a nonzero leading coefficient cannot
+  disappear in synthetic division. QED
+  -/
+  induction cs with
+  | nil => simp at h
+  | cons a cs ih =>
+    cases cs with
+    | nil => simp at h
+    | cons b cs =>
+      cases cs with
+      | nil => simp [quotient,evaluate,leading]
+      | cons c cs =>
+        have he := ih (by simp)
+        simpa only [quotient,leading] using he
+
+theorem division_identity (cs : List Int) (r x : Int) :
+    evaluate cs x=(x-r)*evaluate (quotient r cs) x+evaluate cs r := by
+  /-
+  Lemma: Dividing an integer polynomial f by x-r leaves remainder
+  f(r). Coefficient lists run from the constant term upward.
+  Proof: Use induction on the coefficient list. Constants have
+  zero quotient. Write the next polynomial as a+x*h(x). If
+  h(x)=(x-r)*q(x)+h(r), then
+
+    a+x*h(x)=(x-r)*(h(r)+x*q(x))+(a+r*h(r)).
+
+  The last term is f(r), and h(r)+x*q(x) is the quotient given
+  by the recursion. All its coefficients are integers. QED
+  -/
+  induction cs with
+  | nil => simp [evaluate,quotient]
+  | cons a cs ih =>
+    cases cs with
+    | nil => simp [evaluate,quotient]
+    | cons b cs =>
+      change a+x*evaluate (b::cs) x =
+        (x-r)*(evaluate (b::cs) r+x*evaluate (quotient r (b::cs)) x)+
+          (a+r*evaluate (b::cs) r)
+      rw [ih]
+      simp only [Int.mul_add,Int.add_mul,Int.sub_mul,Int.mul_sub,
+        Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+      omega
+
+theorem prime_coprime (a : Int) (p : Nat) (hp : Prime p) (ha : ¬ (p : Int) ∣ a) :
+    gcd a p=1 := by
+  /-
+  Lemma: An integer not divisible by a prime is relatively prime
+  to it. Proof: The positive gcd d divides p, so primality makes
+  d either one or p. The latter would imply p divides a, which
+  is excluded. Hence d=1. QED
+  -/
+  have hd := gcd_positive a p (Or.inr (by have := hp.1; omega))
+  have hcast := Int.toNat_of_nonneg (Int.le_of_lt hd)
+  have hdiv : (gcd a p).toNat ∣ p := by
+    apply Int.ofNat_dvd.mp
+    rw [hcast]
+    exact (gcd_data a p).2.2.1
+  rcases hp.2 _ hdiv with h | h
+  · omega
+  · have he : gcd a p=(p : Int) := by omega
+    have had := (gcd_data a p).2.1
+    rw [he] at had
+    exact False.elim (ha had)
+
+theorem prime_product_divides (p : Nat) (a b : Int) (hp : Prime p)
+    (h : (p : Int) ∣ a*b) : (p : Int) ∣ a ∨ (p : Int) ∣ b := by
+  /-
+  Lemma: If a prime divides a product, it divides a factor.
+  Proof: If it does not divide a, then a is coprime to p.
+  Cancel a from b*a congruent to zero to obtain b congruent to
+  zero. This says p divides b. QED
+  -/
+  by_cases ha : (p : Int) ∣ a
+  · exact Or.inl ha
+  · have hc := prime_coprime a p hp ha
+    have hm : Congruent (b*a) (0*a) p := by
+      refine ⟨by have := hp.1; omega,?_⟩
+      simpa [Int.mul_comm] using h
+    have hb := cancel_coprime b 0 a p hc hm
+    exact Or.inr (by simpa using hb.2)
+
+theorem quotient_root (cs : List Int) (r s : Int) (p : Nat) (hp : Prime p)
+    (hr : (p : Int) ∣ evaluate cs r) (hs : (p : Int) ∣ evaluate cs s)
+    (hne : ¬ Congruent r s p) : (p : Int) ∣ evaluate (quotient r cs) s := by
+  /-
+  Lemma: Removing a root r leaves every incongruent root s as a
+  root of the quotient modulo p. Proof: The division identity is
+
+    f(s)-f(r)=(s-r)*g(s).
+
+  The prime divides both values on the left, hence their difference.
+  A prime dividing a product divides a factor. It cannot divide
+  s-r, since the two roots are incongruent. Therefore it divides
+  g(s), as required. QED
+  -/
+  have hd := dvd_linear p (evaluate cs s) (evaluate cs r) 1 (-1) hs hr
+  have he := division_identity cs r s
+  have hid : evaluate cs s*1+evaluate cs r*(-1)=(s-r)*evaluate (quotient r cs) s := by
+    simp only [Int.mul_one,Int.mul_neg]
+    omega
+  rw [hid] at hd
+  rcases prime_product_divides p (s-r) (evaluate (quotient r cs) s) hp hd with h | h
+  · exact False.elim (hne (modeq_symm s r p ⟨by have := hp.1; omega,h⟩))
+  · exact h
+
+theorem root_count (cs : List Int) (p : Nat) (hp : Prime p)
+    (hl : ¬ (p : Int) ∣ leading cs) (roots : List Int)
+    (hdist : roots.Pairwise (fun r s => ¬ Congruent r s p))
+    (hroots : ∀ r ∈ roots, (p : Int) ∣ evaluate cs r) :
+    roots.length ≤ cs.length-1 := by
+  /-
+  Lemma: A list of pairwise incongruent roots has at most one
+  fewer entries than the coefficient list, provided the prime
+  does not divide the leading coefficient.
+  Proof: Induct on the length of the coefficient list. An empty
+  list has leading coefficient zero, so is excluded. A nonzero
+  constant modulo p has no root. Otherwise choose the first root
+  r and divide by x-r. Every remaining root is a root of the
+  quotient, since it is incongruent to r. The quotient has one
+  fewer coefficient and the same leading coefficient. Induction
+  bounds the remaining roots by the smaller degree. Restoring r
+  adds one and gives the required bound. QED
+  -/
+  generalize hk : cs.length=k
+  induction k using Nat.strongRecOn generalizing cs roots with
+  | ind k ih =>
+    cases roots with
+    | nil => simp
+    | cons r rs =>
+      have hr := hroots r (by simp)
+      have hpair := List.pairwise_cons.mp hdist
+      have hdeg : 2 ≤ cs.length := by
+        cases cs with
+        | nil => exact False.elim (hl ⟨0,by simp [leading]⟩)
+        | cons a tail =>
+          cases tail with
+          | nil =>
+            have ha : (p : Int) ∣ a := by simpa [evaluate] using hr
+            exact False.elim (hl ha)
+          | cons b tail => simp
+      have hlen := quotient_length cs r (by intro he; subst cs; simp at hdeg)
+      have hlead : ¬ (p : Int) ∣ leading (quotient r cs) := by
+        rw [quotient_leading cs r hdeg]
+        exact hl
+      have hrest : ∀ s ∈ rs, (p : Int) ∣ evaluate (quotient r cs) s := by
+        intro s hs
+        exact quotient_root cs r s p hp hr (hroots s (by simp [hs])) (hpair.1 s hs)
+      have hb := ih (quotient r cs).length (by omega) (quotient r cs) hlead rs hpair.2 hrest rfl
+      simp only [List.length_cons]
+      omega
+
+theorem power_root_count (p d : Nat) (hp : Prime p) (hd : 0 < d) (xs : List Int)
+    (hpair : xs.Pairwise (fun r s => ¬ Congruent r s p))
+    (hroot : ∀ x ∈ xs, Congruent (x^d) 1 p) : xs.length ≤ d := by
+  /-
+  Lemma: At most d incongruent integers satisfy x^d=1 modulo p.
+  Proof: Use the coefficient list [-1,0,...,0,1] for x^d-1.
+  It has d+1 coefficients and leading coefficient one, which
+  the prime cannot divide. Each given solution is a root of this
+  polynomial. The elementary polynomial root bound applies. QED
+  -/
+  let cs : List Int := -1 :: monomial (d-1)
+  have hlen : cs.length=d+1 := by simp only [cs,List.length_cons,monomial_length]; omega
+  have hlead : leading cs=1 := by
+    have hl := monomial_length (d-1)
+    cases he : monomial (d-1) with
+    | nil => rw [he] at hl; simp at hl
+    | cons b tail =>
+      change leading (-1::monomial (d-1))=1
+      rw [he]
+      change leading (b::tail)=1
+      rw [← he]
+      exact monomial_leading (d-1)
+  have hnot : ¬ (p : Int) ∣ leading cs := by
+    rw [hlead]
+    intro h
+    have hb := divisor_le_positive p 1 (by decide) h
+    have := hp.1
+    omega
+  have heval : ∀ x, evaluate cs x=x^d-1 := by
+    intro x
+    change -1+x*evaluate (monomial (d-1)) x=x^d-1
+    rw [monomial_evaluate,Int.mul_comm x (x^(d-1)),← Int.pow_succ]
+    have he : d-1+1=d := by omega
+    rw [he]
+    omega
+  have hb := root_count cs p hp hnot xs hpair (by
+    intro x hx
+    rw [heval]
+    exact (hroot x hx).2)
+  rw [hlen] at hb
+  omega
+
+theorem power_mul (a : Int) (i j : Nat) : (a^i)^j=a^(i*j) := by
+  /-
+  Lemma: Raising a power to another power multiplies exponents.
+  Proof: Induct on j. At zero both sides are one. The successor
+  multiplies the preceding power by a^i, which adds i to its
+  exponent and gives i*(j+1). QED
+  -/
+  induction j with
+  | zero => simp [Int.pow_zero]
+  | succ j ih => rw [Int.pow_succ,ih,Nat.mul_succ,power_add]
+
+theorem modeq_refl (a n : Int) (hn : 0 < n) : a ≡ a [MOD n] := by
+  /-
+  Theorem: Every integer is congruent to itself.
+  Proof: The modulus n is positive by hypothesis. Also,
+
+    a - a = 0 = n * 0.
+
+  Thus n divides a - a, using the integer 0. QED
+  -/
+  constructor
+  · exact hn
+  · exists 0
+    rw [Int.sub_self, Int.mul_zero]
+
+theorem dvd_mult_of_dvd_left (a b c : Int) (h : a ∣ b) : a ∣ b * c := by
+  /-
+  Theorem: If a divides b, then a divides b * c for any integer c.
+  Proof: If b = a * m, then
+
+    b * c = (a * m) * c = a * (m * c).
+
+  Use m * c as the witness. QED
+  -/
+  rcases h with ⟨m, hm⟩
+  exists m * c
+  rw [hm, Int.mul_assoc]
+
+theorem modeq_mult (a b c d n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : c ≡ d [MOD n]) : a * c ≡ b * d [MOD n] := by
+  /-
+  Theorem: Congruences can be multiplied.
+  Proof: We must show that n divides a * c - b * d. We can express
+  this difference in terms of a - b and c - d:
+
+    a * c - b * d = a * c - b * c + b * c - b * d
+                 = (a - b) * c + b * (c - d).
+
+  Since n divides a - b, it divides (a - b) * c. Similarly, since n
+  divides c - d, it divides b * (c - d). It therefore divides their
+  sum, which is a * c - b * d. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h₂ := dvd_mult_of_dvd_left n (a - b) c h₀.2
+    have h₃ := dvd_mult_of_dvd_left n (c - d) b h₁.2
+    have h := dvd_add n ((a - b) * c) ((c - d) * b) h₂ h₃
+    rw [Int.mul_comm (c - d) b, Int.sub_mul, Int.mul_sub,
+      ← Int.add_sub_assoc, Int.sub_add_cancel] at h
+    exact h
+
+theorem power_multiple_one (a : Int) (n k q : Nat)
+    (hk : Congruent (a^k) 1 n) : Congruent (a^(k*q)) 1 n := by
+  /-
+  Lemma: If a^k is congruent to one, so is a^(k*q) for every
+  nonnegative q. Proof: Induct on q. The zero power is one.
+  Each successor adds k to the exponent, so the power is multiplied
+  by a^k. Multiplying the two congruences to one proves the step.
+  QED
+  -/
+  induction q with
+  | zero => simpa [Int.pow_zero] using modeq_refl 1 n hk.1
+  | succ q ih =>
+    rw [Nat.mul_succ,power_add]
+    simpa using modeq_mult _ 1 _ 1 n ih hk
+
+theorem cycle_power_one (a : Int) (n : Nat) (hn : 0 < n) (ha : gcd a n=1)
+    (x : Int) (hx : x ∈ cyclePowers a (order a n)) : Congruent (x^(order a n)) 1 n := by
+  /-
+  Lemma: Every power in the cycle solves x^d=1, where d is the
+  order. Proof: Write x=a^(j+1). Raising it to d gives a power
+  whose exponent d*(j+1) is a multiple of the order. QED
+  -/
+  rcases List.mem_map.mp hx with ⟨j,_,he⟩
+  subst x
+  rw [power_mul,Nat.mul_comm (j+1) (order a n)]
+  exact power_multiple_one a n (order a n) (j+1) (order_spec a n hn ha).2.1
+
+theorem power_root_in_cycle (a x : Int) (p : Nat) (hp : Prime p) (ha : gcd a p=1)
+    (hx : Congruent (x^(order a p)) 1 p) :
+    ∃ i : Nat, 0 < i ∧ i ≤ order a p ∧ Congruent x (a^i) p := by
+  /-
+  Lemma: Every solution of x^d=1 is congruent to a power of an
+  element a of order d. Proof: The d cycle powers are distinct
+  solutions. If x were incongruent to all of them, adjoining x
+  would give d+1 incongruent solutions. The power root bound
+  excludes this. Hence x matches one of the powers a through a^d.
+  QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hd := (order_spec a p hn ha).1
+  apply Classical.byContradiction
+  intro hnone
+  have hsep : ∀ y ∈ cyclePowers a (order a p), ¬ Congruent x y p := by
+    intro y hy hxy
+    rcases List.mem_map.mp hy with ⟨j,hj,he⟩
+    have hjb := List.mem_range.mp hj
+    apply hnone
+    exact ⟨j+1,by omega,by omega,by simpa only [he] using hxy⟩
+  have hpair := List.pairwise_cons.mpr ⟨hsep,cycle_distinct a p hn ha⟩
+  have hb := power_root_count p (order a p) hp hd (x::cyclePowers a (order a p)) hpair (by
+    intro y hy
+    rcases List.mem_cons.mp hy with he | hy
+    · subst y; exact hx
+    · exact cycle_power_one a p hn ha y hy)
+  simp only [cyclePowers,List.length_cons,List.length_map,List.length_range] at hb
+  omega
+
+theorem modeq_pow_step (a b n : Int) (k : Nat)
+    (h : a ≡ b [MOD n]) (hk : a ^ k ≡ b ^ k [MOD n]) :
+    a ^ (k + 1) ≡ b ^ (k + 1) [MOD n] := by
+  /-
+  Theorem: Advance an exponent by one.
+  Proof: a ^ (k + 1) = a ^ k * a, and likewise for b.
+  Multiply the two assumed congruences. QED
+  -/
+  rw [Int.pow_succ, Int.pow_succ]
+  exact modeq_mult (a ^ k) (b ^ k) a b n hk h
+
+theorem modeq_pow (a b n : Int) (k : Nat) (h : a ≡ b [MOD n]) :
+    a ^ k ≡ b ^ k [MOD n] := by
+  /-
+  Theorem: Every natural-number power preserves congruence.
+  Proof: We use induction on k, including zero.
+
+  Base case: When k = 0, both powers are 1. We have already shown
+  that every integer is congruent to itself.
+
+  Inductive case: Suppose a ^ k is congruent to b ^ k modulo n.
+  We also know that a is congruent to b modulo n. Multiplying these
+  congruences gives
+
+    a ^ k * a ≡ b ^ k * b [MOD n].
+
+  These products are a ^ (k + 1) and b ^ (k + 1), as required.
+
+  QED
+  -/
+  induction k with
+  | zero =>
+    rw [Int.pow_zero, Int.pow_zero]
+    exact modeq_refl 1 n h.1
+  | succ k ih =>
+    exact modeq_pow_step a b n k h ih
+
+theorem congruent_orders (a b : Int) (n : Nat) (hn : 0 < n)
+    (ha : gcd a n=1) (hb : gcd b n=1) (h : Congruent a b n) : order a n=order b n := by
+  /-
+  Lemma: Congruent coprime integers have the same order.
+  Proof: Congruent inputs have congruent powers. Thus each positive
+  exponent returning one input to one also returns the other.
+  Minimality bounds each order by the other, so they are equal.
+  QED
+  -/
+  have hs := order_spec a n hn ha
+  have ht := order_spec b n hn hb
+  have h1 := hs.2.2 _ ht.1 (modeq_trans _ _ _ n (modeq_pow a b n (order b n) h) ht.2.1)
+  have h2 := ht.2.2 _ hs.1 (modeq_trans _ _ _ n
+    (modeq_pow b a n (order a n) (modeq_symm _ _ n h)) hs.2.1)
+  omega
+
+theorem equal_power_order_coprime (a : Int) (n i : Nat) (hn : 0 < n)
+    (ha : gcd a n=1) (he : order (a^i) n=order a n) : gcd (i : Int) (order a n)=1 := by
+  /-
+  Lemma: If a^i has the full order d of a, then i is coprime
+  to d. Proof: Let g=gcd(i,d), and write i=g*u and d=g*v.
+  Since d>0, both g and v are positive. The identity i*v=d*u
+  makes (a^i)^v congruent to one. Its order d is therefore at
+  most v. But d=g*v, so g cannot exceed one. Thus g=1. QED
+  -/
+  have hs := order_spec a n hn ha
+  have ht := order_spec (a^i) n hn (coprime_power a n (by omega) ha i)
+  let d := order a n
+  let g := (gcd (i : Int) d).toNat
+  have hgdata := gcd_data (i : Int) d
+  have hgcast : (g : Int)=gcd (i : Int) d := Int.toNat_of_nonneg hgdata.1
+  have hgpositive := gcd_positive (i : Int) d (Or.inr (by dsimp [d]; omega))
+  have hgpos : 0 < g := by omega
+  have hgi : g ∣ i := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.1)
+  have hgd : g ∣ d := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.2.1)
+  rcases hgi with ⟨u,hu⟩
+  rcases hgd with ⟨v,hv⟩
+  have hvpos : 0 < v := by
+    by_cases hz : v=0
+    · rw [hz,Nat.mul_zero] at hv
+      dsimp [d] at hv
+      omega
+    · omega
+  have hmul : i*v=d*u := by
+    rw [hu,hv]
+    simp only [Nat.mul_assoc,Nat.mul_left_comm,Nat.mul_comm]
+  have hm := power_multiple_one a n d u hs.2.1
+  have hreturn : Congruent ((a^i)^v) 1 n := by rw [power_mul,hmul]; exact hm
+  have hbound := ht.2.2 v hvpos hreturn
+  rw [he] at hbound
+  have hg1 : g=1 := by
+    by_cases h : g=1
+    · exact h
+    · have h2 := Nat.mul_le_mul_right v (by omega : 2 ≤ g)
+      change d ≤ v at hbound
+      omega
+  rw [hg1] at hgcast
+  exact hgcast.symm
+
+theorem equal_order_index (a b : Int) (p : Nat) (hp : Prime p)
+    (ha : gcd a p=1) (hb : gcd b p=1) (he : order b p=order a p) :
+    ∃ i : Nat, 0 < i ∧ i ≤ order a p ∧ gcd (i : Int) (order a p)=1 ∧ Congruent b (a^i) p := by
+  /-
+  Lemma: Every element with the same order d as a is represented
+  by a power a^i with 1≤i≤d and gcd(i,d)=1. Proof: Its d-th
+  power is one, so the full cycle exhausts the possible roots
+  and supplies i. Congruence preserves order, so a^i has order d.
+  The preceding necessity argument makes i coprime to d. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hroot : Congruent (b^(order a p)) 1 p := by
+    rw [← he]
+    exact (order_spec b p hn hb).2.1
+  rcases power_root_in_cycle a b p hp ha hroot with ⟨i,hi,hid,hbi⟩
+  have horder := congruent_orders b (a^i) p hn hb (coprime_power a p (by omega) ha i) hbi
+  have hcop := equal_power_order_coprime a p i hn ha (horder.symm.trans he)
+  exact ⟨i,hi,hid,hcop,hbi⟩
+
+theorem order_count (p d : Nat) (hp : Prime p) (xs : List Int)
+    (hpair : xs.Pairwise (fun a b => ¬ Congruent a b p))
+    (horders : ∀ a ∈ xs, gcd a p=1 ∧ order a p=d) : xs.length ≤ phi d := by
+  /-
+  Theorem: At most phi(d) incongruent integers have order d modulo
+  a prime. Proof: If the list is empty, there is nothing to count.
+  Otherwise fix its first element a. Each element b is congruent
+  to a^i for some 1≤i≤d coprime to d. Choose such an exponent
+  for each b. Two elements assigned the same exponent would be
+  congruent, which is excluded. Thus the chosen exponents form a
+  distinct list drawn from the reduced representatives counted
+  by phi(d). The elementary distinct-list bound gives the result.
+  Coprimality makes the order meaningful; d=0 consequently admits
+  no such elements, and is harmless in this formulation. QED
+  -/
+  cases xs with
+  | nil => exact Nat.zero_le _
+  | cons a xs =>
+    have ha := horders a (by simp)
+    have hspec : ∀ b ∈ a::xs, ∃ i : Nat, 0 < i ∧ i ≤ d ∧ gcd (i : Int) d=1 ∧ Congruent b (a^i) p := by
+      intro b hb
+      have hs := horders b hb
+      have he := equal_order_index a b p hp ha.1 hs.1 (hs.2.trans ha.2.symm)
+      simpa only [ha.2] using he
+    let index (b : Int) : Nat := if h : b ∈ a::xs then Classical.choose (hspec b h) else 0
+    have hindex : ∀ b (_hb : b ∈ a::xs),
+        0 < index b ∧ index b ≤ d ∧ gcd (index b : Int) d=1 ∧ Congruent b (a^(index b)) p := by
+      intro b hb
+      dsimp only [index]
+      rw [dif_pos hb]
+      exact Classical.choose_spec (hspec b hb)
+    have hnd : ((a::xs).map index).Nodup := by
+      apply List.pairwise_map.mpr
+      apply List.Pairwise.imp_of_mem ?_ hpair
+      intro b c hb hc hbc he
+      have hs := (hindex b hb).2.2.2
+      have ht := (hindex c hc).2.2.2
+      rw [he] at hs
+      exact hbc (modeq_trans _ _ _ p hs (modeq_symm _ _ p ht))
+    have hsub : ∀ i ∈ (a::xs).map index, i ∈ reducedResidues d := by
+      intro i hi
+      rcases List.mem_map.mp hi with ⟨b,hb,he⟩
+      subst i
+      have hs := hindex b hb
+      exact (reduced_mem d _).mpr ⟨hs.1,hs.2.1,hs.2.2.1⟩
+    have hb := distinct_length_bound _ _ hnd hsub
+    change (a::xs).length ≤ (reducedResidues d).length
+    simpa only [List.length_map] using hb
+
+theorem small_prime_coprime (p i : Nat) (hp : Prime p) (hi : 0 < i) (hip : i < p) :
+    gcd (i : Int) p=1 := by
+  /-
+  Lemma: Each positive integer below p is relatively prime to p.
+  Proof: If p divided i, the divisor bound for positive i would
+  force p≤i. This contradicts i<p, so the preceding lemma applies.
+  QED
+  -/
+  apply prime_coprime i p hp
+  intro h
+  have hb := divisor_le_positive p i (by omega) h
+  omega
+
+theorem order_class_bound (p d : Nat) (hp : Prime p) :
+    (orderClass p d).length ≤ phi d := by
+  /-
+  Lemma: The number of representatives of order d is at most
+  phi(d). Proof: The selected representatives are distinct and
+  lie between one and p-1, so equality of their residue classes
+  would be equality of the representatives. They are coprime to
+  the prime p. The elementary power-cycle bound therefore applies.
+  QED
+  -/
+  have hnd : (orderClass p d).Nodup := (positive_range_nodup (p-1)).filter _
+  have hpair : ((orderClass p d).map (fun a : Nat => (a : Int))).Pairwise
+      (fun a b => ¬ Congruent a b p) := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ hnd
+    intro a b ha hb hab he
+    have ha' := (order_class_mem p d a).mp ha
+    have hb' := (order_class_mem p d b).mp hb
+    have heq := bounded_congruent_equal a b p (by omega) (by have := hp.1; omega)
+      (by omega) (by have := hp.1; omega) he
+    exact hab (by omega)
+  have h := order_count p d hp ((orderClass p d).map (fun a : Nat => (a : Int))) hpair (by
+    intro a ha
+    rcases List.mem_map.mp ha with ⟨b,hb,hba⟩
+    subst a
+    have hb' := (order_class_mem p d b).mp hb
+    exact ⟨small_prime_coprime p b hp hb'.1 (by have := hp.1; omega),hb'.2.2⟩)
+  simpa only [List.length_map] using h
+
 end NumberTheory.DivisorCounts
