@@ -809,4 +809,29 @@ theorem sum_single_label (ds : List Nat) (a : Nat) (hnd : ds.Nodup)
     · have ham : a ∈ ds := by rcases List.mem_cons.mp ha with h | h; exact False.elim (he h); exact h
       simp only [sumOn,if_neg he,Nat.zero_add,ih hpair.2 ham]
 
+theorem count_by_labels (xs ds : List Nat) (f : Nat → Nat)
+    (hnd : ds.Nodup) (hlabels : ∀ x ∈ xs, f x ∈ ds) :
+    sumOn ds (fun d => (xs.filter (fun x => decide (f x=d))).length)=xs.length := by
+  /-
+  Lemma: Sorting a finite list into distinct labels counts each
+  entry exactly once, provided every entry has a listed label.
+  Proof: Remove the first entry x. Its addition increases exactly
+  the count for f(x) by one. The sum of those increases is one,
+  and induction counts all remaining entries. QED
+  -/
+  induction xs with
+  | nil => simpa only [List.filter_nil,List.length_nil] using sum_on_zero ds
+  | cons x xs ih =>
+    have hstep : ∀ d ∈ ds,
+        ((x::xs).filter (fun y => decide (f y=d))).length=
+          (if f x=d then 1 else 0)+(xs.filter (fun y => decide (f y=d))).length := by
+      intro d _
+      by_cases he : f x=d
+      · simp [he,Nat.add_comm]
+      · simp [he]
+    rw [sum_on_congr ds _ _ hstep,sum_on_add,
+      sum_single_label ds (f x) hnd (hlabels x (by simp)),
+      ih (fun y hy => hlabels y (by simp [hy]))]
+    simp only [List.length_cons]; omega
+
 end NumberTheory.DivisorCounts
