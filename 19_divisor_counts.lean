@@ -534,4 +534,17 @@ theorem fraction_denominator_unique (n d e i j : Nat) (hn : 0 < n)
   apply Nat.eq_of_mul_eq_mul_left hf.1
   rw [hf.2,hq,hf'.2]
 
+theorem reduced_nodup (n : Nat) : (reducedResidues n).Nodup := by
+  /-
+  Lemma: The reduced residue list has no repeated entries.
+  Proof: The initial range is distinct, adding one preserves
+  distinctness, and filtering can only remove entries. QED
+  -/
+  have h : ((List.range n).map (fun i => i+1)).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range n)
+    intro i j hij he
+    exact hij (by omega)
+  exact h.filter _
+
 end NumberTheory.DivisorCounts
