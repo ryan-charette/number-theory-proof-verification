@@ -1904,4 +1904,269 @@ theorem order_class_bound (p d : Nat) (hp : Prime p) :
     exact ⟨small_prime_coprime p b hp hb'.1 (by have := hp.1; omega),hb'.2.2⟩)
   simpa only [List.length_map] using h
 
+theorem power_remainder (a : Int) (n : Nat) (hn : 0 < n)
+    (hc : gcd a n=1) (m : Nat) :
+    Congruent (a^m) (a^(m % order a n)) n := by
+  /-
+  Lemma: Dividing an exponent by the order does not change its
+  power's congruence class when the exponent is replaced by its
+  remainder. Proof: Put k=order(a,n). Division gives m=r+k*q.
+  The power a^(k*q) is congruent to one, so
+  a^m=a^r*a^(k*q) is congruent to a^r. QED
+  -/
+  have hs := order_spec a n hn hc
+  have hp := power_multiple_one a n (order a n) (m / order a n) hs.2.1
+  have he := Nat.mod_add_div m (order a n)
+  have h := modeq_mult (a^(m % order a n)) (a^(m % order a n))
+    (a^(order a n*(m / order a n))) 1 n
+    (modeq_refl _ _ (by omega)) hp
+  rw [←power_add,he,Int.mul_one] at h
+  exact h
+
+theorem order_dvd_iff (a : Int) (n : Nat) (hn : 0 < n)
+    (hc : gcd a n=1) (m : Nat) :
+    Congruent (a^m) 1 n ↔ order a n ∣ m := by
+  /-
+  Theorem: A power is congruent to one exactly when the order
+  divides its exponent. Proof: Divide m by k=order(a,n), leaving
+  remainder r<k. The remainder-power lemma shows that a^r is
+  congruent to one if a^m is. If r were positive, minimality of k
+  would give k≤r, a contradiction. Thus r=0 and k divides m.
+  Conversely, a multiple of the returning exponent k returns to
+  one by the multiplication lemma. QED
+  -/
+  have hs := order_spec a n hn hc
+  constructor
+  · intro hm
+    have hr := modeq_trans _ _ _ n (modeq_symm _ _ n (power_remainder a n hn hc m)) hm
+    have hlt := Nat.mod_lt m hs.1
+    have hz : m % order a n=0 := by
+      by_cases hpos : 0 < m % order a n
+      · have hmin := hs.2.2 _ hpos hr
+        omega
+      · omega
+    refine ⟨m / order a n,?_⟩
+    have he := Nat.mod_add_div m (order a n)
+    omega
+  · rintro ⟨q,rfl⟩
+    exact power_multiple_one a n (order a n) q hs.2.1
+
+def nonzeroResidues (n : Nat) : List Nat := (List.range n).erase 0
+
+def intProduct : List Int → Int
+  | [] => 1
+  | a::xs => a*intProduct xs
+
+theorem product_congruent (xs : List Nat) (f g : Nat → Int) (n : Int) (hn : 0 < n)
+    (h : ∀ i ∈ xs, Congruent (f i) (g i) n) :
+    Congruent (intProduct (xs.map f)) (intProduct (xs.map g)) n := by
+  /-
+  Lemma: Products of corresponding congruent factors are congruent.
+  Proof: Induct on the list. Empty products are both one. For a
+  nonempty list multiply the head congruence by the congruence
+  of the remaining products supplied by induction. QED
+  -/
+  induction xs with
+  | nil => exact modeq_refl 1 n hn
+  | cons i xs ih =>
+    exact modeq_mult _ _ _ _ n (h i (by simp)) (ih (fun j hj => h j (by simp [hj])))
+
+theorem product_perm (xs ys : List Int) (h : xs.Perm ys) : intProduct xs=intProduct ys := by
+  /-
+  Lemma: Rearranging a finite list preserves its product.
+  Proof: The elementary rearrangement steps are keeping a common
+  head, swapping adjacent entries, and composing rearrangements.
+  Induction on these steps uses multiplication's associativity and
+  commutativity for a swap, and equality for the other steps. QED
+  -/
+  induction h with
+  | nil => rfl
+  | cons a _ ih => simp only [intProduct,ih]
+  | swap a b xs => simp only [intProduct,Int.mul_left_comm]
+  | trans _ _ ih₁ ih₂ => exact ih₁.trans ih₂
+
+theorem scaled_labels_injective (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1)
+    (i j : Nat) (hi : i < n) (hj : j < n)
+    (he : canonicalLabel ((i : Int)*a) n=canonicalLabel ((j : Int)*a) n) : i=j := by
+  /-
+  Lemma: Multiplication by a coprime integer gives distinct residue
+  labels to distinct canonical representatives. Proof: Equal labels
+  give i*a congruent to j*a. Cancel a; the representatives i and j
+  lie between zero and n-1, so their congruence makes them equal.
+  QED
+  -/
+  have h := (canonicalLabel_eq_iff _ _ n hn).mp he
+  have hcancel := cancel_coprime i j a n hc h
+  have hb := bounded_congruent_equal i j n (by omega) (by omega)
+    (by omega) (by omega) hcancel
+  omega
+
+theorem nonzero_residues_mem (n i : Nat) : i ∈ nonzeroResidues n ↔ 0 < i ∧ i < n := by
+  /-
+  Lemma: Removing zero from the canonical list leaves exactly the
+  positive integers below n. Proof: Membership in the range means
+  i<n. Its entries are distinct, so erasing zero removes precisely
+  zero. For i≠0 membership is unchanged. QED
+  -/
+  by_cases hi : i=0
+  · subst i
+    simp [nonzeroResidues,List.Nodup.not_mem_erase (List.nodup_range n)]
+  · rw [nonzeroResidues,List.mem_erase_of_ne hi,List.mem_range]
+    omega
+
+theorem coprime_not_zero (a : Int) (n : Nat) (hn : 1 < n) (hc : gcd a n=1) :
+    ¬ Congruent a 0 n := by
+  /-
+  Lemma: A number coprime to a modulus greater than one cannot be
+  congruent to zero. Proof: Otherwise n divides a and n. It then
+  divides the Bezout combination one, forcing n≤1, a contradiction.
+  QED
+  -/
+  intro h
+  have ha : (n : Int) ∣ a := by simpa using h.2
+  rcases bezout a n with ⟨u,v,he⟩
+  rw [hc] at he
+  have hd := dvd_linear n a n u v ha (dvd_refl n)
+  rw [he] at hd
+  have hb := divisor_le_positive n 1 (by decide) hd
+  omega
+
+theorem nonzero_labels_perm (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
+    ((nonzeroResidues p).map (fun i : Nat => canonicalLabel ((i : Int)*a) p)).Perm
+      (nonzeroResidues p) := by
+  /-
+  Lemma: Multiplication by a coprime integer rearranges the nonzero
+  residue labels modulo a prime. Proof: Cancellation makes the
+  labels distinct. Each factor i and a is coprime to p, so their
+  product has a Bezout identity with p and cannot have label zero.
+  Thus all labels belong to the nonzero list. The lengths agree,
+  so the distinct-selection lemma gives the rearrangement. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hnd0 : (nonzeroResidues p).Nodup := (List.nodup_range p).erase 0
+  have hnd : ((nonzeroResidues p).map (fun i : Nat => canonicalLabel ((i : Int)*a) p)).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ hnd0
+    intro i j hi hj hne he
+    exact hne (scaled_labels_injective a p hn hc i j
+      ((nonzero_residues_mem p i).mp hi).2 ((nonzero_residues_mem p j).mp hj).2 he)
+  apply distinct_subset_perm _ _ hnd ?_ (by simp)
+  intro r hr
+  rcases List.mem_map.mp hr with ⟨i,hi,he⟩
+  subst r
+  have hib := (nonzero_residues_mem p i).mp hi
+  have hs := canonicalLabel_spec ((i : Int)*a) p hn
+  apply (nonzero_residues_mem p _).mpr
+  refine ⟨?_,hs.1⟩
+  have hzero : canonicalLabel ((i : Int)*a) p ≠ 0 := by
+    intro hz
+    rw [hz] at hs
+    have hcancel := cancel_coprime i 0 a p hc (by simpa using hs.2)
+    exact coprime_not_zero i p hp.1 (small_prime_coprime p i hp hib.1 hib.2) hcancel
+  omega
+
+theorem residue_product_congruent (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
+    Congruent (intProduct ((nonzeroResidues p).map (fun i : Nat => (i : Int)*a)))
+      (intProduct ((nonzeroResidues p).map (fun i : Nat => (i : Int)))) p := by
+  /-
+  Theorem: The product a*(2*a)*...*((p-1)*a) is congruent to
+  1*2*...*(p-1). Proof: Replace each factor by its canonical label.
+  The products are congruent because corresponding factors are.
+  The labels rearrange the nonzero canonical residues, so their
+  product equals the product of those residues. QED
+  -/
+  have h := product_congruent (nonzeroResidues p) (fun i : Nat => (i : Int)*a)
+    (fun i : Nat => (canonicalLabel ((i : Int)*a) p : Int)) p
+    (by have := hp.1; omega) (fun i _ => (canonicalLabel_spec _ p (by have := hp.1; omega)).2)
+  have he := product_perm _ _ ((nonzero_labels_perm a p hp hc).map (fun i : Nat => (i : Int)))
+  simp only [List.map_map,Function.comp_def] at he
+  rw [he] at h
+  exact h
+
+theorem scaled_product (xs : List Nat) (a : Int) :
+    intProduct (xs.map (fun i : Nat => (i : Int)*a))=
+      a^xs.length*intProduct (xs.map (fun i : Nat => (i : Int))) := by
+  /-
+  Lemma: Multiplying every entry by a inserts a factor a raised
+  to the number of entries into the total product.
+  Proof: Induct on the list. Empty products and a^0 are one.
+  Restoring one head inserts one more factor a. Reassociate and
+  commute the factors to obtain the successor power. QED
+  -/
+  induction xs with
+  | nil => simp [intProduct,Int.pow_zero]
+  | cons i xs ih =>
+    simp only [List.map_cons,List.length_cons,intProduct]
+    rw [ih,Int.pow_succ]
+    simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+
+theorem coprime_product (xs : List Int) (n : Int) (hn : 0 < n)
+    (hc : ∀ x ∈ xs, gcd x n=1) : gcd (intProduct xs) n=1 := by
+  /-
+  Lemma: A product of integers coprime to n is coprime to n.
+  Proof: Inductively construct a Bezout identity for n and the
+  product. The empty product is one. For a nonempty list, combine
+  the identity for n and the head with the one for n and the tail
+  product. Reverse the order of terms to identify the gcd as one.
+  QED
+  -/
+  have hb : ∃ u v : Int, n*u+intProduct xs*v=1 := by
+    induction xs with
+    | nil => exact ⟨0,1,by simp [intProduct]⟩
+    | cons x xs ih =>
+      rcases bezout x n with ⟨u,v,he⟩
+      rw [hc x (by simp)] at he
+      exact bezout_product n x (intProduct xs) ⟨v,u,by omega⟩
+        (ih (fun y hy => hc y (by simp [hy])))
+  rcases hb with ⟨u,v,he⟩
+  exact gcd_one_right _ n hn ⟨v,u,by omega⟩
+
+theorem fermat_coprime (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
+    Congruent (a^(p-1)) 1 p := by
+  /-
+  Theorem: For a prime p and an integer a relatively prime to p,
+  a^(p-1) is congruent to one modulo p.
+  Proof: Let P be the product of the positive integers below p.
+  The residue product theorem gives a^(p-1)*P congruent to P,
+  because scaling each of its p-1 factors extracts a^(p-1).
+  Each factor of P is coprime to p, hence so is P. Cancelling P
+  gives the asserted congruence. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hl : (nonzeroResidues p).length=p-1 := by
+    have he := List.length_erase_of_mem (by simp; omega : 0 ∈ List.range p)
+    simp only [List.length_range] at he
+    exact he
+  have h := residue_product_congruent a p hp hc
+  rw [scaled_product,hl] at h
+  have hprod := coprime_product ((nonzeroResidues p).map (fun i : Nat => (i : Int)))
+    p (by omega) (by
+      intro x hx
+      rcases List.mem_map.mp hx with ⟨i,hi,he⟩
+      subst x
+      have hib := (nonzero_residues_mem p i).mp hi
+      exact small_prime_coprime p i hp hib.1 hib.2)
+  exact cancel_coprime (a^(p-1)) 1 _ p hprod (by simpa using h)
+
+theorem order_class_total (p : Nat) (hp : Prime p) :
+    sumOn (divisors (p-1)) (fun d => (orderClass p d).length)=p-1 := by
+  /-
+  Lemma: Summing the order counts over divisors of p-1 gives p-1.
+  Proof: Each nonzero representative is coprime to p. Fermat's
+  theorem and the order divisibility criterion put its positive
+  order among these divisors. Sorting the p-1 representatives by
+  this unique order counts each of them once. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hn' : 0 < p-1 := by have := hp.1; omega
+  have h := count_by_labels (positiveRange (p-1)) (divisors (p-1))
+    (fun a => order (a : Int) p) (divisors_nodup (p-1)) (by
+      intro a ha
+      have ha' := (positive_range_mem (p-1) a).mp ha
+      have hc := small_prime_coprime p a hp ha'.1 (by have := hp.1; omega)
+      apply (divisors_mem (p-1) _ hn').mpr
+      exact ⟨(order_spec a p hn hc).1,
+        (order_dvd_iff a p hn hc (p-1)).mp (fermat_coprime a p hp hc)⟩)
+  simpa only [orderClass,positiveRange,List.length_map,List.length_range] using h
+
 end NumberTheory.DivisorCounts
