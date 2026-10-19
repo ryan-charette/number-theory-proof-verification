@@ -2219,4 +2219,16 @@ theorem primitive_class_mem (p a : Nat) (hp : Prime p) :
   · intro ha
     exact (order_class_mem p (p-1) a).mpr ⟨ha.1,by omega,ha.2.2.2⟩
 
+theorem primitive_root_count (p : Nat) (hp : Prime p) :
+    (orderClass p (p-1)).length=phi (p-1) := by
+  /-
+  Theorem: A prime p has exactly phi(p-1) primitive-root classes.
+  Proof: The positive representatives below p with order p-1
+  represent precisely these classes. Since p-1 is a positive
+  divisor of itself, its order count is phi(p-1). Counting classes
+  is essential: adding multiples of p gives infinitely many
+  integer representatives of the same primitive root. QED
+  -/
+  exact exact_order_count p (p-1) hp (by have := hp.1; omega) (Nat.dvd_refl _)
+
 end NumberTheory.DivisorCounts
