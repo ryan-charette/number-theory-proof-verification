@@ -834,4 +834,18 @@ theorem count_by_labels (xs ds : List Nat) (f : Nat → Nat)
       ih (fun y hy => hlabels y (by simp [hy]))]
     simp only [List.length_cons]; omega
 
+theorem sum_on_le (ds : List Nat) (f g : Nat → Nat)
+    (h : ∀ d ∈ ds, f d ≤ g d) : sumOn ds f ≤ sumOn ds g := by
+  /-
+  Lemma: Bounding each summand bounds the total.
+  Proof: Add the bound for the first term to the bound supplied
+  by induction for the remaining terms. QED
+  -/
+  induction ds with
+  | nil => exact Nat.le_refl _
+  | cons d ds ih =>
+    have hfirst := h d (by simp)
+    have hrest := ih (fun e he => h e (by simp [he]))
+    simp only [sumOn]; omega
+
 end NumberTheory.DivisorCounts
