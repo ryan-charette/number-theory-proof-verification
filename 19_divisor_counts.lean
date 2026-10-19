@@ -427,4 +427,22 @@ theorem expanded_fraction_gcd (n d i : Nat) (hn : 0 < n)
   rw [hi,Int.mul_one] at he
   simpa only [← Int.natCast_mul,hq.2] using he
 
+noncomputable def reducedResidues (n : Nat) : List Nat := by
+  exact ((List.range n).map (fun i => i+1)).filter (fun i => decide (gcd (i : Int) n=1))
+
+theorem reduced_mem (n i : Nat) : i ∈ reducedResidues n ↔ 0 < i ∧ i ≤ n ∧ gcd (i : Int) n=1 := by
+  /-
+  Lemma: The reduced residue list consists exactly of the positive
+  integers at most n that are coprime to n. Proof: Its initial
+  list is 1,...,n; the filter keeps exactly the coprime entries.
+  Its length defines the counting function phi, including n=1.
+  QED
+  -/
+  simp only [reducedResidues,List.mem_filter,List.mem_map,List.mem_range,decide_eq_true_eq]
+  constructor
+  · rintro ⟨⟨j,hj,he⟩,hc⟩
+    exact ⟨by omega,by omega,hc⟩
+  · rintro ⟨hi,hin,hc⟩
+    exact ⟨⟨i-1,by omega,by omega⟩,hc⟩
+
 end NumberTheory.DivisorCounts
