@@ -767,4 +767,13 @@ theorem sum_on_congr (ds : List Nat) (f g : Nat → Nat)
   | cons d ds ih =>
     simp only [sumOn,h d (by simp),ih (fun e he => h e (by simp [he]))]
 
+theorem sum_on_zero (ds : List Nat) : sumOn ds (fun _ => 0)=0 := by
+  /-
+  Lemma: A sum of zeros is zero.
+  Proof: Induction adds one zero at a time. QED
+  -/
+  induction ds with
+  | nil => rfl
+  | cons _d ds ih => simp only [sumOn,ih,Nat.zero_add]
+
 end NumberTheory.DivisorCounts
