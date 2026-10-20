@@ -1144,4 +1144,19 @@ theorem grid_mem (m n : Nat) (is : List Nat) (a : Int) :
       · subst j; exact Or.inl ha
       · exact Or.inr ⟨j,hj,ha⟩
 
+theorem grid_length (m n : Nat) (is : List Nat) :
+    (gridRows m n is).length=is.length*n := by
+  /-
+  Lemma: An array with t columns, each of height n, has t*n
+  entries. Proof: Each progression has n entries. Appending
+  one more column adds n to the total, giving the formula
+  by induction on the column list. QED
+  -/
+  induction is with
+  | nil => simp only [gridRows,List.length_nil,Nat.zero_mul]
+  | cons i is ih =>
+    simp only [gridRows,List.length_append,progression,List.length_map,
+      List.length_range,ih,List.length_cons,Nat.add_mul,Nat.one_mul]
+    omega
+
 end NumberTheory.TotientProducts
