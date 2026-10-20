@@ -1050,4 +1050,25 @@ theorem coprime_count_congr (xs : List Int) (m n : Int)
     · have hn : gcd a n ≠ 1 := fun hn => hm (ha.mpr hn)
       simpa [coprimeCount,hm,hn] using ht
 
+theorem coprime_count_constant (xs : List Int) (i m : Int)
+    (h : ∀ a ∈ xs, gcd a m=1 ↔ gcd i m=1) :
+    coprimeCount xs m=if gcd i m=1 then xs.length else 0 := by
+  /-
+  Lemma: If every entry has the same coprimality status as i,
+  the count is the whole length or zero.
+  Proof: Induct on the list. In the coprime case every entry
+  is kept; in the other case every entry is removed. QED
+  -/
+  induction xs with
+  | nil => simp [coprimeCount]
+  | cons a xs ih =>
+    have ha := h a (by simp)
+    have ht := ih (fun b hb => h b (by simp [hb]))
+    by_cases hi : gcd i m=1
+    · have ha' := ha.mpr hi
+      have ht' : coprimeCount xs m=xs.length := by simpa only [if_pos hi] using ht
+      simpa [coprimeCount,hi,ha'] using congrArg Nat.succ ht'
+    · have ha' : gcd a m ≠ 1 := fun ha' => hi (ha.mp ha')
+      simpa [coprimeCount,hi,ha'] using ht
+
 end NumberTheory.TotientProducts
