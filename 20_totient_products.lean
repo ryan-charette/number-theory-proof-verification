@@ -1071,4 +1071,13 @@ theorem coprime_count_constant (xs : List Int) (i m : Int)
     · have ha' : gcd a m ≠ 1 := fun ha' => hi (ha.mp ha')
       simpa [coprimeCount,hi,ha'] using ht
 
+theorem coprime_count_append (xs ys : List Int) (n : Int) :
+    coprimeCount (xs++ys) n=coprimeCount xs n+coprimeCount ys n := by
+  /-
+  Lemma: Counts add when lists are appended.
+  Proof: Filtering an append filters both parts, and the length
+  of their append is the sum of their lengths. QED
+  -/
+  simp only [coprimeCount,List.filter_append,List.length_append]
+
 end NumberTheory.TotientProducts
