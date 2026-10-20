@@ -1267,4 +1267,22 @@ theorem column_base_count (i : Int) (m n : Nat) (hm : 0 < m) :
   rw [coprime_count_constant _ i m (column_coprime_iff i m n hm)]
   simp only [progression,List.length_map,List.length_range]
 
+theorem grid_base_count (m n : Nat) (hm : 0 < m) (is : List Nat) :
+    coprimeCount (gridRows m n is) m =
+      n*(is.filter (fun i : Nat => decide (gcd (i : Int) m=1))).length := by
+  /-
+  Lemma: Counting array entries coprime to its width m gives
+  n times the number of coprime column starts.
+  Proof: A qualifying column contributes all n entries; any
+  other column contributes zero. Append the columns and add
+  their counts by induction. QED
+  -/
+  induction is with
+  | nil => simp [gridRows,coprimeCount]
+  | cons i is ih =>
+    rw [gridRows,coprime_count_append,column_base_count i m n hm,ih]
+    by_cases hi : gcd (i : Int) m=1
+    · simp [hi,Nat.mul_add,Nat.add_comm]
+    · simp [hi]
+
 end NumberTheory.TotientProducts
