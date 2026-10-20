@@ -1256,4 +1256,15 @@ theorem grid_complete (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
   · rw [grid_length]
     simp only [positiveRange,List.length_map,List.length_range]
 
+theorem column_base_count (i : Int) (m n : Nat) (hm : 0 < m) :
+    coprimeCount (progression i m n) m=if gcd i m=1 then n else 0 := by
+  /-
+  Lemma: Counting entries coprime to m in one column gives n
+  or zero according as its starting value is coprime or not.
+  Proof: Every entry has the same coprimality status with m,
+  and there are n positions in the column. QED
+  -/
+  rw [coprime_count_constant _ i m (column_coprime_iff i m n hm)]
+  simp only [progression,List.length_map,List.length_range]
+
 end NumberTheory.TotientProducts
