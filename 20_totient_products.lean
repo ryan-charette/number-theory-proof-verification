@@ -395,4 +395,13 @@ theorem phi_one : phi 1=1 := by
       exact ⟨by decide,by decide,gcd_one_combination 1 1 ⟨1,0,by decide⟩⟩
   exact hp.length_eq
 
+theorem bezout (a b : Int) : ∃ x y : Int, a * x + b * y = gcd a b := by
+  /-
+  Theorem: The gcd of two integers is an integer linear combination.
+  Proof: These are the coefficients constructed by the Euclidean
+  procedure and back-substitution above. The construction also covers
+  the harmless extra case a = b = 0. QED
+  -/
+  exact (gcd_data a b).2.2.2
+
 end NumberTheory.TotientProducts
