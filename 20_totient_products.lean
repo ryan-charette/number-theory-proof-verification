@@ -1030,4 +1030,24 @@ theorem coprime_power_iff (a m : Int) (k : Nat) :
     rw [Int.pow_succ,coprime_product_iff,ih]
     exact ⟨fun h => h.1,fun h => ⟨h,h⟩⟩
 
+theorem coprime_count_congr (xs : List Int) (m n : Int)
+    (h : ∀ a ∈ xs, gcd a m=1 ↔ gcd a n=1) :
+    coprimeCount xs m=coprimeCount xs n := by
+  /-
+  Lemma: Two coprimality tests with the same answers on a list
+  count the same entries. Proof: At the first entry the two
+  tests agree. Keep it in both lists or discard it from both,
+  then use induction for the remaining entries. QED
+  -/
+  induction xs with
+  | nil => rfl
+  | cons a xs ih =>
+    have ha := h a (by simp)
+    have ht := ih (fun b hb => h b (by simp [hb]))
+    by_cases hm : gcd a m=1
+    · have hn := ha.mp hm
+      simpa [coprimeCount,hm,hn] using congrArg Nat.succ ht
+    · have hn : gcd a n ≠ 1 := fun hn => hm (ha.mpr hn)
+      simpa [coprimeCount,hm,hn] using ht
+
 end NumberTheory.TotientProducts
