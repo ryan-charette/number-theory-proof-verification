@@ -1119,4 +1119,29 @@ theorem column_coprime_iff (i : Int) (m n : Nat) (hm : 0 < m)
   exact ⟨fun hc => congruent_coprime a i m hc h,
     fun hc => congruent_coprime i a m hc (modeq_symm a i m h)⟩
 
+def gridRows (m n : Nat) : List Nat → List Int
+  | [] => []
+  | i::is => progression i m n ++ gridRows m n is
+
+theorem grid_mem (m n : Nat) (is : List Nat) (a : Int) :
+    a ∈ gridRows m n is ↔ ∃ i ∈ is, a ∈ progression i m n := by
+  /-
+  Lemma: An array entry belongs to one of its listed columns.
+  Proof: Unfold the first column and use membership in an
+  append, then proceed through the remaining columns. QED
+  -/
+  induction is with
+  | nil => simp [gridRows]
+  | cons i is ih =>
+    simp only [gridRows,List.mem_append,ih,List.mem_cons]
+    constructor
+    · intro h
+      rcases h with h | ⟨j,hj,ha⟩
+      · exact ⟨i,Or.inl rfl,h⟩
+      · exact ⟨j,Or.inr hj,ha⟩
+    · rintro ⟨j,hj,ha⟩
+      rcases hj with hj | hj
+      · subst j; exact Or.inl ha
+      · exact Or.inr ⟨j,hj,ha⟩
+
 end NumberTheory.TotientProducts
