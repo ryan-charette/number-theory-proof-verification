@@ -1014,4 +1014,20 @@ theorem coprime_product_iff (a m n : Int) :
     rw [hn] at hs
     exact gcd_one_combination a (m*n) (bezout_product a m n ⟨u,v,hu⟩ ⟨s,t,hs⟩)
 
+theorem coprime_power_iff (a m : Int) (k : Nat) :
+    gcd a (m^(k+1))=1 ↔ gcd a m=1 := by
+  /-
+  Lemma: Coprimality to a positive power is equivalent to
+  coprimality to its base.
+  Proof: The first power is the base. For the induction step,
+  split m^(k+2) into m^(k+1)*m. Coprimality to this product is
+  equivalent to coprimality to both factors, which by induction
+  is just the single condition for m. QED
+  -/
+  induction k with
+  | zero => simp only [Nat.zero_add,Int.pow_succ,Int.pow_zero,Int.one_mul]
+  | succ k ih =>
+    rw [Int.pow_succ,coprime_product_iff,ih]
+    exact ⟨fun h => h.1,fun h => ⟨h,h⟩⟩
+
 end NumberTheory.TotientProducts
