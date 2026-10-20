@@ -1350,4 +1350,23 @@ theorem column_product_count (i : Int) (m n : Nat) (hm : 0 < m) (hn : 0 < n)
       exact hnone a ha (of_decide_eq_true hd)
     simp only [coprimeCount,hfilter,List.length_nil]
 
+theorem grid_product_count (m n : Nat) (hm : 0 < m) (hn : 0 < n)
+    (hc : gcd (m : Int) n=1) (is : List Nat) :
+    coprimeCount (gridRows m n is) (m*n : Nat) =
+      phi n * (is.filter (fun i : Nat => decide (gcd (i : Int) m=1))).length := by
+  /-
+  Lemma: The total number of array entries coprime to mn is
+  phi(n) times the number of column starts coprime to m.
+  Proof: Each such column contributes phi(n), and the other
+  columns contribute zero. Add the column counts by induction.
+  QED
+  -/
+  induction is with
+  | nil => simp [gridRows,coprimeCount]
+  | cons i is ih =>
+    rw [gridRows,coprime_count_append,column_product_count i m n hm hn hc,ih]
+    by_cases hi : gcd (i : Int) m=1
+    · simp [hi,Nat.mul_add,Nat.add_comm]
+    · simp [hi]
+
 end NumberTheory.TotientProducts
