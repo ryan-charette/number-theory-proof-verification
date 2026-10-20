@@ -1094,4 +1094,17 @@ theorem progression_nodup_positive (i m : Int) (n : Nat) (hm : 0 < m) :
   have heq := Int.eq_of_mul_eq_mul_right (by omega : m ≠ 0) he'
   exact hjk (by omega)
 
+theorem column_congruent (i : Int) (m n : Nat) (hm : 0 < m)
+    (a : Int) (ha : a ∈ progression i m n) : Congruent a i m := by
+  /-
+  Lemma: Every entry in the column with starting value i and
+  step m is congruent to i modulo m.
+  Proof: At position j its difference from i is j*m, explicitly
+  a multiple of m. QED
+  -/
+  rcases (progression_mem i m a n).mp ha with ⟨j,_,he⟩
+  refine ⟨by omega,(j : Int),?_⟩
+  rw [he,Int.mul_comm (m : Int) j]
+  omega
+
 end NumberTheory.TotientProducts
