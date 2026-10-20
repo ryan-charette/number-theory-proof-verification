@@ -805,4 +805,21 @@ theorem complete_coprime_count (xs : List Int) (n : Nat) (hn : 0 < n)
   have hlen := hperm.length_eq
   simpa only [List.length_map,ys,coprimeCount,phi] using hlen
 
+def progression (k m : Int) (n : Nat) : List Int :=
+  (List.range n).map (fun j : Nat => k+(j : Int)*m)
+
+theorem progression_mem (k m a : Int) (n : Nat) :
+    a ∈ progression k m n ↔ ∃ j : Nat, j < n ∧ a=k+(j : Int)*m := by
+  /-
+  Lemma: An entry of a progression has its indicated position j,
+  with 0≤j<n. Proof: Unpack the map of the natural-number range.
+  The converse inserts that position into the mapped list. QED
+  -/
+  constructor
+  · intro h
+    rcases List.mem_map.mp h with ⟨j,hj,he⟩
+    exact ⟨j,List.mem_range.mp hj,he.symm⟩
+  · rintro ⟨j,hj,he⟩
+    exact List.mem_map.mpr ⟨j,List.mem_range.mpr hj,he.symm⟩
+
 end NumberTheory.TotientProducts
