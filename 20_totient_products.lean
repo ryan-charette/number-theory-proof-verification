@@ -1285,4 +1285,32 @@ theorem grid_base_count (m n : Nat) (hm : 0 < m) (is : List Nat) :
     · simp [hi,Nat.mul_add,Nat.add_comm]
     · simp [hi]
 
+theorem phi_prime_power (p k : Nat) (hp : Prime p) :
+    phi (p^(k+1))=p^(k+1)-p^k := by
+  /-
+  Theorem: Phi of the positive power p^(k+1) is p^(k+1)-p^k.
+  Proof: Arrange the p^(k+1) representatives in p columns of
+  height p^k. Coprimality to p^(k+1) is exactly coprimality to p.
+  Each column has constant remainder modulo p. The p-1 columns
+  starting at 1,...,p-1 qualify; the column starting at p consists
+  of the multiples of p and does not. Thus the count is
+  p^k*(p-1)=p^(k+1)-p^k. Writing the exponent as k+1 expresses
+  its positivity; exponent zero is covered by phi(1)=1. QED
+  -/
+  have hpp : 0 < p := by have := hp.1; omega
+  have hpow : 0 < p^k := Nat.pow_pos hpp
+  have he : p*p^k=p^(k+1) := by rw [Nat.pow_succ,Nat.mul_comm]
+  have hcount := complete_coprime_count (gridRows p (p^k) (positiveRange p)) (p*p^k)
+    (Nat.mul_pos hpp hpow) (grid_complete p (p^k) hpp hpow)
+  have hc : coprimeCount (gridRows p (p^k) (positiveRange p)) (p*p^k : Nat)=
+      coprimeCount (gridRows p (p^k) (positiveRange p)) p := by
+    apply coprime_count_congr
+    intro a _
+    rw [he,Int.natCast_pow]
+    exact coprime_power_iff a p k
+  rw [hc,grid_base_count p (p^k) hpp] at hcount
+  change p^k * phi p=phi (p*p^k) at hcount
+  rw [phi_prime p hp,he] at hcount
+  rw [← hcount,Nat.mul_sub_left_distrib,Nat.mul_one,Nat.pow_succ]
+
 end NumberTheory.TotientProducts
