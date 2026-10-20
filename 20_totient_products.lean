@@ -1369,4 +1369,24 @@ theorem grid_product_count (m n : Nat) (hm : 0 < m) (hn : 0 < n)
     · simp [hi,Nat.mul_add,Nat.add_comm]
     · simp [hi]
 
+theorem phi_multiply (m n : Nat) (hm : 0 < m) (hn : 0 < n)
+    (hc : gcd (m : Int) n=1) : phi (m*n)=phi m*phi n := by
+  /-
+  Theorem: Phi is multiplicative on relatively prime positive
+  integers.
+  Proof: Arrange 1,...,mn into m columns of height n, with
+  entries i,i+m,...,i+(n-1)*m. There are phi(m) columns whose
+  starts are coprime to m. Each contributes exactly phi(n)
+  entries coprime to mn, because its progression is a complete
+  residue system modulo n. The other columns contribute none.
+  The array itself is a complete residue system modulo mn, so
+  its total count is phi(mn). Hence phi(mn)=phi(m)*phi(n).
+  The argument includes m=1 or n=1. QED
+  -/
+  have h := complete_coprime_count (gridRows m n (positiveRange m)) (m*n)
+    (Nat.mul_pos hm hn) (grid_complete m n hm hn)
+  rw [grid_product_count m n hm hn hc] at h
+  change phi n * phi m=phi (m*n) at h
+  rw [← h,Nat.mul_comm]
+
 end NumberTheory.TotientProducts
