@@ -956,4 +956,17 @@ theorem noncongruent_full_length_complete (reps : List Int) (n : Nat) (hn : 0 < 
   rcases List.mem_map.mp hmem with ⟨b,hb,he⟩
   exact ⟨b,hb,(canonicalLabel_eq_iff a b n hn).mp he.symm⟩
 
+theorem progression_complete (k m : Int) (n : Nat) (hn : 0 < n)
+    (hc : gcd m n=1) : CompleteResidues (progression k m n) n := by
+  /-
+  Theorem: Any n-term arithmetic progression with step coprime
+  to n is a complete residue system modulo n.
+  Proof: Its n entries are pairwise incongruent by cancellation.
+  A list of n incongruent entries must cover all n possible
+  remainders, so it is complete. The starting point and step may
+  be arbitrary integers; n is positive. QED
+  -/
+  apply noncongruent_full_length_complete _ n hn (progression_noncongruent k m n hn hc)
+  simp only [progression,List.length_map,List.length_range]
+
 end NumberTheory.TotientProducts
