@@ -289,4 +289,22 @@ theorem same_members_perm (xs ys : List Nat) (hx : xs.Nodup) (hy : ys.Nodup)
   have h₂ := distinct_length_bound ys xs hy (fun i hi => (h i).mpr hi)
   exact distinct_subset_perm xs ys hx (fun i hi => (h i).mp hi) (by omega)
 
+noncomputable def gcd (a b : Int) : Int := (Classical.choose (euclid_integer a b) : Nat)
+
+noncomputable def reducedResidues (n : Nat) : List Nat := by
+  exact ((List.range n).map (fun i => i+1)).filter (fun i => decide (gcd (i : Int) n=1))
+
+theorem reduced_nodup (n : Nat) : (reducedResidues n).Nodup := by
+  /-
+  Lemma: The reduced residue list has no repeated entries.
+  Proof: The initial range is distinct, adding one preserves
+  distinctness, and filtering can only remove entries. QED
+  -/
+  have h : ((List.range n).map (fun i => i+1)).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range n)
+    intro i j hij he
+    exact hij (by omega)
+  exact h.filter _
+
 end NumberTheory.TotientProducts
