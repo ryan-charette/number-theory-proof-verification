@@ -969,4 +969,49 @@ theorem progression_complete (k m : Int) (n : Nat) (hn : 0 < n)
   apply noncongruent_full_length_complete _ n hn (progression_noncongruent k m n hn hc)
   simp only [progression,List.length_map,List.length_range]
 
+theorem bezout_product (a b c : Int)
+    (hb : ∃ u v : Int, a*u+b*v=1) (hc : ∃ u v : Int, a*u+c*v=1) :
+    ∃ u v : Int, a*u+(b*c)*v=1 := by
+  /-
+  Lemma: If a has a linear combination equal to one with each of
+  b and c, it also has one with b*c.
+  Proof: Write a*u+b*v=1 and a*p+c*q=1. Multiply the second
+  equality by b*v and substitute for b*v in the first. We obtain
+  a*(u+b*v*p)+(b*c)*(v*q)=1. These are the required coefficients.
+  QED
+  -/
+  rcases hb with ⟨u,v,hu⟩
+  rcases hc with ⟨p,q,hp⟩
+  refine ⟨u+b*v*p,v*q,?_⟩
+  have he := congrArg (fun t => t*(b*v)) hp
+  simp only [Int.add_mul,Int.mul_add,Int.one_mul,Int.mul_assoc,
+    Int.mul_left_comm,Int.mul_comm,Int.mul_one] at he ⊢
+  omega
+
+theorem coprime_product_iff (a m n : Int) :
+    gcd a (m*n)=1 ↔ gcd a m=1 ∧ gcd a n=1 := by
+  /-
+  Lemma: An integer is coprime to a product exactly when it is
+  coprime to each factor.
+  Proof: A Bezout identity a*u+(m*n)*v=1 is also an identity for
+  a,m and for a,n, by regrouping the second term. Conversely,
+  combining identities for a,m and a,n gives one for a,m*n.
+  The Bezout characterization proves both directions. QED
+  -/
+  constructor
+  · intro hc
+    rcases bezout a (m*n) with ⟨u,v,he⟩
+    rw [hc] at he
+    constructor
+    · apply gcd_one_combination a m
+      exact ⟨u,n*v,by simpa only [Int.mul_assoc] using he⟩
+    · apply gcd_one_combination a n
+      exact ⟨u,m*v,by simpa only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm] using he⟩
+  · rintro ⟨hm,hn⟩
+    rcases bezout a m with ⟨u,v,hu⟩
+    rcases bezout a n with ⟨s,t,hs⟩
+    rw [hm] at hu
+    rw [hn] at hs
+    exact gcd_one_combination a (m*n) (bezout_product a m n ⟨u,v,hu⟩ ⟨s,t,hs⟩)
+
 end NumberTheory.TotientProducts
