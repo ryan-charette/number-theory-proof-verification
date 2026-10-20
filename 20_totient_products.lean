@@ -1159,4 +1159,38 @@ theorem grid_length (m n : Nat) (is : List Nat) :
       List.length_range,ih,List.length_cons,Nat.add_mul,Nat.one_mul]
     omega
 
+def positiveRange (n : Nat) : List Nat := (List.range n).map (fun i => i+1)
+
+theorem positive_range_mem (n k : Nat) : k ∈ positiveRange n ↔ 0 < k ∧ k ≤ n := by
+  /-
+  Lemma: The positive range lists exactly the integers from one to n.
+  Proof: Its entries are j+1 for 0≤j<n. Subtracting one gives the
+  reverse correspondence. QED
+  -/
+  constructor
+  · intro h
+    rcases List.mem_map.mp h with ⟨j,hj,hjk⟩
+    have := List.mem_range.mp hj
+    omega
+  · intro h
+    exact List.mem_map.mpr ⟨k-1,List.mem_range.mpr (by omega),by omega⟩
+
+theorem grid_bounds (m n : Nat) (hm : 0 < m) (a : Int)
+    (ha : a ∈ gridRows m n (positiveRange m)) : 0 < a ∧ a ≤ (m*n : Nat) := by
+  /-
+  Lemma: The standard m-wide, n-high array has all its entries
+  between one and mn.
+  Proof: An entry is i+j*m, where 1≤i≤m and 0≤j<n. It is
+  positive, and it is at most (j+1)*m≤n*m=mn. QED
+  -/
+  rcases (grid_mem m n _ a).mp ha with ⟨i,hi,hai⟩
+  have hi' := (positive_range_mem m i).mp hi
+  rcases (progression_mem i m a n).mp hai with ⟨j,hj,he⟩
+  have hnonneg := Int.mul_nonneg (by omega : (0 : Int) ≤ j) (by omega : (0 : Int) ≤ m)
+  have hbound := Int.mul_le_mul_of_nonneg_right (by omega : (j : Int)+1 ≤ n)
+    (by omega : (0 : Int) ≤ m)
+  rw [Int.add_mul,Int.one_mul,Int.mul_comm (n : Int) m] at hbound
+  simp only [Int.natCast_mul]
+  omega
+
 end NumberTheory.TotientProducts
