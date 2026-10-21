@@ -2064,4 +2064,42 @@ theorem squarefree_roots_unique (b : Int) (ps : List Nat) (hnd : ps.Nodup)
     ⟨u,v,hu,hv,he⟩
   exact ⟨u,v,hu,hv,he,squarefree_root_criterion b ps hnd hps k u v he⟩
 
+theorem prime_product_divides (p : Nat) (a b : Int) (hp : Prime p)
+    (h : (p : Int) ∣ a*b) : (p : Int) ∣ a ∨ (p : Int) ∣ b := by
+  /-
+  Lemma: If a prime divides a product, it divides a factor.
+  Proof: If it does not divide a, then a is coprime to p.
+  Cancel a from b*a congruent to zero to obtain b congruent to
+  zero. This says p divides b. QED
+  -/
+  by_cases ha : (p : Int) ∣ a
+  · exact Or.inl ha
+  · have hc := prime_coprime a p hp ha
+    have hm : Congruent (b*a) (0*a) p := by
+      refine ⟨by have := hp.1; omega,?_⟩
+      simpa [Int.mul_comm] using h
+    have hb := cancel_coprime b 0 a p hc hm
+    exact Or.inr (by simpa using hb.2)
+
+theorem prime_divides_power (p : Nat) (a : Int) (hp : Prime p) (k : Nat)
+    (h : (p : Int) ∣ a^k) : (p : Int) ∣ a := by
+  /-
+  Lemma: If a prime divides a power, it divides the base.
+  Proof: For exponent zero the hypothesis would make a prime
+  divide one, which is impossible. At a successor exponent,
+  prime divisibility of the product a^k*a gives divisibility of
+  a directly or of a^k, where induction applies. QED
+  -/
+  induction k with
+  | zero =>
+    simp only [Int.pow_zero] at h
+    have hb := divisor_le_positive p 1 (by decide) h
+    have := hp.1
+    omega
+  | succ k ih =>
+    rw [Int.pow_succ] at h
+    rcases prime_product_divides p (a^k) a hp h with h | h
+    · exact ih h
+    · exact h
+
 end NumberTheory.ModularRoots
