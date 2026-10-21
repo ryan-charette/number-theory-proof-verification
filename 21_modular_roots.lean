@@ -1215,4 +1215,16 @@ theorem distinct_length_bound (xs ys : List Nat) (h : xs.Nodup)
     simp only [List.length_cons]
     omega
 
+theorem same_members_perm (xs ys : List Nat) (hx : xs.Nodup) (hy : ys.Nodup)
+    (h : ∀ i, i ∈ xs ↔ i ∈ ys) : xs.Perm ys := by
+  /-
+  Lemma: Two distinct lists with the same members are rearrangements.
+  Proof: Each list is drawn from the other, so the distinct-list
+  bound gives both length inequalities. The equal-length selection
+  theorem then gives the rearrangement. QED
+  -/
+  have h₁ := distinct_length_bound xs ys hx (fun i hi => (h i).mp hi)
+  have h₂ := distinct_length_bound ys xs hy (fun i hi => (h i).mpr hi)
+  exact distinct_subset_perm xs ys hx (fun i hi => (h i).mp hi) (by omega)
+
 end NumberTheory.ModularRoots
