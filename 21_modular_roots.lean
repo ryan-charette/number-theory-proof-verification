@@ -2407,4 +2407,18 @@ theorem cycle_distinct (a : Int) (n : Nat) (hn : 0 < n) (ha : gcd a n=1) :
   simp only [List.mem_range] at hi hj
   exact powers_distinct a n hn ha (i+1) (j+1) (by omega) (by omega) (by omega)
 
+def monomial : Nat → List Int
+  | 0 => [1]
+  | k+1 => 0 :: monomial k
+
+theorem monomial_length (k : Nat) : (monomial k).length=k+1 := by
+  /-
+  Lemma: The coefficient list for x^k has length k+1.
+  Proof: It starts with one coefficient. Each recursive step
+  adds one zero to the front, increasing the length by one. QED
+  -/
+  induction k with
+  | zero => rfl
+  | succ k ih => simp only [monomial,List.length_cons,ih]
+
 end NumberTheory.ModularRoots
