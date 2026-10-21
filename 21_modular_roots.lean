@@ -414,4 +414,21 @@ theorem bounded_congruent_equal (r s m : Int) (hr : 0 ≤ r) (hrm : r < m)
   exact (division_unique r m 0 r q s h.1 (by simp) (by omega)
     hr hrm hs hsm).2
 
+theorem modeq_trans (a b c n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : b ≡ c [MOD n]) : a ≡ c [MOD n] := by
+  /-
+  Theorem: Two consecutive congruences combine.
+  Proof: The hypotheses tell us that n divides a - b and b - c.
+  Therefore n divides their sum. Adding the differences gives:
+
+    (a - b) + (b - c) = a - c.
+
+  Both differences are divisible by n, so their sum is too. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h := dvd_add n (a - b) (b - c) h₀.2 h₁.2
+    rw [← Int.add_sub_assoc, Int.sub_add_cancel] at h
+    exact h
+
 end NumberTheory.ModularRoots
