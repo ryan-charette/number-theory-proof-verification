@@ -3751,4 +3751,23 @@ theorem nonzero_roots_count_when_solvable (p k : Nat) (b : Int) (hp : Prime p)
   rw [List.length_map,hlen] at h
   exact h.symm
 
+theorem nonzero_root_count (p k : Nat) (b : Int) (hp : Prime p) (hk : 0 < k)
+    (hb : ¬ (p : Int) ∣ b) :
+    (rootResidues p k b).length=0 ∨
+      (rootResidues p k b).length=(gcd (k : Int) (p-1 : Nat)).toNat := by
+  /-
+  Theorem: For a nonzero right-hand side modulo a prime, the
+  number of positive-power roots is zero or gcd(k,p-1).
+  Proof: If the canonical root list is empty, its length is zero.
+  Otherwise its first entry provides a solution, and the solvable
+  case gives exactly gcd(k,p-1) roots. QED
+  -/
+  cases he : rootResidues p k b with
+  | nil => exact Or.inl rfl
+  | cons r rs =>
+    have hr : r ∈ rootResidues p k b := by rw [he]; simp
+    have h := nonzero_roots_count_when_solvable p k b hp hk hb
+      ⟨r,((root_residues_mem p k r b).mp hr).2⟩
+    exact Or.inr (by simpa only [he] using h)
+
 end NumberTheory.ModularRoots
