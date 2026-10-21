@@ -2322,4 +2322,36 @@ theorem order_dvd_iff (a : Int) (n : Nat) (hn : 0 < n)
   · rintro ⟨q,rfl⟩
     exact power_multiple_one a n (order a n) q hs.2.1
 
+theorem powers_congruent_ordered (a : Int) (n i j : Nat) (hn : 0 < n)
+    (ha : gcd a n=1) (hij : i ≤ j) :
+    Congruent (a^j) (a^i) n ↔ Congruent (j : Int) i (order a n) := by
+  /-
+  Lemma: For i≤j, equality of the two power classes is equivalent
+  to congruence of the exponents modulo the order.
+  Proof: Factor a^j=a^(j-i)*a^i. Coprime cancellation makes the
+  power congruence equivalent to a^(j-i) congruent to one. This
+  is equivalent to the order dividing j-i. Conversely, that
+  divisibility returns the first factor to one, and multiplication
+  by a^i restores the original power congruence. QED
+  -/
+  have hd := (order_spec a n hn ha).1
+  have hsplit : a^j=a^(j-i)*a^i := by
+    rw [← power_add]
+    congr 1
+    omega
+  constructor
+  · intro h
+    rw [hsplit] at h
+    have hc : Congruent (a^(j-i)*a^i) (1*a^i) n := by simpa only [Int.one_mul] using h
+    have hret := cancel_coprime (a^(j-i)) 1 (a^i) n (coprime_power a n (by omega) ha i) hc
+    have hdiv := Int.ofNat_dvd.mpr ((order_dvd_iff a n hn ha (j-i)).mp hret)
+    refine ⟨by omega,?_⟩
+    simpa only [Int.ofNat_sub hij] using hdiv
+  · intro h
+    have hdiv : order a n ∣ j-i := Int.ofNat_dvd.mp (by
+      simpa only [Int.ofNat_sub hij] using h.2)
+    have hret := (order_dvd_iff a n hn ha (j-i)).mpr hdiv
+    rw [hsplit]
+    simpa only [Int.one_mul] using modeq_mult _ 1 (a^i) (a^i) n hret (modeq_refl _ n (by omega))
+
 end NumberTheory.ModularRoots
