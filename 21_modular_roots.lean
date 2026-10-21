@@ -487,4 +487,25 @@ theorem canonicalLabel_spec (a : Int) (n : Nat) (hn : 0 < n) :
   · rw [Int.toNat_of_nonneg h.1]
     exact h.2.2.1
 
+noncomputable def positiveLabel (a : Int) (n : Nat) : Nat :=
+  if canonicalLabel a n=0 then n else canonicalLabel a n
+
+theorem positiveLabel_spec (a : Int) (n : Nat) (hn : 0 < n) :
+    0 < positiveLabel a n ∧ positiveLabel a n ≤ n ∧ Congruent a (positiveLabel a n) n := by
+  /-
+  Lemma: Every integer has a positive representative at most n.
+  Proof: Use its canonical label unless that label is zero. Replace
+  zero by n, which is congruent to zero; otherwise the canonical
+  bounds already give a positive representative below n. QED
+  -/
+  have hs := canonicalLabel_spec a n hn
+  unfold positiveLabel
+  by_cases hz : canonicalLabel a n=0
+  · rw [if_pos hz]
+    have hs0 : Congruent a 0 n := by simpa only [hz,Int.natCast_zero] using hs.2
+    refine ⟨hn,Nat.le_refl _,modeq_trans a 0 n n hs0 ?_⟩
+    exact ⟨by omega,-1,by simp⟩
+  · rw [if_neg hz]
+    exact ⟨by omega,by omega,hs.2⟩
+
 end NumberTheory.ModularRoots
