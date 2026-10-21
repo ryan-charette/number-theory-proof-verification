@@ -2987,4 +2987,15 @@ theorem sum_on_congr (ds : List Nat) (f g : Nat → Nat)
   | cons d ds ih =>
     simp only [sumOn,h d (by simp),ih (fun e he => h e (by simp [he]))]
 
+theorem sum_on_add (ds : List Nat) (f g : Nat → Nat) :
+    sumOn ds (fun d => f d+g d)=sumOn ds f+sumOn ds g := by
+  /-
+  Lemma: A sum of pairwise sums separates into the two sums.
+  Proof: Expand the first summands and use induction. Associating
+  and commuting addition puts the f and g terms together. QED
+  -/
+  induction ds with
+  | nil => rfl
+  | cons d ds ih => simp only [sumOn,ih]; omega
+
 end NumberTheory.ModularRoots
