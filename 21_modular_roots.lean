@@ -222,4 +222,22 @@ We also set gcd(0,0) = 0 through this construction; statements that require
 a positive greatest divisor explicitly exclude the pair (0,0).
 -/
 
+def Congruent (a b n : Int) : Prop := 0 < n ∧ n ∣ a-b
+
+local notation:50 a " ≡ " b " [MOD " n "]" => Congruent a b n
+
+theorem modeq_refl (a n : Int) (hn : 0 < n) : a ≡ a [MOD n] := by
+  /-
+  Theorem: Every integer is congruent to itself.
+  Proof: The modulus n is positive by hypothesis. Also,
+
+    a - a = 0 = n * 0.
+
+  Thus n divides a - a, using the integer 0. QED
+  -/
+  constructor
+  · exact hn
+  · exists 0
+    rw [Int.sub_self, Int.mul_zero]
+
 end NumberTheory.ModularRoots
