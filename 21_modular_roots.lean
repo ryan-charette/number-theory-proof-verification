@@ -2752,4 +2752,1003 @@ theorem primitive_labels_injective (a : Int) (p i j : Nat) (hp : Prime p)
     (by omega) (by omega) (by omega) (by omega) he'
   omega
 
+def sumOn : List Nat → (Nat → Nat) → Nat
+  | [], _ => 0
+  | d::ds, f => f d + sumOn ds f
+
+theorem sum_on_le (ds : List Nat) (f g : Nat → Nat)
+    (h : ∀ d ∈ ds, f d ≤ g d) : sumOn ds f ≤ sumOn ds g := by
+  /-
+  Lemma: Bounding each summand bounds the total.
+  Proof: Add the bound for the first term to the bound supplied
+  by induction for the remaining terms. QED
+  -/
+  induction ds with
+  | nil => exact Nat.le_refl _
+  | cons d ds ih =>
+    have hfirst := h d (by simp)
+    have hrest := ih (fun e he => h e (by simp [he]))
+    simp only [sumOn]; omega
+
+theorem equal_sum_forces_equal_terms (ds : List Nat) (f g : Nat → Nat)
+    (hle : ∀ d ∈ ds, f d ≤ g d) (he : sumOn ds f=sumOn ds g) :
+    ∀ d ∈ ds, f d=g d := by
+  /-
+  Lemma: If each term is bounded above and the totals are equal,
+  every term attains its bound. Proof: The first term and the
+  remaining sum are both bounded above. Equality of their sum
+  forces equality in both bounds. Repeat on the remaining list.
+  QED
+  -/
+  induction ds with
+  | nil => intro d hd; simp at hd
+  | cons a ds ih =>
+    have hfirst := hle a (by simp)
+    have htail : ∀ d ∈ ds, f d ≤ g d := fun d hd => hle d (by simp [hd])
+    have hrest := sum_on_le ds f g htail
+    simp only [sumOn] at he
+    have hfirsteq : f a=g a := by omega
+    have hresteq : sumOn ds f=sumOn ds g := by omega
+    intro d hd
+    rcases List.mem_cons.mp hd with hd | hd
+    · subst d; exact hfirsteq
+    · exact ih htail hresteq d hd
+
+noncomputable def orderClass (p d : Nat) : List Nat :=
+  (positiveRange (p-1)).filter (fun a => decide (order (a : Int) p=d))
+
+theorem order_class_mem (p d a : Nat) :
+    a ∈ orderClass p d ↔ 0 < a ∧ a ≤ p-1 ∧ order (a : Int) p=d := by
+  /-
+  Lemma: The list for order d contains exactly the positive
+  representatives below p with that order.
+  Proof: Its filter tests the order equality on the positive
+  interval ending at p-1. QED
+  -/
+  simp only [orderClass,List.mem_filter,decide_eq_true_eq,positive_range_mem]
+  constructor
+  · intro h; exact ⟨h.1.1,h.1.2,h.2⟩
+  · intro h; exact ⟨⟨h.1,h.2.1⟩,h.2.2⟩
+
+theorem congruent_orders (a b : Int) (n : Nat) (hn : 0 < n)
+    (ha : gcd a n=1) (hb : gcd b n=1) (h : Congruent a b n) : order a n=order b n := by
+  /-
+  Lemma: Congruent coprime integers have the same order.
+  Proof: Congruent inputs have congruent powers. Thus each positive
+  exponent returning one input to one also returns the other.
+  Minimality bounds each order by the other, so they are equal.
+  QED
+  -/
+  have hs := order_spec a n hn ha
+  have ht := order_spec b n hn hb
+  have h1 := hs.2.2 _ ht.1 (modeq_trans _ _ _ n (modeq_pow a b n (order b n) h) ht.2.1)
+  have h2 := ht.2.2 _ hs.1 (modeq_trans _ _ _ n
+    (modeq_pow b a n (order a n) (modeq_symm _ _ n h)) hs.2.1)
+  omega
+
+theorem equal_power_order_coprime (a : Int) (n i : Nat) (hn : 0 < n)
+    (ha : gcd a n=1) (he : order (a^i) n=order a n) : gcd (i : Int) (order a n)=1 := by
+  /-
+  Lemma: If a^i has the full order d of a, then i is coprime
+  to d. Proof: Let g=gcd(i,d), and write i=g*u and d=g*v.
+  Since d>0, both g and v are positive. The identity i*v=d*u
+  makes (a^i)^v congruent to one. Its order d is therefore at
+  most v. But d=g*v, so g cannot exceed one. Thus g=1. QED
+  -/
+  have hs := order_spec a n hn ha
+  have ht := order_spec (a^i) n hn (coprime_power a n (by omega) ha i)
+  let d := order a n
+  let g := (gcd (i : Int) d).toNat
+  have hgdata := gcd_data (i : Int) d
+  have hgcast : (g : Int)=gcd (i : Int) d := Int.toNat_of_nonneg hgdata.1
+  have hgpositive := gcd_positive (i : Int) d (Or.inr (by dsimp [d]; omega))
+  have hgpos : 0 < g := by omega
+  have hgi : g ∣ i := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.1)
+  have hgd : g ∣ d := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.2.1)
+  rcases hgi with ⟨u,hu⟩
+  rcases hgd with ⟨v,hv⟩
+  have hvpos : 0 < v := by
+    by_cases hz : v=0
+    · rw [hz,Nat.mul_zero] at hv
+      dsimp [d] at hv
+      omega
+    · omega
+  have hmul : i*v=d*u := by
+    rw [hu,hv]
+    simp only [Nat.mul_assoc,Nat.mul_left_comm,Nat.mul_comm]
+  have hm := power_multiple_one a n d u hs.2.1
+  have hreturn : Congruent ((a^i)^v) 1 n := by rw [power_mul,hmul]; exact hm
+  have hbound := ht.2.2 v hvpos hreturn
+  rw [he] at hbound
+  have hg1 : g=1 := by
+    by_cases h : g=1
+    · exact h
+    · have h2 := Nat.mul_le_mul_right v (by omega : 2 ≤ g)
+      change d ≤ v at hbound
+      omega
+  rw [hg1] at hgcast
+  exact hgcast.symm
+
+theorem equal_order_index (a b : Int) (p : Nat) (hp : Prime p)
+    (ha : gcd a p=1) (hb : gcd b p=1) (he : order b p=order a p) :
+    ∃ i : Nat, 0 < i ∧ i ≤ order a p ∧ gcd (i : Int) (order a p)=1 ∧ Congruent b (a^i) p := by
+  /-
+  Lemma: Every element with the same order d as a is represented
+  by a power a^i with 1≤i≤d and gcd(i,d)=1. Proof: Its d-th
+  power is one, so the full cycle exhausts the possible roots
+  and supplies i. Congruence preserves order, so a^i has order d.
+  The preceding necessity argument makes i coprime to d. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hroot : Congruent (b^(order a p)) 1 p := by
+    rw [← he]
+    exact (order_spec b p hn hb).2.1
+  rcases power_root_in_cycle a b p hp ha hroot with ⟨i,hi,hid,hbi⟩
+  have horder := congruent_orders b (a^i) p hn hb (coprime_power a p (by omega) ha i) hbi
+  have hcop := equal_power_order_coprime a p i hn ha (horder.symm.trans he)
+  exact ⟨i,hi,hid,hcop,hbi⟩
+
+theorem order_count (p d : Nat) (hp : Prime p) (xs : List Int)
+    (hpair : xs.Pairwise (fun a b => ¬ Congruent a b p))
+    (horders : ∀ a ∈ xs, gcd a p=1 ∧ order a p=d) : xs.length ≤ phi d := by
+  /-
+  Theorem: At most phi(d) incongruent integers have order d modulo
+  a prime. Proof: If the list is empty, there is nothing to count.
+  Otherwise fix its first element a. Each element b is congruent
+  to a^i for some 1≤i≤d coprime to d. Choose such an exponent
+  for each b. Two elements assigned the same exponent would be
+  congruent, which is excluded. Thus the chosen exponents form a
+  distinct list drawn from the reduced representatives counted
+  by phi(d). The elementary distinct-list bound gives the result.
+  Coprimality makes the order meaningful; d=0 consequently admits
+  no such elements, and is harmless in this formulation. QED
+  -/
+  cases xs with
+  | nil => exact Nat.zero_le _
+  | cons a xs =>
+    have ha := horders a (by simp)
+    have hspec : ∀ b ∈ a::xs, ∃ i : Nat, 0 < i ∧ i ≤ d ∧ gcd (i : Int) d=1 ∧ Congruent b (a^i) p := by
+      intro b hb
+      have hs := horders b hb
+      have he := equal_order_index a b p hp ha.1 hs.1 (hs.2.trans ha.2.symm)
+      simpa only [ha.2] using he
+    let index (b : Int) : Nat := if h : b ∈ a::xs then Classical.choose (hspec b h) else 0
+    have hindex : ∀ b (_hb : b ∈ a::xs),
+        0 < index b ∧ index b ≤ d ∧ gcd (index b : Int) d=1 ∧ Congruent b (a^(index b)) p := by
+      intro b hb
+      dsimp only [index]
+      rw [dif_pos hb]
+      exact Classical.choose_spec (hspec b hb)
+    have hnd : ((a::xs).map index).Nodup := by
+      apply List.pairwise_map.mpr
+      apply List.Pairwise.imp_of_mem ?_ hpair
+      intro b c hb hc hbc he
+      have hs := (hindex b hb).2.2.2
+      have ht := (hindex c hc).2.2.2
+      rw [he] at hs
+      exact hbc (modeq_trans _ _ _ p hs (modeq_symm _ _ p ht))
+    have hsub : ∀ i ∈ (a::xs).map index, i ∈ reducedResidues d := by
+      intro i hi
+      rcases List.mem_map.mp hi with ⟨b,hb,he⟩
+      subst i
+      have hs := hindex b hb
+      exact (reduced_mem d _).mpr ⟨hs.1,hs.2.1,hs.2.2.1⟩
+    have hb := distinct_length_bound _ _ hnd hsub
+    change (a::xs).length ≤ (reducedResidues d).length
+    simpa only [List.length_map] using hb
+
+theorem order_class_bound (p d : Nat) (hp : Prime p) :
+    (orderClass p d).length ≤ phi d := by
+  /-
+  Lemma: The number of representatives of order d is at most
+  phi(d). Proof: The selected representatives are distinct and
+  lie between one and p-1, so equality of their residue classes
+  would be equality of the representatives. They are coprime to
+  the prime p. The elementary power-cycle bound therefore applies.
+  QED
+  -/
+  have hnd : (orderClass p d).Nodup := (positive_range_nodup (p-1)).filter _
+  have hpair : ((orderClass p d).map (fun a : Nat => (a : Int))).Pairwise
+      (fun a b => ¬ Congruent a b p) := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ hnd
+    intro a b ha hb hab he
+    have ha' := (order_class_mem p d a).mp ha
+    have hb' := (order_class_mem p d b).mp hb
+    have heq := bounded_congruent_equal a b p (by omega) (by have := hp.1; omega)
+      (by omega) (by have := hp.1; omega) he
+    exact hab (by omega)
+  have h := order_count p d hp ((orderClass p d).map (fun a : Nat => (a : Int))) hpair (by
+    intro a ha
+    rcases List.mem_map.mp ha with ⟨b,hb,hba⟩
+    subst a
+    have hb' := (order_class_mem p d b).mp hb
+    exact ⟨small_prime_coprime p b hp hb'.1 (by have := hp.1; omega),hb'.2.2⟩)
+  simpa only [List.length_map] using h
+
+theorem sum_on_zero (ds : List Nat) : sumOn ds (fun _ => 0)=0 := by
+  /-
+  Lemma: A sum of zeros is zero.
+  Proof: Induction adds one zero at a time. QED
+  -/
+  induction ds with
+  | nil => rfl
+  | cons _d ds ih => simp only [sumOn,ih,Nat.zero_add]
+
+theorem sum_on_congr (ds : List Nat) (f g : Nat → Nat)
+    (h : ∀ d ∈ ds, f d=g d) : sumOn ds f=sumOn ds g := by
+  /-
+  Lemma: Equal summands give equal finite sums.
+  Proof: Match the first summands, then apply induction to the
+  remaining list. QED
+  -/
+  induction ds with
+  | nil => rfl
+  | cons d ds ih =>
+    simp only [sumOn,h d (by simp),ih (fun e he => h e (by simp [he]))]
+
+theorem sum_on_add (ds : List Nat) (f g : Nat → Nat) :
+    sumOn ds (fun d => f d+g d)=sumOn ds f+sumOn ds g := by
+  /-
+  Lemma: A sum of pairwise sums separates into the two sums.
+  Proof: Expand the first summands and use induction. Associating
+  and commuting addition puts the f and g terms together. QED
+  -/
+  induction ds with
+  | nil => rfl
+  | cons d ds ih => simp only [sumOn,ih]; omega
+
+theorem sum_single_label (ds : List Nat) (a : Nat) (hnd : ds.Nodup)
+    (ha : a ∈ ds) : sumOn ds (fun d => if a=d then 1 else 0)=1 := by
+  /-
+  Lemma: Marking one label in a list without repetitions gives
+  total one. Proof: If the first label is a, all remaining marks
+  are zero. Otherwise its mark is zero and induction counts the
+  unique occurrence in the rest of the list. QED
+  -/
+  induction ds with
+  | nil => simp at ha
+  | cons d ds ih =>
+    have hpair := List.pairwise_cons.mp hnd
+    by_cases he : a=d
+    · subst a
+      have hz : sumOn ds (fun e => if d=e then 1 else 0)=0 := by
+        rw [sum_on_congr ds _ (fun _ => 0) (by
+          intro e he
+          exact if_neg (hpair.1 e he)),sum_on_zero]
+      simp [sumOn,hz]
+    · have ham : a ∈ ds := by rcases List.mem_cons.mp ha with h | h; exact False.elim (he h); exact h
+      simp only [sumOn,if_neg he,Nat.zero_add,ih hpair.2 ham]
+
+theorem count_by_labels (xs ds : List Nat) (f : Nat → Nat)
+    (hnd : ds.Nodup) (hlabels : ∀ x ∈ xs, f x ∈ ds) :
+    sumOn ds (fun d => (xs.filter (fun x => decide (f x=d))).length)=xs.length := by
+  /-
+  Lemma: Sorting a finite list into distinct labels counts each
+  entry exactly once, provided every entry has a listed label.
+  Proof: Remove the first entry x. Its addition increases exactly
+  the count for f(x) by one. The sum of those increases is one,
+  and induction counts all remaining entries. QED
+  -/
+  induction xs with
+  | nil => simpa only [List.filter_nil,List.length_nil] using sum_on_zero ds
+  | cons x xs ih =>
+    have hstep : ∀ d ∈ ds,
+        ((x::xs).filter (fun y => decide (f y=d))).length=
+          (if f x=d then 1 else 0)+(xs.filter (fun y => decide (f y=d))).length := by
+      intro d _
+      by_cases he : f x=d
+      · simp [he,Nat.add_comm]
+      · simp [he]
+    rw [sum_on_congr ds _ _ hstep,sum_on_add,
+      sum_single_label ds (f x) hnd (hlabels x (by simp)),
+      ih (fun y hy => hlabels y (by simp [hy]))]
+    simp only [List.length_cons]; omega
+
+def divisors (n : Nat) : List Nat := (positiveRange n).filter (fun d => decide (d ∣ n))
+
+theorem divisors_nodup (n : Nat) : (divisors n).Nodup := by
+  /-
+  Lemma: Each divisor is listed only once.
+  Proof: Filtering a list without repetitions cannot introduce one.
+  QED
+  -/
+  exact (positive_range_nodup n).filter _
+
+theorem divisors_mem (n d : Nat) (hn : 0 < n) :
+    d ∈ divisors n ↔ 0 < d ∧ d ∣ n := by
+  /-
+  Lemma: Our divisor list contains precisely the positive divisors.
+  Proof: A positive divisor of positive n is at most n, so filtering
+  the interval from one to n loses no divisor. QED
+  -/
+  simp only [divisors,List.mem_filter,decide_eq_true_eq,positive_range_mem]
+  constructor
+  · intro h; exact ⟨h.1.1,h.2⟩
+  · intro h; exact ⟨⟨h.1,Nat.le_of_dvd hn h.2⟩,h.2⟩
+
+theorem order_class_total (p : Nat) (hp : Prime p) :
+    sumOn (divisors (p-1)) (fun d => (orderClass p d).length)=p-1 := by
+  /-
+  Lemma: Summing the order counts over divisors of p-1 gives p-1.
+  Proof: Each nonzero representative is coprime to p. Fermat's
+  theorem and the order divisibility criterion put its positive
+  order among these divisors. Sorting the p-1 representatives by
+  this unique order counts each of them once. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hn' : 0 < p-1 := by have := hp.1; omega
+  have h := count_by_labels (positiveRange (p-1)) (divisors (p-1))
+    (fun a => order (a : Int) p) (divisors_nodup (p-1)) (by
+      intro a ha
+      have ha' := (positive_range_mem (p-1) a).mp ha
+      have hc := small_prime_coprime p a hp ha'.1 (by have := hp.1; omega)
+      apply (divisors_mem (p-1) _ hn').mpr
+      exact ⟨(order_spec a p hn hc).1,
+        (order_dvd_iff a p hn hc (p-1)).mp (fermat_coprime a p hp hc)⟩)
+  simpa only [orderClass,positiveRange,List.length_map,List.length_range] using h
+
+theorem divisor_factor (n d : Nat) (hn : 0 < n) (hd : d ∣ n) :
+    0 < n/d ∧ (n/d)*d=n := by
+  /-
+  Lemma: For a divisor d of positive n, the complementary factor
+  n/d is positive and its product with d is n. Proof: Exact integer
+  division gives the product identity. A zero quotient would force
+  n=0, contrary to its positivity. QED
+  -/
+  have he := Nat.div_mul_cancel hd
+  refine ⟨?_,he⟩
+  by_cases hz : n/d=0
+  · rw [hz,Nat.zero_mul] at he; omega
+  · exact Nat.pos_of_ne_zero hz
+
+noncomputable def expandedFractions (n : Nat) : List Nat → List Nat
+  | [] => []
+  | d::ds => ((reducedResidues d).map (fun i => (n/d)*i)) ++ expandedFractions n ds
+
+theorem expanded_fractions_mem (n k : Nat) (ds : List Nat) :
+    k ∈ expandedFractions n ds ↔
+      ∃ d ∈ ds, ∃ i ∈ reducedResidues d, k=(n/d)*i := by
+  /-
+  Lemma: The expanded list consists of the numerators obtained by
+  expanding each reduced fraction with a listed denominator.
+  Proof: Induct on the denominator list. Its first row consists
+  exactly of the scaled reduced numerators; append adds the rows
+  belonging to the remaining denominators. QED
+  -/
+  induction ds with
+  | nil => simp [expandedFractions]
+  | cons d ds ih =>
+    simp only [expandedFractions,List.mem_append,List.mem_map,ih,List.mem_cons]
+    constructor
+    · intro h
+      rcases h with h | ⟨e,he,i,hi,hk⟩
+      · rcases h with ⟨i,hi,hk⟩; exact ⟨d,Or.inl rfl,i,hi,hk.symm⟩
+      · exact ⟨e,Or.inr he,i,hi,hk⟩
+    · rintro ⟨e,he,i,hi,hk⟩
+      rcases he with he | he
+      · subst e; exact Or.inl ⟨i,hi,hk.symm⟩
+      · exact Or.inr ⟨e,he,i,hi,hk⟩
+
+theorem gcd_greatest (a b : Int) (h : a ≠ 0 ∨ b ≠ 0)
+    (e : Int) (ha : e ∣ a) (hb : e ∣ b) : e ≤ gcd a b := by
+  /-
+  Theorem: Every common divisor is at most the constructed gcd.
+  Proof: A common divisor divides every integer linear combination,
+  hence divides the gcd by its Euclidean representation. Since the
+  gcd is positive, the preceding bound gives the result. QED
+  -/
+  rcases (gcd_data a b).2.2.2 with ⟨x, y, hxy⟩
+  have hd := dvd_linear e a b x y ha hb
+  rw [hxy] at hd
+  exact divisor_le_positive e (gcd a b) (gcd_positive a b h) hd
+
+theorem gcd_eq_of_combination (a b d : Int) (hd : 0 < d)
+    (ha : d ∣ a) (hb : d ∣ b) (hxy : ∃ x y : Int, a * x + b * y = d) :
+    gcd a b = d := by
+  /-
+  Theorem: A positive common divisor that is a linear combination of
+  the inputs is their gcd. Proof: The inputs cannot both vanish,
+  because the combination is positive. Thus d is at most their gcd.
+  Conversely, the gcd divides the combination d, so is at most d.
+  These two inequalities prove equality. QED
+  -/
+  rcases hxy with ⟨x, y, heq⟩
+  have hne : a ≠ 0 ∨ b ≠ 0 := by
+    by_cases ha₀ : a = 0
+    · right
+      intro hb₀
+      rw [ha₀, hb₀, Int.zero_mul, Int.zero_mul, Int.add_zero] at heq
+      omega
+    · exact Or.inl ha₀
+  have hle := gcd_greatest a b hne d ha hb
+  have hdiv := dvd_linear (gcd a b) a b x y (gcd_data a b).2.1 (gcd_data a b).2.2.1
+  rw [heq] at hdiv
+  have hge := divisor_le_positive (gcd a b) d hd hdiv
+  omega
+
+theorem gcd_scale (a b : Int) (k : Nat) (hk : 0 < k) (hne : a ≠ 0 ∨ b ≠ 0) :
+    gcd ((k : Int) * a) ((k : Int) * b) = (k : Int) * gcd a b := by
+  /-
+  Theorem: Multiplying both inputs by a positive natural number k
+  multiplies the gcd by k. Proof: Write g=gcd(a,b). The number k*g
+  is positive and divides both k*a and k*b. If a*x+b*y=g, then
+
+    (k*a)*x + (k*b)*y = k*g.
+
+  The preceding characterization identifies k*g as the new gcd. QED
+  -/
+  have hg := gcd_data a b
+  apply gcd_eq_of_combination ((k : Int) * a) ((k : Int) * b) ((k : Int) * gcd a b)
+  · exact Int.mul_pos (by omega) (gcd_positive a b hne)
+  · rcases hg.2.1 with ⟨u, hu⟩
+    exists u
+    exact (congrArg (fun t : Int => (k : Int) * t) hu).trans (Int.mul_assoc _ _ _).symm
+  · rcases hg.2.2.1 with ⟨v, hv⟩
+    exists v
+    exact (congrArg (fun t : Int => (k : Int) * t) hv).trans (Int.mul_assoc _ _ _).symm
+  · rcases bezout a b with ⟨x, y, hxy⟩
+    exists x, y
+    rw [Int.mul_assoc, Int.mul_assoc, ← Int.mul_add, hxy]
+
+/-
+For positive inputs, a least common multiple is a positive integer
+that both inputs divide and that is no larger than any other positive
+common multiple. The expression below will be proved to have exactly
+these properties; it does not use a library least-common-multiple theorem.
+-/
+
+theorem expanded_fraction_gcd (n d i : Nat) (hn : 0 < n)
+    (hd : 0 < d) (hdn : d ∣ n) (hi : gcd (i : Int) d=1) :
+    gcd (((n/d)*i : Nat) : Int) n=(n/d : Nat) := by
+  /-
+  Lemma: Expanding a reduced fraction i/d to denominator n makes
+  the gcd of its numerator and n exactly n/d.
+  Proof: Put q=n/d, so n=q*d and q>0. Scaling both coprime inputs
+  i,d multiplies their gcd one by q. QED
+  -/
+  have hq := divisor_factor n d hn hdn
+  have he := gcd_scale (i : Int) d (n/d) hq.1 (Or.inr (by omega))
+  rw [hi,Int.mul_one] at he
+  simpa only [← Int.natCast_mul,hq.2] using he
+
+theorem fraction_denominator_unique (n d e i j : Nat) (hn : 0 < n)
+    (hd : 0 < d) (hdn : d ∣ n) (he : 0 < e) (hen : e ∣ n)
+    (hi : gcd (i : Int) d=1) (hj : gcd (j : Int) e=1)
+    (h : (n/d)*i=(n/e)*j) : d=e := by
+  /-
+  Lemma: Two reduced fractions that expand to the same numerator
+  over n have the same denominator. Proof: The expanded numerator
+  has gcd n/d with n and also gcd n/e with n. Thus these positive
+  complementary factors are equal. Cancel that common factor in
+  (n/d)*d=n=(n/e)*e to obtain d=e. QED
+  -/
+  have hg := expanded_fraction_gcd n d i hn hd hdn hi
+  have hg' := expanded_fraction_gcd n e j hn he hen hj
+  rw [h,hg'] at hg
+  have hq : n/d=n/e := by omega
+  have hf := divisor_factor n d hn hdn
+  have hf' := divisor_factor n e hn hen
+  apply Nat.eq_of_mul_eq_mul_left hf.1
+  rw [hf.2,hq,hf'.2]
+
+theorem expanded_fractions_nodup (n : Nat) (hn : 0 < n) (ds : List Nat)
+    (hds : ds.Nodup) (hdiv : ∀ d ∈ ds, 0 < d ∧ d ∣ n) :
+    (expandedFractions n ds).Nodup := by
+  /-
+  Lemma: The expanded reduced fractions have no repeated numerators
+  when the denominators are distinct divisors of n.
+  Proof: Within one row, multiplication by the positive factor n/d
+  is injective. Across rows, equality of numerators would imply
+  equality of their reduced denominators, already excluded. Apply
+  this observation successively to the rows. QED
+  -/
+  induction ds with
+  | nil => exact List.Pairwise.nil
+  | cons d ds ih =>
+    have hd := hdiv d (by simp)
+    have hp := List.pairwise_cons.mp hds
+    apply List.pairwise_append.mpr
+    refine ⟨?_,ih hp.2 (fun e he => hdiv e (by simp [he])),?_⟩
+    · apply List.pairwise_map.mpr
+      apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (reduced_nodup d)
+      intro i j hij heq
+      exact hij (Nat.eq_of_mul_eq_mul_left (divisor_factor n d hn hd.2).1 heq)
+    · intro a ha b hb hab
+      rcases List.mem_map.mp ha with ⟨i,hi,hia⟩
+      rcases (expanded_fractions_mem n b ds).mp hb with ⟨e,he,j,hj,hbj⟩
+      have hed := hdiv e (by simp [he])
+      have hde := fraction_denominator_unique n d e i j hn hd.1 hd.2 hed.1 hed.2
+        ((reduced_mem d i).mp hi).2.2 ((reduced_mem e j).mp hj).2.2 (by omega)
+      exact hp.1 e he hde
+
+theorem reduced_fraction_expansion (n k : Nat) (hn : 0 < n)
+    (hk : 0 < k) (hkn : k ≤ n) :
+    ∃ d i : Nat, 0 < d ∧ d ∣ n ∧ i ∈ reducedResidues d ∧ k=(n/d)*i := by
+  /-
+  Lemma: Every fraction k/n with 1≤k≤n is obtained by expanding
+  a reduced fraction i/d, where d divides n and 1≤i≤d.
+  Proof: Let g=gcd(k,n), which is positive, and write k=g*i and
+  n=g*d. Positivity and k≤n give 1≤i≤d. Scaling the gcd shows
+  g*gcd(i,d)=g; cancellation gives gcd(i,d)=1. Finally n/d=g,
+  so expansion recovers exactly k. QED
+  -/
+  let g := (gcd (k : Int) n).toNat
+  have hgdata := gcd_data (k : Int) n
+  have hgcast : (g : Int)=gcd (k : Int) n := Int.toNat_of_nonneg hgdata.1
+  have hgpositive := gcd_positive (k : Int) n (Or.inr (by omega))
+  have hgp : 0 < g := by omega
+  have hgk : g ∣ k := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.1)
+  have hgn : g ∣ n := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.2.1)
+  rcases hgk with ⟨i,hki⟩
+  rcases hgn with ⟨d,hnd⟩
+  have hd : 0 < d := by
+    by_cases hz : d=0
+    · rw [hz,Nat.mul_zero] at hnd; omega
+    · omega
+  have hi : 0 < i := by
+    by_cases hz : i=0
+    · rw [hz,Nat.mul_zero] at hki; omega
+    · omega
+  have hid : i ≤ d := by
+    by_cases h : i ≤ d
+    · exact h
+    · have := Nat.mul_lt_mul_of_pos_left (by omega : d<i) hgp
+      omega
+  have hscale := gcd_scale (i : Int) d g hgp (Or.inr (by omega))
+  have hcop : gcd (i : Int) d=1 := by
+    apply Int.eq_of_mul_eq_mul_left (a := (g : Int)) (by omega)
+    rw [← hscale,← Int.natCast_mul,← Int.natCast_mul,← hki,← hnd,← hgcast,Int.mul_one]
+  have hquot : n/d=g := by rw [hnd]; exact Nat.mul_div_cancel g hd
+  refine ⟨d,i,hd,⟨g,by rw [hnd,Nat.mul_comm]⟩,(reduced_mem d i).mpr ⟨hi,hid,hcop⟩,?_⟩
+  rw [hquot]; exact hki
+
+theorem reduced_fraction_correspondence (n : Nat) (hn : 0 < n) :
+    (expandedFractions n (divisors n)).Perm (positiveRange n) := by
+  /-
+  Theorem: Reducing 1/n,...,n/n gives a one-to-one correspondence
+  with the reduced fractions i/d for positive divisors d of n.
+  Proof: Reduction supplies every numerator in the original range.
+  Conversely expansion of 1≤i≤d gives 1≤(n/d)*i≤n. Distinct
+  reduced fractions have distinct expansions, as just proved.
+  Thus the two lists contain the same entries without repetitions.
+  The fractions are represented by integer numerator-denominator
+  pairs, so no rational-number machinery is required. QED
+  -/
+  apply same_members_perm _ _
+    (expanded_fractions_nodup n hn _ (divisors_nodup n)
+      (fun d hd => (divisors_mem n d hn).mp hd)) (positive_range_nodup n)
+  intro k
+  constructor
+  · intro hk
+    rcases (expanded_fractions_mem n k _).mp hk with ⟨d,hd,i,hi,hk⟩
+    have hd' := (divisors_mem n d hn).mp hd
+    have hi' := (reduced_mem d i).mp hi
+    have hq := divisor_factor n d hn hd'.2
+    apply (positive_range_mem n k).mpr
+    constructor
+    · rw [hk]; exact Nat.mul_pos hq.1 hi'.1
+    · have := Nat.mul_le_mul_left (n/d) hi'.2.1
+      omega
+  · intro hk
+    have hk' := (positive_range_mem n k).mp hk
+    rcases reduced_fraction_expansion n k hn hk'.1 hk'.2 with ⟨d,i,hd,hdn,hi,hki⟩
+    exact (expanded_fractions_mem n k _).mpr ⟨d,(divisors_mem n d hn).mpr ⟨hd,hdn⟩,i,hi,hki⟩
+
+theorem expanded_fractions_length (n : Nat) (ds : List Nat) :
+    (expandedFractions n ds).length=sumOn ds phi := by
+  /-
+  Lemma: The number of expanded fractions is the sum of phi(d)
+  over the listed denominators. Proof: A row has one entry for
+  each of its phi(d) reduced numerators. Appending a row adds
+  its length; induction sums all rows. QED
+  -/
+  induction ds with
+  | nil => rfl
+  | cons d ds ih => simp only [expandedFractions,List.length_append,List.length_map,ih,sumOn,phi]
+
+noncomputable def divisorSum (n : Nat) : Nat := sumOn (divisors n) phi
+
+theorem totient_divisor_sum (n : Nat) (hn : 0 < n) : divisorSum n=n := by
+  /-
+  Theorem: Adding phi(d) over the positive divisors of n gives n.
+  Proof: Group the fractions 1/n,...,n/n by their denominators
+  after reduction. The preceding correspondence places exactly
+  phi(d) of them in the row for d, and counts each fraction once.
+  The original list has n entries, giving the identity. This is
+  the elementary reduced-fraction proof of the divisor-sum formula.
+  QED
+  -/
+  have h := (reduced_fraction_correspondence n hn).length_eq
+  rw [expanded_fractions_length] at h
+  simpa only [divisorSum,positiveRange,List.length_map,List.length_range] using h
+
+theorem exact_order_count (p d : Nat) (hp : Prime p) (hd : 0 < d)
+    (hdp : d ∣ p-1) : (orderClass p d).length=phi d := by
+  /-
+  Theorem: For every positive divisor d of p-1 there are exactly
+  phi(d) residue classes of order d modulo p.
+  Proof: Each order count is at most phi(d). Their sum is p-1,
+  and the sum of phi(d) over the same divisors is also p-1.
+  A strict inequality for any one term would make the total
+  strictly smaller. Thus all the individual bounds are equalities.
+  QED
+  -/
+  have hn : 0 < p-1 := by have := hp.1; omega
+  apply equal_sum_forces_equal_terms (divisors (p-1))
+    (fun e => (orderClass p e).length) phi (fun e _ => order_class_bound p e hp)
+  · rw [order_class_total p hp]
+    exact (totient_divisor_sum (p-1) hn).symm
+  · exact (divisors_mem (p-1) d hn).mpr ⟨hd,hdp⟩
+
+theorem primitive_root_count (p : Nat) (hp : Prime p) :
+    (orderClass p (p-1)).length=phi (p-1) := by
+  /-
+  Theorem: A prime p has exactly phi(p-1) primitive-root classes.
+  Proof: The positive representatives below p with order p-1
+  represent precisely these classes. Since p-1 is a positive
+  divisor of itself, its order count is phi(p-1). Counting classes
+  is essential: adding multiples of p gives infinitely many
+  integer representatives of the same primitive root. QED
+  -/
+  exact exact_order_count p (p-1) hp (by have := hp.1; omega) (Nat.dvd_refl _)
+
+theorem primitive_class_mem (p a : Nat) (hp : Prime p) :
+    a ∈ orderClass p (p-1) ↔ 0 < a ∧ a < p ∧ PrimitiveRoot a p := by
+  /-
+  Lemma: The representatives of order p-1 are exactly the
+  primitive-root representatives. Proof: Every positive integer
+  below a prime is coprime to it. The remaining defining condition
+  is that its order be p-1, which is exactly the filter condition.
+  QED
+  -/
+  constructor
+  · intro ha
+    have h := (order_class_mem p (p-1) a).mp ha
+    have hap : a < p := by have := hp.1; omega
+    exact ⟨h.1,hap,small_prime_coprime p a hp h.1 hap,h.2.2⟩
+  · intro ha
+    exact (order_class_mem p (p-1) a).mpr ⟨ha.1,by omega,ha.2.2.2⟩
+
+theorem primitive_root_exists (p : Nat) (hp : Prime p) :
+    ∃ a : Nat, 0 < a ∧ a < p ∧ PrimitiveRoot a p := by
+  /-
+  Theorem: Every prime has a primitive root.
+  Proof: The list of primitive-root representatives has length
+  phi(p-1), which is positive because p-1≥1. Hence the list is
+  nonempty. Any of its entries supplies the required root. This
+  includes p=2, whose primitive-root representative is one. QED
+  -/
+  have hpos := phi_positive (p-1) (by have := hp.1; omega)
+  have hlen := primitive_root_count p hp
+  cases he : orderClass p (p-1) with
+  | nil => rw [he] at hlen; simp only [List.length_nil] at hlen; omega
+  | cons a xs =>
+    exact ⟨a,(primitive_class_mem p a hp).mp (by rw [he]; simp)⟩
+
+theorem gcd_quotients (a b : Int) :
+    a = gcd a b * (a / gcd a b) ∧ b = gcd a b * (b / gcd a b) := by
+  /-
+  Theorem: Dividing either input by its gcd gives an exact integer factor.
+  Proof: The gcd divides both numbers. Exact division of an integer
+  multiple recovers its factor, so multiplication by the gcd recovers
+  the original number. Only this basic exact-division identity is used.
+  QED
+  -/
+  exact ⟨(Int.mul_ediv_cancel' (gcd_data a b).2.1).symm,
+    (Int.mul_ediv_cancel' (gcd_data a b).2.2.1).symm⟩
+
+theorem modulus_step_data (a n : Int) (hn : 0 < n) :
+    0 < gcd a n ∧ 0 < n/gcd a n ∧ n=gcd a n*(n/gcd a n) := by
+  /-
+  Lemma: For positive n, its gcd d with a is positive, the quotient
+  s=n/d is positive, and n=d*s.
+  Proof: The inputs are not both zero, so d>0. Divisibility by the
+  gcd makes the quotient exact. If s≤0, multiplying by d>0 would
+  give n≤0, a contradiction. QED
+  -/
+  have hd := gcd_positive a n (Or.inr (by omega))
+  have he := (gcd_quotients a n).2
+  refine ⟨hd,?_,he⟩
+  by_cases hs : n/gcd a n ≤ 0
+  · have hm := Int.mul_nonpos_of_nonneg_of_nonpos (Int.le_of_lt hd) hs
+    rw [←he] at hm
+    omega
+  · omega
+
+theorem reduced_cross_product (a n : Int) :
+    a*(n/gcd a n)=n*(a/gcd a n) := by
+  /-
+  Lemma: Multiplying a by n/d equals multiplying n by a/d, where
+  d=gcd(a,n). Proof: Write a=d*A and n=d*N using exact division.
+  Both products are d*A*N, up to reordering the factors. QED
+  -/
+  have hf := gcd_quotients a n
+  calc
+    a*(n/gcd a n) = (gcd a n*(a/gcd a n))*(n/gcd a n) :=
+      congrArg (fun z => z*(n/gcd a n)) hf.1
+    _ = (gcd a n*(n/gcd a n))*(a/gcd a n) := by rw [Int.mul_right_comm]
+    _ = n*(a/gcd a n) := congrArg (fun z => z*(a/gcd a n)) hf.2.symm
+
+theorem reduced_modulus_dvd_iff (a n z : Int) (hn : 0 < n) :
+    n ∣ a*z ↔ n/gcd a n ∣ z := by
+  /-
+  Lemma: n divides a*z exactly when n/d divides z, where d=gcd(a,n).
+  Proof: Choose a*u+n*v=d. If a*z=n*q, multiplying the Bezout
+  equation by z gives d*z=n*(q*u+v*z). Substituting n=d*(n/d)
+  and cancelling positive d gives z=(n/d)*(q*u+v*z).
+  Conversely, if z=(n/d)*k, the cross-product identity gives
+  a*z=n*((a/d)*k), an explicit quotient. QED
+  -/
+  have hg := modulus_step_data a n hn
+  constructor
+  · rintro ⟨q,hq⟩
+    rcases bezout a n with ⟨u,v,hu⟩
+    exists q*u+v*z
+    apply Int.eq_of_mul_eq_mul_left (a := gcd a n) (by omega)
+    calc
+      gcd a n*z = (a*u+n*v)*z := congrArg (fun t => t*z) hu.symm
+      _ = (a*z)*u+n*(v*z) := by
+        simp only [Int.add_mul,Int.mul_add,Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+      _ = n*(q*u+v*z) := by rw [hq,Int.mul_add,Int.mul_assoc]
+      _ = gcd a n*((n/gcd a n)*(q*u+v*z)) := by
+        calc
+          n*(q*u+v*z) = (gcd a n*(n/gcd a n))*(q*u+v*z) :=
+            congrArg (fun t => t*(q*u+v*z)) hg.2.2
+          _ = _ := by rw [Int.mul_assoc]
+  · rintro ⟨k,hk⟩
+    exists (a/gcd a n)*k
+    calc
+      a*z = a*((n/gcd a n)*k) := congrArg (fun t => a*t) hk
+      _ = (a*(n/gcd a n))*k := by rw [Int.mul_assoc]
+      _ = (n*(a/gcd a n))*k := congrArg (fun t => t*k) (reduced_cross_product a n)
+      _ = n*((a/gcd a n)*k) := by rw [Int.mul_assoc]
+
+theorem solution_difference_iff (a b n x₀ x : Int) (hn : 0 < n)
+    (h₀ : Congruent (a*x₀) b n) :
+    Congruent (a*x) b n ↔ n/gcd a n ∣ x-x₀ := by
+  /-
+  Theorem: Once x₀ is a solution, x is a solution exactly when
+  x-x₀ is divisible by n/gcd(a,n).
+  Proof: Subtract the equations a*x-b=n*q and a*x₀-b=n*q₀.
+  Their difference says n divides a*(x-x₀). The reduced-modulus
+  criterion converts this to divisibility of x-x₀. Conversely,
+  that criterion makes a*(x-x₀) a multiple of n; adding the equation
+  for x₀ gives an equation proving x is a solution. QED
+  -/
+  rcases h₀.2 with ⟨q₀,hq₀⟩
+  constructor
+  · rintro ⟨_,q,hq⟩
+    apply (reduced_modulus_dvd_iff a n (x-x₀) hn).mp
+    refine ⟨q-q₀,?_⟩
+    rw [Int.mul_sub,Int.mul_sub]
+    omega
+  · intro hd
+    rcases (reduced_modulus_dvd_iff a n (x-x₀) hn).mpr hd with ⟨q,hq⟩
+    rw [Int.mul_sub] at hq
+    refine ⟨hn,q+q₀,?_⟩
+    rw [Int.mul_add]
+    omega
+
+theorem small_solution_exists (a b n : Int) (hn : 0 < n)
+    (hsol : ∃ x : Int, Congruent (a*x) b n) :
+    ∃ r : Int, 0 ≤ r ∧ r < n/gcd a n ∧ Congruent (a*r) b n := by
+  /-
+  Lemma: Whenever there is a solution, there is one between zero
+  and n/d-1, where d=gcd(a,n).
+  Proof: Choose a solution x and divide it by the positive integer
+  s=n/d. Write x=s*q+r with 0≤r<s. Then r-x=s*(-q), so the
+  difference criterion shows that r is also a solution. QED
+  -/
+  rcases hsol with ⟨x,hx⟩
+  have hg := modulus_step_data a n hn
+  have hscast := Int.toNat_of_nonneg (Int.le_of_lt hg.2.1)
+  rcases integer_division_exists x (n/gcd a n).toNat (by omega) with
+    ⟨q,r,he,hr,hrs⟩
+  rw [hscast] at he hrs
+  refine ⟨r,hr,hrs,(solution_difference_iff a b n x r hn hx).mpr ?_⟩
+  refine ⟨-q,?_⟩
+  rw [Int.mul_neg]
+  omega
+
+theorem all_integer_solutions (a b n x₀ x : Int) (hn : 0 < n)
+    (h₀ : Congruent (a*x₀) b n) :
+    Congruent (a*x) b n ↔ ∃ k : Int, x=x₀+(n/gcd a n)*k := by
+  /-
+  Corollary: All integer solutions are x₀+(n/d)*k, with k any integer
+  and d=gcd(a,n). Proof: The difference criterion says x-x₀=(n/d)*k
+  for some integer k. Moving x₀ across the equality gives the formula.
+  Conversely, the formula supplies the difference's divisibility witness.
+  QED
+  -/
+  rw [solution_difference_iff a b n x₀ x hn h₀]
+  constructor
+  · rintro ⟨k,hk⟩
+    exact ⟨k,by omega⟩
+  · rintro ⟨k,hk⟩
+    exact ⟨k,by omega⟩
+
+theorem canonical_progression_solution (a b n r i : Int) (hn : 0 < n)
+    (hr : 0 ≤ r) (hrs : r < n/gcd a n) (hsol : Congruent (a*r) b n)
+    (hi : 0 ≤ i) (hid : i < gcd a n) :
+    0 ≤ r+(n/gcd a n)*i ∧ r+(n/gcd a n)*i < n ∧
+      Congruent (a*(r+(n/gcd a n)*i)) b n := by
+  /-
+  Lemma: Start with a solution r between zero and s-1, where
+  d=gcd(a,n) and s=n/d. For each integer i with 0≤i<d, r+s*i
+  is a solution between zero and n-1.
+  Proof: The term s*i is nonnegative. Also i+1≤d, so
+  s*i+s≤s*d=n. Since r<s, we have r+s*i<n. Its difference
+  from the known solution r is s*i; the difference criterion
+  proves that it is a solution. QED
+  -/
+  have hg := modulus_step_data a n hn
+  have hlo := Int.mul_nonneg (Int.le_of_lt hg.2.1) hi
+  have hhi := Int.mul_le_mul_of_nonneg_left (by omega : i+1 ≤ gcd a n)
+    (Int.le_of_lt hg.2.1)
+  have hsd : (n/gcd a n)*gcd a n=n := by
+    rw [Int.mul_comm]
+    exact hg.2.2.symm
+  rw [Int.mul_add,Int.mul_one,hsd] at hhi
+  refine ⟨by omega,by omega,?_⟩
+  apply (solution_difference_iff a b n r (r+(n/gcd a n)*i) hn hsol).mpr
+  exact ⟨i,by omega⟩
+
+theorem canonical_solution_index (a b n r x : Int) (hn : 0 < n)
+    (hr : 0 ≤ r) (hrs : r < n/gcd a n) (hsol : Congruent (a*r) b n) :
+    (0 ≤ x ∧ x < n ∧ Congruent (a*x) b n) ↔
+      ∃ i : Nat, i < (gcd a n).toNat ∧ x=r+(n/gcd a n)*(i : Int) := by
+  /-
+  Lemma: With r and s as above, the solutions x between zero and
+  n-1 are precisely r+s*i for natural indices i<d.
+  Proof: Any solution is r+s*k for an integer k. If k<0, then
+  k≤-1 and s*k≤-s, giving x≤r-s<0. If k≥d, then s*k≥s*d=n,
+  giving x≥n because r≥0. Thus 0≤k<d, so k is a natural index
+  in the stated range. Conversely, each such index gives a
+  canonical solution by the bounds and congruence just proved. QED
+  -/
+  have hg := modulus_step_data a n hn
+  have hdcast := Int.toNat_of_nonneg (Int.le_of_lt hg.1)
+  have hsd : (n/gcd a n)*gcd a n=n := by
+    rw [Int.mul_comm]
+    exact hg.2.2.symm
+  constructor
+  · rintro ⟨hx,hxn,hxs⟩
+    rcases (all_integer_solutions a b n r x hn hsol).mp hxs with ⟨k,hk⟩
+    have hk0 : 0 ≤ k := by
+      by_cases h : k < 0
+      · have hm := Int.mul_le_mul_of_nonneg_left (by omega : k ≤ -1)
+          (Int.le_of_lt hg.2.1)
+        simp only [Int.mul_neg,Int.mul_one] at hm
+        omega
+      · omega
+    have hkd : k < gcd a n := by
+      by_cases h : gcd a n ≤ k
+      · have hm := Int.mul_le_mul_of_nonneg_left h (Int.le_of_lt hg.2.1)
+        rw [hsd] at hm
+        omega
+      · omega
+    have hkcast := Int.toNat_of_nonneg hk0
+    exact ⟨k.toNat,by omega,by rw [hkcast]; exact hk⟩
+  · rintro ⟨i,hi,he⟩
+    rw [he]
+    exact canonical_progression_solution a b n r i hn hr hrs hsol
+      (by omega) (by omega)
+
+theorem canonical_solution_count (a b n : Int) (hn : 0 < n)
+    (hsol : ∃ x : Int, Congruent (a*x) b n) :
+    ∃ solutions : List Int, solutions.Nodup ∧
+      solutions.length = (gcd a n).toNat ∧
+      ∀ x : Int, x ∈ solutions ↔ 0 ≤ x ∧ x < n ∧ Congruent (a*x) b n := by
+  /-
+  Theorem: A solvable linear congruence a*x congruent to b modulo n
+  has exactly d=gcd(a,n) solutions between zero and n-1.
+  Proof: Choose a solution r with 0≤r<s, where s=n/d. Make the
+  list r, r+s, ..., r+s*(d-1) by using the indices 0 through d-1.
+  The list has d entries. Distinct indices give distinct entries:
+  r+s*i=r+s*j implies s*i=s*j, and cancellation of positive s
+  gives i=j. The index characterization proves that an integer
+  occurs in this list exactly when it is a solution between zero
+  and n-1. Thus this list counts every such solution once. QED
+  -/
+  rcases small_solution_exists a b n hn hsol with ⟨r,hr,hrs,hrsol⟩
+  have hg := modulus_step_data a n hn
+  let solutions := (List.range (gcd a n).toNat).map
+    (fun i : Nat => r+(n/gcd a n)*(i : Int))
+  refine ⟨solutions,?_,?_,?_⟩
+  · change List.Pairwise (fun x y : Int => x ≠ y)
+      ((List.range (gcd a n).toNat).map (fun i : Nat => r+(n/gcd a n)*(i : Int)))
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp (l := List.range (gcd a n).toNat)
+      (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range _)
+    intro i j hij he
+    have hm : (n/gcd a n)*(i : Int)=(n/gcd a n)*(j : Int) := by omega
+    have heq := Int.eq_of_mul_eq_mul_left (a := n/gcd a n) (by omega) hm
+    exact hij (by omega)
+  · simp only [solutions,List.length_map,List.length_range]
+  · intro x
+    constructor
+    · intro hx
+      rcases List.mem_map.mp hx with ⟨i,hi,he⟩
+      exact (canonical_solution_index a b n r x hn hr hrs hrsol).mpr
+        ⟨i,List.mem_range.mp hi,he.symm⟩
+    · intro hx
+      rcases (canonical_solution_index a b n r x hn hr hrs hrsol).mp hx with
+        ⟨i,hi,he⟩
+      exact List.mem_map.mpr ⟨i,List.mem_range.mpr hi,he.symm⟩
+
+theorem nonzero_roots_count_when_solvable (p k : Nat) (b : Int) (hp : Prime p)
+    (hk : 0 < k) (hb : ¬ (p : Int) ∣ b) (hsol : ∃ x : Int, Congruent (x^k) b p) :
+    (rootResidues p k b).length=(gcd (k : Int) (p-1 : Nat)).toNat := by
+  /-
+  Theorem: A solvable positive-power congruence with nonzero
+  right-hand side modulo p has gcd(k,p-1) root classes.
+  Proof: Choose a primitive root a and write b congruent to a^j.
+  Express each nonzero residue as a^(e+1), with 0≤e<p-1. The
+  root condition becomes k*e congruent to j-k modulo p-1.
+  An existing root gives an exponent solution, so elementary
+  linear-congruence counting supplies exactly gcd(k,p-1)
+  canonical exponent solutions. Map them to the canonical labels
+  of a^(e+1). Distinct exponents have distinct labels. Every such
+  label is a root, and every root is coprime and has one of these
+  exponents. Thus the root and exponent lists have equal lengths.
+  The nonzero hypothesis is essential and is the approved
+  correction; the zero class was counted separately. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hd : 0 < p-1 := by have := hp.1; omega
+  have hbc := prime_coprime b p hp hb
+  rcases primitive_root_exists p hp with ⟨a,_,_,ha⟩
+  rcases primitive_index a b p hp ha hbc with ⟨j,_hj,hbj⟩
+  have hlinear : ∃ e : Int, Congruent ((k : Int)*e) (((j+1 : Nat) : Int)-k) (p-1 : Nat) := by
+    rcases hsol with ⟨x,hx⟩
+    have hxc := root_is_coprime x b p k hk hbc hx
+    rcases primitive_index a x p hp ha hxc with ⟨e,_,hxe⟩
+    have hroot := modeq_trans _ _ _ p (modeq_pow _ _ p k (modeq_symm _ _ p hxe)) hx
+    exact ⟨e,(primitive_power_root_iff a b p k e (j+1) hp ha hbj).mp hroot⟩
+  rcases canonical_solution_count k (((j+1 : Nat) : Int)-k) (p-1 : Nat) (by omega) hlinear with
+    ⟨es,hnd,hlen,hmem⟩
+  let label (e : Int) : Nat := canonicalLabel ((a : Int)^(e.toNat+1)) p
+  have hlabels : (es.map label).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ hnd
+    intro e f he hf hef heq
+    have he' := (hmem e).mp he
+    have hf' := (hmem f).mp hf
+    have hecast : (e.toNat : Int)=e := Int.toNat_of_nonneg he'.1
+    have hfcast : (f.toNat : Int)=f := Int.toNat_of_nonneg hf'.1
+    have h := primitive_labels_injective a p e.toNat f.toNat hp ha (by omega) (by omega) heq
+    exact hef (by omega)
+  have hperm : (es.map label).Perm (rootResidues p k b) := by
+    apply same_members_perm _ _ hlabels (root_residues_nodup p k b)
+    intro r
+    constructor
+    · intro hr
+      rcases List.mem_map.mp hr with ⟨e,he,her⟩
+      subst r
+      have he' := (hmem e).mp he
+      have hecast : (e.toNat : Int)=e := Int.toNat_of_nonneg he'.1
+      have hlin : Congruent ((k : Int)*e.toNat) (((j+1 : Nat) : Int)-k) (p-1 : Nat) := by
+        rw [hecast]; exact he'.2.2
+      have hroot := (primitive_power_root_iff a b p k e.toNat (j+1) hp ha hbj).mpr hlin
+      have hl := canonicalLabel_spec ((a : Int)^(e.toNat+1)) p hn
+      apply (root_residues_mem p k (label e) b).mpr
+      exact ⟨hl.1,modeq_trans _ _ _ p (modeq_pow _ _ p k (modeq_symm _ _ p hl.2)) hroot⟩
+    · intro hr
+      have hr' := (root_residues_mem p k r b).mp hr
+      have hrc := root_is_coprime r b p k hk hbc hr'.2
+      rcases primitive_index a r p hp ha hrc with ⟨e,he,hre⟩
+      have hroot := modeq_trans _ _ _ p (modeq_pow _ _ p k (modeq_symm _ _ p hre)) hr'.2
+      have hlin := (primitive_power_root_iff a b p k e (j+1) hp ha hbj).mp hroot
+      have hemem : (e : Int) ∈ es := (hmem e).mpr ⟨by omega,by omega,hlin⟩
+      have hl := canonicalLabel_spec ((a : Int)^(e+1)) p hn
+      have heq := bounded_congruent_equal r (canonicalLabel ((a : Int)^(e+1)) p) p
+        (by omega) (by omega) (by omega) (by omega) (modeq_trans _ _ _ p hre hl.2)
+      refine List.mem_map.mpr ⟨(e : Int),hemem,?_⟩
+      change canonicalLabel ((a : Int)^(e+1)) p=r
+      omega
+  have h := hperm.length_eq
+  rw [List.length_map,hlen] at h
+  exact h.symm
+
 end NumberTheory.ModularRoots
