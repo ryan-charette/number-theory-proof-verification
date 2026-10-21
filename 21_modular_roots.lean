@@ -1844,4 +1844,25 @@ theorem combine_coprime_moduli (x a : Int) (n m : Nat)
   rw [hc] at hb
   exact ⟨Int.mul_pos hn.1 hm.1,(product_divides n m (x-a) hb).mp ⟨hn.2,hm.2⟩⟩
 
+theorem combine_prime_moduli (ps : List Nat) (hnd : ps.Nodup)
+    (hps : ∀ p ∈ ps, Prime p) (a b : Int)
+    (h : ∀ p ∈ ps, Congruent a b p) : Congruent a b (primeProduct ps) := by
+  /-
+  Lemma: Congruence modulo each of a list of distinct primes
+  implies congruence modulo their product.
+  Proof: Induct on the list, combining the first prime with
+  the remaining product. They are coprime, so divisibility of
+  the difference by both implies divisibility by their product.
+  For the empty list every difference is a multiple of one. QED
+  -/
+  induction ps with
+  | nil => exact ⟨by decide,a-b,by simp [primeProduct]⟩
+  | cons p ps ih =>
+    have hp := hps p (by simp)
+    have ht : ∀ q ∈ ps, Prime q := fun q hq => hps q (by simp [hq])
+    have hpair := List.nodup_cons.mp hnd
+    exact combine_coprime_moduli a b p (primeProduct ps)
+      (prime_coprime_remaining_product p ps hp ht hpair.1)
+      (h p (by simp)) (ih hpair.2 ht (fun q hq => h q (by simp [hq])))
+
 end NumberTheory.ModularRoots
