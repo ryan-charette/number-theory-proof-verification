@@ -3198,4 +3198,18 @@ common multiple. The expression below will be proved to have exactly
 these properties; it does not use a library least-common-multiple theorem.
 -/
 
+theorem expanded_fraction_gcd (n d i : Nat) (hn : 0 < n)
+    (hd : 0 < d) (hdn : d ∣ n) (hi : gcd (i : Int) d=1) :
+    gcd (((n/d)*i : Nat) : Int) n=(n/d : Nat) := by
+  /-
+  Lemma: Expanding a reduced fraction i/d to denominator n makes
+  the gcd of its numerator and n exactly n/d.
+  Proof: Put q=n/d, so n=q*d and q>0. Scaling both coprime inputs
+  i,d multiplies their gcd one by q. QED
+  -/
+  have hq := divisor_factor n d hn hdn
+  have he := gcd_scale (i : Int) d (n/d) hq.1 (Or.inr (by omega))
+  rw [hi,Int.mul_one] at he
+  simpa only [← Int.natCast_mul,hq.2] using he
+
 end NumberTheory.ModularRoots
