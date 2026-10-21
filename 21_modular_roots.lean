@@ -877,4 +877,18 @@ theorem euler_power (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1) :
       exact ((reduced_mem n i).mp hi).2.2)
   exact cancel_coprime (a^(phi n)) 1 _ n hprod (by simpa [phi] using hp)
 
+theorem euler_shifted_power (a : Int) (n v : Nat) (hn : 0 < n) (ha : gcd a n=1) :
+    Congruent (a^(v*phi n+1)) a n := by
+  /-
+  Theorem: A coprime input raised to one more than a multiple of
+  phi(n) returns the original input modulo n.
+  Proof: Euler's theorem makes a^phi(n) congruent to one. Its
+  v-th power is still one. Multiplication by a gives the stated
+  exponent and returns a. This also allows v=0. QED
+  -/
+  have h := power_multiple_one a n (phi n) v (euler_power a n hn ha)
+  rw [Nat.mul_comm (phi n) v] at h
+  rw [Int.pow_succ]
+  simpa only [Int.one_mul] using modeq_mult _ 1 a a n h (modeq_refl a n (by omega))
+
 end NumberTheory.ModularRoots
