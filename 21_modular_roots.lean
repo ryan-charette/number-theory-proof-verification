@@ -2081,4 +2081,25 @@ theorem prime_product_divides (p : Nat) (a b : Int) (hp : Prime p)
     have hb := cancel_coprime b 0 a p hc hm
     exact Or.inr (by simpa using hb.2)
 
+theorem prime_divides_power (p : Nat) (a : Int) (hp : Prime p) (k : Nat)
+    (h : (p : Int) ∣ a^k) : (p : Int) ∣ a := by
+  /-
+  Lemma: If a prime divides a power, it divides the base.
+  Proof: For exponent zero the hypothesis would make a prime
+  divide one, which is impossible. At a successor exponent,
+  prime divisibility of the product a^k*a gives divisibility of
+  a directly or of a^k, where induction applies. QED
+  -/
+  induction k with
+  | zero =>
+    simp only [Int.pow_zero] at h
+    have hb := divisor_le_positive p 1 (by decide) h
+    have := hp.1
+    omega
+  | succ k ih =>
+    rw [Int.pow_succ] at h
+    rcases prime_product_divides p (a^k) a hp h with h | h
+    · exact ih h
+    · exact h
+
 end NumberTheory.ModularRoots
