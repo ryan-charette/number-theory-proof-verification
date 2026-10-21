@@ -2102,4 +2102,16 @@ theorem prime_divides_power (p : Nat) (a : Int) (hp : Prime p) (k : Nat)
     · exact ih h
     · exact h
 
+def rootResidues (n k : Nat) (b : Int) : List Nat :=
+  (List.range n).filter (fun x : Nat => decide (0 < (n : Int) ∧ (n : Int) ∣ (x : Int)^k-b))
+
+theorem root_residues_mem (n k x : Nat) (b : Int) :
+    x ∈ rootResidues n k b ↔ x<n ∧ Congruent ((x : Int)^k) b n := by
+  /-
+  Lemma: The root list contains exactly the canonical solutions.
+  Proof: The range supplies 0≤x<n, and the filter keeps precisely
+  the entries whose k-th powers are congruent to b. QED
+  -/
+  simp only [rootResidues,List.mem_filter,List.mem_range,decide_eq_true_eq,Congruent]
+
 end NumberTheory.ModularRoots
