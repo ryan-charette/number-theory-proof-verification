@@ -2123,4 +2123,39 @@ theorem root_residues_nodup (n k : Nat) (b : Int) : (rootResidues n k b).Nodup :
   -/
   exact (List.nodup_range n).filter _
 
+theorem zero_root_count (p k : Nat) (b : Int) (hp : Prime p) (hk : 0 < k)
+    (hb : (p : Int) ∣ b) : (rootResidues p k b).length=1 := by
+  /-
+  Theorem: If p divides b and k is positive, there is exactly one
+  root class of x^k congruent to b modulo p: the zero class.
+  Proof: A root has its k-th power divisible by p, so its base
+  is divisible by p. In the canonical range this forces x=0.
+  Conversely zero is a root because k is positive and b is zero
+  modulo p. The root list is therefore a permutation of [0].
+  This is the separately proved zero-residue case of the approved
+  correction to the root-count statement. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hb0 : Congruent b 0 p := ⟨by omega,by simpa only [Int.sub_zero] using hb⟩
+  have hperm : (rootResidues p k b).Perm [0] := by
+    apply same_members_perm _ _ (root_residues_nodup p k b) (by simp)
+    intro x
+    simp only [List.mem_singleton]
+    constructor
+    · intro hx
+      have hs := (root_residues_mem p k x b).mp hx
+      have hz := modeq_trans _ _ _ p hs.2 hb0
+      have hd := prime_divides_power p x hp k (by simpa only [Int.sub_zero] using hz.2)
+      have he := bounded_congruent_equal x 0 p (by omega) (by omega) (by omega) (by omega)
+        ⟨by omega,by simpa only [Int.sub_zero] using hd⟩
+      omega
+    · intro he
+      subst x
+      apply (root_residues_mem p k 0 b).mpr
+      refine ⟨hn,?_⟩
+      have he : k=(k-1)+1 := by omega
+      rw [he,Int.natCast_zero,Int.pow_succ,Int.mul_zero]
+      exact modeq_symm _ _ p hb0
+  exact hperm.length_eq
+
 end NumberTheory.ModularRoots
