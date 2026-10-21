@@ -3438,4 +3438,22 @@ theorem gcd_quotients (a b : Int) :
   exact ⟨(Int.mul_ediv_cancel' (gcd_data a b).2.1).symm,
     (Int.mul_ediv_cancel' (gcd_data a b).2.2.1).symm⟩
 
+theorem modulus_step_data (a n : Int) (hn : 0 < n) :
+    0 < gcd a n ∧ 0 < n/gcd a n ∧ n=gcd a n*(n/gcd a n) := by
+  /-
+  Lemma: For positive n, its gcd d with a is positive, the quotient
+  s=n/d is positive, and n=d*s.
+  Proof: The inputs are not both zero, so d>0. Divisibility by the
+  gcd makes the quotient exact. If s≤0, multiplying by d>0 would
+  give n≤0, a contradiction. QED
+  -/
+  have hd := gcd_positive a n (Or.inr (by omega))
+  have he := (gcd_quotients a n).2
+  refine ⟨hd,?_,he⟩
+  by_cases hs : n/gcd a n ≤ 0
+  · have hm := Int.mul_nonpos_of_nonneg_of_nonpos (Int.le_of_lt hd) hs
+    rw [←he] at hm
+    omega
+  · omega
+
 end NumberTheory.ModularRoots
