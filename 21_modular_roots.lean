@@ -266,4 +266,19 @@ theorem dvd_mult_of_dvd_left (a b c : Int) (h : a ∣ b) : a ∣ b * c := by
   exists m * c
   rw [hm, Int.mul_assoc]
 
+theorem dvd_add (a b c : Int) (h₀ : a ∣ b) (h₁ : a ∣ c) : a ∣ b + c := by
+  /-
+  Theorem: A common divisor divides the sum.
+  Proof: Write b = a * m and c = a * n. Then
+
+    b + c = a * m + a * n    [Substitution]
+          = a * (m + n)      [Distributivity]
+
+  The integer m + n is the required witness. QED
+  -/
+  rcases h₀ with ⟨m, hm⟩
+  rcases h₁ with ⟨n, hn⟩
+  exists m + n
+  rw [hm, hn, Int.mul_add]
+
 end NumberTheory.ModularRoots
