@@ -3410,4 +3410,20 @@ theorem primitive_class_mem (p a : Nat) (hp : Prime p) :
   · intro ha
     exact (order_class_mem p (p-1) a).mpr ⟨ha.1,by omega,ha.2.2.2⟩
 
+theorem primitive_root_exists (p : Nat) (hp : Prime p) :
+    ∃ a : Nat, 0 < a ∧ a < p ∧ PrimitiveRoot a p := by
+  /-
+  Theorem: Every prime has a primitive root.
+  Proof: The list of primitive-root representatives has length
+  phi(p-1), which is positive because p-1≥1. Hence the list is
+  nonempty. Any of its entries supplies the required root. This
+  includes p=2, whose primitive-root representative is one. QED
+  -/
+  have hpos := phi_positive (p-1) (by have := hp.1; omega)
+  have hlen := primitive_root_count p hp
+  cases he : orderClass p (p-1) with
+  | nil => rw [he] at hlen; simp only [List.length_nil] at hlen; omega
+  | cons a xs =>
+    exact ⟨a,(primitive_class_mem p a hp).mp (by rw [he]; simp)⟩
+
 end NumberTheory.ModularRoots
