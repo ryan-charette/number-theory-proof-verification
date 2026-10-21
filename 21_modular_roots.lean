@@ -1404,4 +1404,18 @@ theorem grid_mem (m n : Nat) (is : List Nat) (a : Int) :
       · subst j; exact Or.inl ha
       · exact Or.inr ⟨j,hj,ha⟩
 
+theorem progression_mem (k m a : Int) (n : Nat) :
+    a ∈ progression k m n ↔ ∃ j : Nat, j < n ∧ a=k+(j : Int)*m := by
+  /-
+  Lemma: An entry of a progression has its indicated position j,
+  with 0≤j<n. Proof: Unpack the map of the natural-number range.
+  The converse inserts that position into the mapped list. QED
+  -/
+  constructor
+  · intro h
+    rcases List.mem_map.mp h with ⟨j,hj,he⟩
+    exact ⟨j,List.mem_range.mp hj,he.symm⟩
+  · rintro ⟨j,hj,he⟩
+    exact List.mem_map.mpr ⟨j,List.mem_range.mpr hj,he.symm⟩
+
 end NumberTheory.ModularRoots
