@@ -1462,4 +1462,17 @@ theorem grid_nodup (m n : Nat) (hm : 0 < m) (is : List Nat)
       (by omega) (by omega) hij
     exact hp.1 j hj (by omega)
 
+def positiveRange (n : Nat) : List Nat := (List.range n).map (fun i => i+1)
+
+theorem positive_range_nodup (n : Nat) : (positiveRange n).Nodup := by
+  /-
+  Lemma: The positive range has no repetitions.
+  Proof: Adding one to two different natural numbers cannot make
+  them equal; the original range has no repetitions. QED
+  -/
+  apply List.pairwise_map.mpr
+  apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range n)
+  intro i j h he
+  exact h (by omega)
+
 end NumberTheory.ModularRoots
