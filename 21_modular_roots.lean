@@ -1771,4 +1771,31 @@ theorem phi_prime (p : Nat) (hp : Prime p) : phi p=p-1 := by
   change (reducedResidues p).length=p-1
   exact he.trans hl
 
+theorem prime_predecessor_divides_totient (ps : List Nat) (hnd : ps.Nodup)
+    (hps : ∀ q ∈ ps, Prime q) (p : Nat) (hp : p ∈ ps) :
+    p-1 ∣ phi (primeProduct ps) := by
+  /-
+  Lemma: If a square-free product contains p, its totient is a
+  multiple of p-1. Proof: Separate the first prime q from the
+  remaining product. The factors are coprime, so the totient
+  splits into phi(q) times the remaining totient. If p=q, the
+  first factor is p-1. Otherwise induction supplies the divisor
+  in the remaining factor. QED
+  -/
+  induction ps with
+  | nil => simp at hp
+  | cons q ps ih =>
+    have hq := hps q (by simp)
+    have ht : ∀ r ∈ ps, Prime r := fun r hr => hps r (by simp [hr])
+    have hpair := List.nodup_cons.mp hnd
+    rw [primeProduct,phi_multiply q (primeProduct ps)
+      (by have := hq.1; omega) (prime_product_positive ps ht)
+      (prime_coprime_remaining_product q ps hq ht hpair.1)]
+    rcases List.mem_cons.mp hp with he | hp
+    · subst p
+      rw [phi_prime q hq]
+      exact ⟨phi (primeProduct ps),rfl⟩
+    · rcases ih hpair.2 ht hp with ⟨t,he⟩
+      exact ⟨phi q*t,by rw [he]; simp only [Nat.mul_assoc,Nat.mul_left_comm,Nat.mul_comm]⟩
+
 end NumberTheory.ModularRoots
