@@ -319,4 +319,22 @@ theorem power_multiple_one (a : Int) (n k q : Nat)
     rw [Nat.mul_succ,power_add]
     simpa using modeq_mult _ 1 _ 1 n ih hk
 
+def intProduct : List Int → Int
+  | [] => 1
+  | a::xs => a*intProduct xs
+
+theorem product_congruent (xs : List Nat) (f g : Nat → Int) (n : Int) (hn : 0 < n)
+    (h : ∀ i ∈ xs, Congruent (f i) (g i) n) :
+    Congruent (intProduct (xs.map f)) (intProduct (xs.map g)) n := by
+  /-
+  Lemma: Products of corresponding congruent factors are congruent.
+  Proof: Induct on the list. Empty products are both one. For a
+  nonempty list multiply the head congruence by the congruence
+  of the remaining products supplied by induction. QED
+  -/
+  induction xs with
+  | nil => exact modeq_refl 1 n hn
+  | cons i xs ih =>
+    exact modeq_mult _ _ _ _ n (h i (by simp)) (ih (fun j hj => h j (by simp [hj])))
+
 end NumberTheory.ModularRoots
