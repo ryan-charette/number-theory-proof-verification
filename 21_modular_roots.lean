@@ -1798,4 +1798,36 @@ theorem prime_predecessor_divides_totient (ps : List Nat) (hnd : ps.Nodup)
     · rcases ih hpair.2 ht hp with ⟨t,he⟩
       exact ⟨phi q*t,by rw [he]; simp only [Nat.mul_assoc,Nat.mul_left_comm,Nat.mul_comm]⟩
 
+theorem product_divides (n m z : Int)
+    (hcop : ∃ u v : Int, n*u+m*v=1) :
+    (n ∣ z ∧ m ∣ z) ↔ n*m ∣ z := by
+  /-
+  Lemma: If n and m have a linear combination equal to one, their
+  product divides z exactly when each of them divides z.
+  Proof: Write z=n*i=m*j and n*u+m*v=1. Multiplication gives
+  z=z*(n*u+m*v)=n*m*(j*u+i*v). This is a product-divisibility
+  witness. Conversely, z=n*m*k exhibits factors n and m separately.
+  QED
+  -/
+  constructor
+  · rintro ⟨⟨i,hi⟩,⟨j,hj⟩⟩
+    rcases hcop with ⟨u,v,he⟩
+    refine ⟨j*u+i*v,?_⟩
+    have h₁ : z*(n*u)=(n*m)*(j*u) := by
+      rw [hj]
+      simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+    have h₂ : z*(m*v)=(n*m)*(i*v) := by
+      rw [hi]
+      simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+    calc
+      z = z*1 := by rw [Int.mul_one]
+      _ = z*(n*u+m*v) := congrArg (fun t => z*t) he.symm
+      _ = (n*m)*(j*u+i*v) := by rw [Int.mul_add,h₁,h₂,Int.mul_add]
+  · rintro ⟨k,hk⟩
+    constructor
+    · exact ⟨m*k,by rw [hk,Int.mul_assoc]⟩
+    · refine ⟨n*k,?_⟩
+      rw [hk]
+      simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+
 end NumberTheory.ModularRoots
