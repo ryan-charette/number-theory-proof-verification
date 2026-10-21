@@ -1634,4 +1634,41 @@ theorem progression_complete (k m : Int) (n : Nat) (hn : 0 < n)
   apply noncongruent_full_length_complete _ n hn (progression_noncongruent k m n hn hc)
   simp only [progression,List.length_map,List.length_range]
 
+theorem column_product_count (i : Int) (m n : Nat) (hm : 0 < m) (hn : 0 < n)
+    (hc : gcd (m : Int) n=1) :
+    coprimeCount (progression i m n) (m*n : Nat)=if gcd i m=1 then phi n else 0 := by
+  /-
+  Lemma: For coprime positive m,n, a column contributes phi(n)
+  entries coprime to mn if its start is coprime to m, and zero
+  otherwise.
+  Proof: An entry is coprime to mn exactly when it is coprime
+  to both factors. Its condition modulo m is constant throughout
+  the column. If that condition fails, nothing qualifies. If it
+  holds, only coprimality to n remains. Step m is coprime to n,
+  so the column is a complete residue system modulo n and has
+  exactly phi(n) such entries. QED
+  -/
+  by_cases hi : gcd i m=1
+  · rw [if_pos hi]
+    have he : coprimeCount (progression i m n) (m*n : Nat)=
+        coprimeCount (progression i m n) n := by
+      apply coprime_count_congr
+      intro a ha
+      have ham := (column_coprime_iff i m n hm a ha).mpr hi
+      rw [Int.natCast_mul,coprime_product_iff]
+      exact ⟨fun h => h.2,fun h => ⟨ham,h⟩⟩
+    rw [he]
+    exact complete_coprime_count _ n hn (progression_complete i m n hn hc)
+  · rw [if_neg hi]
+    have hnone : ∀ a ∈ progression i m n, gcd a (m*n : Nat) ≠ 1 := by
+      intro a ha hab
+      rw [Int.natCast_mul,coprime_product_iff] at hab
+      exact hi ((column_coprime_iff i m n hm a ha).mp hab.1)
+    have hfilter : (progression i m n).filter (fun a => decide (gcd a (m*n : Nat)=1))=[] := by
+      apply List.filter_eq_nil.mpr
+      intro a ha
+      intro hd
+      exact hnone a ha (of_decide_eq_true hd)
+    simp only [coprimeCount,hfilter,List.length_nil]
+
 end NumberTheory.ModularRoots
