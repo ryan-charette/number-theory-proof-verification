@@ -2114,4 +2114,13 @@ theorem root_residues_mem (n k x : Nat) (b : Int) :
   -/
   simp only [rootResidues,List.mem_filter,List.mem_range,decide_eq_true_eq,Congruent]
 
+theorem root_residues_nodup (n k : Nat) (b : Int) : (rootResidues n k b).Nodup := by
+  /-
+  Lemma: The canonical root list has no repetitions.
+  Proof: Filtering the range removes entries and never duplicates
+  them. Thus its length counts solution classes, not occurrences.
+  QED
+  -/
+  exact (List.nodup_range n).filter _
+
 end NumberTheory.ModularRoots
