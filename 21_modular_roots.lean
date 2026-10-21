@@ -2810,4 +2810,20 @@ theorem order_class_mem (p d a : Nat) :
   · intro h; exact ⟨h.1.1,h.1.2,h.2⟩
   · intro h; exact ⟨⟨h.1,h.2.1⟩,h.2.2⟩
 
+theorem congruent_orders (a b : Int) (n : Nat) (hn : 0 < n)
+    (ha : gcd a n=1) (hb : gcd b n=1) (h : Congruent a b n) : order a n=order b n := by
+  /-
+  Lemma: Congruent coprime integers have the same order.
+  Proof: Congruent inputs have congruent powers. Thus each positive
+  exponent returning one input to one also returns the other.
+  Minimality bounds each order by the other, so they are equal.
+  QED
+  -/
+  have hs := order_spec a n hn ha
+  have ht := order_spec b n hn hb
+  have h1 := hs.2.2 _ ht.1 (modeq_trans _ _ _ n (modeq_pow a b n (order b n) h) ht.2.1)
+  have h2 := ht.2.2 _ hs.1 (modeq_trans _ _ _ n
+    (modeq_pow b a n (order a n) (modeq_symm _ _ n h)) hs.2.1)
+  omega
+
 end NumberTheory.ModularRoots
