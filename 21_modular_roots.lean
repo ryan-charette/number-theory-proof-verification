@@ -2794,4 +2794,20 @@ theorem equal_sum_forces_equal_terms (ds : List Nat) (f g : Nat → Nat)
     · subst d; exact hfirsteq
     · exact ih htail hresteq d hd
 
+noncomputable def orderClass (p d : Nat) : List Nat :=
+  (positiveRange (p-1)).filter (fun a => decide (order (a : Int) p=d))
+
+theorem order_class_mem (p d a : Nat) :
+    a ∈ orderClass p d ↔ 0 < a ∧ a ≤ p-1 ∧ order (a : Int) p=d := by
+  /-
+  Lemma: The list for order d contains exactly the positive
+  representatives below p with that order.
+  Proof: Its filter tests the order equality on the positive
+  interval ending at p-1. QED
+  -/
+  simp only [orderClass,List.mem_filter,decide_eq_true_eq,positive_range_mem]
+  constructor
+  · intro h; exact ⟨h.1.1,h.1.2,h.2⟩
+  · intro h; exact ⟨⟨h.1,h.2.1⟩,h.2.2⟩
+
 end NumberTheory.ModularRoots
