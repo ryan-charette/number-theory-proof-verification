@@ -1076,4 +1076,30 @@ theorem modeq_pow (a b n : Int) (k : Nat) (h : a ≡ b [MOD n]) :
   | succ k ih =>
     exact modeq_pow_step a b n k h ih
 
+theorem coprime_root_criterion (b : Int) (n k u v : Nat)
+    (hn : 0 < n) (hk : 0 < k) (hb : gcd b n=1) (he : k*u=phi n*v+1) :
+    ∀ x : Int, Congruent (x^k) b n ↔ Congruent x (b^u) n := by
+  /-
+  Theorem: If k*u=phi(n)*v+1 and b is coprime to n, the roots
+  of x^k congruent to b are exactly the class b^u.
+  Proof: The candidate satisfies (b^u)^k=b^(k*u), which returns
+  b by Euler's theorem. Any solution x is coprime to n. Raising
+  its congruence to u gives x^(k*u) congruent to b^u, while the
+  left side returns x. Conversely, congruent inputs have
+  congruent k-th powers, so every representative of b^u works.
+  QED
+  -/
+  have hcandidate : Congruent ((b^u)^k) b n := by
+    rw [power_mul,Nat.mul_comm u k,he,Nat.mul_comm (phi n) v]
+    exact euler_shifted_power b n v hn hb
+  intro x
+  constructor
+  · intro hx
+    have hc := root_is_coprime x b n k hk hb hx
+    have hp := modeq_pow (x^k) b n u hx
+    rw [power_mul,he,Nat.mul_comm (phi n) v] at hp
+    exact modeq_trans x _ _ n (modeq_symm _ _ n (euler_shifted_power x n v hn hc)) hp
+  · intro hx
+    exact modeq_trans _ _ _ n (modeq_pow x (b^u) n k hx) hcandidate
+
 end NumberTheory.ModularRoots
