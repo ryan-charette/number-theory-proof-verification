@@ -1135,4 +1135,55 @@ theorem prime_product_positive (ps : List Nat) (hp : ∀ p ∈ ps, Prime p) :
     exact Nat.mul_pos (by have := (hp p (by simp)).1; omega)
       (ih (fun q hq => hp q (by simp [hq])))
 
+theorem prime_coprime (a : Int) (p : Nat) (hp : Prime p) (ha : ¬ (p : Int) ∣ a) :
+    gcd a p=1 := by
+  /-
+  Lemma: An integer not divisible by a prime is relatively prime
+  to it. Proof: The positive gcd d divides p, so primality makes
+  d either one or p. The latter would imply p divides a, which
+  is excluded. Hence d=1. QED
+  -/
+  have hd := gcd_positive a p (Or.inr (by have := hp.1; omega))
+  have hcast := Int.toNat_of_nonneg (Int.le_of_lt hd)
+  have hdiv : (gcd a p).toNat ∣ p := by
+    apply Int.ofNat_dvd.mp
+    rw [hcast]
+    exact (gcd_data a p).2.2.1
+  rcases hp.2 _ hdiv with h | h
+  · omega
+  · have he : gcd a p=(p : Int) := by omega
+    have had := (gcd_data a p).2.1
+    rw [he] at had
+    exact False.elim (ha had)
+
+theorem distinct_primes_coprime (p q : Nat) (hp : Prime p) (hq : Prime q)
+    (hne : p ≠ q) : gcd (p : Int) q=1 := by
+  /-
+  Lemma: Distinct primes are relatively prime. Proof: If q divides
+  p, primality of p makes q either one or p. Both are excluded.
+  The prime coprimality criterion therefore gives gcd(p,q)=1. QED
+  -/
+  apply prime_coprime p q hq
+  intro hd
+  have hdn : q ∣ p := Int.ofNat_dvd.mp hd
+  rcases hp.2 q hdn with h | h
+  · have := hq.1; omega
+  · exact hne h.symm
+
+theorem prime_coprime_remaining_product (p : Nat) (ps : List Nat) (hp : Prime p)
+    (hps : ∀ q ∈ ps, Prime q) (hnot : p ∉ ps) : gcd (p : Int) (primeProduct ps)=1 := by
+  /-
+  Lemma: A prime is coprime to a product of other primes.
+  Proof: It is coprime to every different prime. Induction and
+  the coprime-product criterion combine these conditions. The
+  empty product one has the Bezout identity p*0+1*1=1. QED
+  -/
+  induction ps with
+  | nil => exact gcd_one_combination p 1 ⟨0,1,by simp⟩
+  | cons q ps ih =>
+    rw [primeProduct,Int.natCast_mul,coprime_product_iff]
+    refine ⟨distinct_primes_coprime p q hp (hps q (by simp)) ?_,?_⟩
+    · intro he; subst q; exact hnot (by simp)
+    · exact ih (fun r hr => hps r (by simp [hr])) (fun h => hnot (by simp [h]))
+
 end NumberTheory.ModularRoots
