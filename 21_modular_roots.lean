@@ -781,4 +781,36 @@ theorem coprime_multiply (a b n : Int) (ha : gcd a n=1) (hb : gcd b n=1) : gcd (
   rcases bezout_product n a b ⟨v,u,by omega⟩ ⟨t,s,by omega⟩ with ⟨x,y,he⟩
   exact gcd_one_combination (a*b) n ⟨y,x,by omega⟩
 
+theorem reduced_labels_perm (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1) :
+    ((reducedResidues n).map (fun i : Nat => positiveLabel ((i : Int)*a) n)).Perm (reducedResidues n) := by
+  /-
+  Lemma: Multiplication by a coprime integer rearranges the reduced
+  residue labels. Proof: Each product remains coprime to n, and
+  its positive label preserves coprimality, so the labels stay in
+  the same list. Equal labels imply congruent products and hence
+  equal original representatives by cancellation. The labels are
+  therefore distinct and their number is unchanged, giving a
+  rearrangement. QED
+  -/
+  let f : Nat → Nat := fun i => positiveLabel ((i : Int)*a) n
+  have hnd : ((reducedResidues n).map f).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ (reduced_nodup n)
+    intro i j hi hj hne he
+    have h₁ := (positiveLabel_spec ((i : Int)*a) n hn).2.2
+    have h₂ := (positiveLabel_spec ((j : Int)*a) n hn).2.2
+    change positiveLabel ((i : Int)*a) n=positiveLabel ((j : Int)*a) n at he
+    rw [he] at h₁
+    have hprod := modeq_trans _ _ _ n h₁ (modeq_symm _ _ n h₂)
+    exact hne (reduced_multiples_distinct a n i j hc hi hj
+      (by simpa only [Int.mul_comm] using hprod))
+  apply distinct_subset_perm _ _ hnd ?_ (by simp)
+  intro r hr
+  rcases List.mem_map.mp hr with ⟨i,hi,he⟩
+  subst r
+  have hs := positiveLabel_spec ((i : Int)*a) n hn
+  apply (reduced_mem n _).mpr
+  exact ⟨hs.1,hs.2.1,congruent_coprime _ _ _
+    (coprime_multiply i a n ((reduced_mem n i).mp hi).2.2 hc) hs.2.2⟩
+
 end NumberTheory.ModularRoots
