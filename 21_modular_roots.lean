@@ -1418,4 +1418,17 @@ theorem progression_mem (k m a : Int) (n : Nat) :
   · rintro ⟨j,hj,he⟩
     exact List.mem_map.mpr ⟨j,List.mem_range.mpr hj,he.symm⟩
 
+theorem column_congruent (i : Int) (m n : Nat) (hm : 0 < m)
+    (a : Int) (ha : a ∈ progression i m n) : Congruent a i m := by
+  /-
+  Lemma: Every entry in the column with starting value i and
+  step m is congruent to i modulo m.
+  Proof: At position j its difference from i is j*m, explicitly
+  a multiple of m. QED
+  -/
+  rcases (progression_mem i m a n).mp ha with ⟨j,_,he⟩
+  refine ⟨by omega,(j : Int),?_⟩
+  rw [he,Int.mul_comm (m : Int) j]
+  omega
+
 end NumberTheory.ModularRoots
