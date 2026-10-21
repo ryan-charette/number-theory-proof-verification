@@ -891,4 +891,51 @@ theorem euler_shifted_power (a : Int) (n v : Nat) (hn : 0 < n) (ha : gcd a n=1) 
   rw [Int.pow_succ]
   simpa only [Int.one_mul] using modeq_mult _ 1 a a n h (modeq_refl a n (by omega))
 
+theorem positive_inverse_exponents (E n : Nat) (hE : 0 < E) (hn : 0 < n)
+    (hc : gcd (E : Int) n=1) :
+    ∃ D y : Nat, 0 < D ∧ 0 < y ∧ E*D=1+y*n := by
+  /-
+  Lemma: A positive integer E coprime to a positive n admits
+  positive D and y with ED=1+yn. Proof: Bezout gives E*u+n*v=1.
+  Replace u by its nonnegative representative b modulo n and
+  choose D=b+2n. Then D is positive and E*D is congruent to one.
+  Write E*D-1=n*y. Since E≥1 and D≥2n≥2, the left side is
+  positive, so y is positive as well. Thus both required integers
+  can be regarded as positive natural numbers. QED
+  -/
+  rcases bezout (E : Int) n with ⟨u,v,he⟩
+  rw [hc] at he
+  let b := canonicalLabel u n
+  let D := b+2*n
+  have hs := canonicalLabel_spec u n hn
+  have hDb : Congruent (D : Int) b n := by
+    refine ⟨by omega,2,?_⟩
+    dsimp [D]
+    simp only [Int.natCast_add,Int.natCast_mul]
+    omega
+  have hDu := modeq_trans _ _ _ n hDb (modeq_symm _ _ n hs.2)
+  have hEu : Congruent ((E : Int)*u) 1 n := by
+    refine ⟨by omega,-v,?_⟩
+    rw [Int.mul_neg]; omega
+  have hED := modeq_trans _ _ _ n
+    (modeq_mult E E D u n (modeq_refl _ _ (by omega)) hDu) hEu
+  rcases hED.2 with ⟨y,hy⟩
+  have hD : 2 ≤ D := by dsimp [D]; omega
+  have hbound := Int.mul_le_mul_of_nonneg_right (by omega : (1 : Int) ≤ E)
+    (by omega : (0 : Int) ≤ D)
+  simp only [Int.one_mul] at hbound
+  have hypos : 0 < y := by
+    by_cases hy0 : 0 < y
+    · exact hy0
+    · have hneg := Int.mul_nonneg (by omega : (0 : Int) ≤ n) (by omega : 0 ≤ -y)
+      rw [Int.mul_neg] at hneg
+      omega
+  have hycast : (y.toNat : Int)=y := Int.toNat_of_nonneg (by omega)
+  refine ⟨D,y.toNat,by omega,by omega,?_⟩
+  have heq : ((E*D : Nat) : Int)=((1+y.toNat*n : Nat) : Int) := by
+    simp only [Int.natCast_add,Int.natCast_mul,Int.natCast_one,hycast]
+    rw [Int.mul_comm y (n : Int)]
+    omega
+  omega
+
 end NumberTheory.ModularRoots
