@@ -766,4 +766,19 @@ theorem gcd_one_combination (a n : Int) (h : ∃ u v : Int, a*u+n*v=1) : gcd a n
     omega
   omega
 
+theorem coprime_multiply (a b n : Int) (ha : gcd a n=1) (hb : gcd b n=1) : gcd (a*b) n=1 := by
+  /-
+  Theorem: Multiplying two integers relatively prime to n preserves
+  that property. Proof: Reverse their Bezout identities, combine
+  them over the product, and reverse the resulting identity to
+  identify the gcd as one. The argument includes all integer n.
+  QED
+  -/
+  rcases bezout a n with ⟨u,v,hu⟩
+  rcases bezout b n with ⟨s,t,hs⟩
+  rw [ha] at hu
+  rw [hb] at hs
+  rcases bezout_product n a b ⟨v,u,by omega⟩ ⟨t,s,by omega⟩ with ⟨x,y,he⟩
+  exact gcd_one_combination (a*b) n ⟨y,x,by omega⟩
+
 end NumberTheory.ModularRoots
