@@ -2000,4 +2000,25 @@ theorem prime_shifted_power (W : Int) (p k : Nat) (hp : Prime p) :
     rw [Nat.mul_comm (p-1) k] at hm
     simpa only [Int.one_mul] using modeq_mult _ 1 W W p hm (modeq_refl _ _ hn)
 
+theorem squarefree_shifted_power (a : Int) (ps : List Nat) (hnd : ps.Nodup)
+    (hps : ∀ p ∈ ps, Prime p) (v : Nat) :
+    Congruent (a^(v*phi (primeProduct ps)+1)) a (primeProduct ps) := by
+  /-
+  Theorem: For a product of distinct primes, raising any integer
+  to one more than a multiple of the totient returns it modulo
+  the product. No coprimality of the input is needed.
+  Proof: For each prime p in the product, write phi(n)=(p-1)*t.
+  The exponent is then 1+(v*t)*(p-1), which returns a modulo p:
+  Fermat handles nonmultiples of p, and multiples remain zero.
+  Combine the congruences over the distinct prime factors. QED
+  -/
+  apply combine_prime_moduli ps hnd hps
+  intro p hp
+  rcases prime_predecessor_divides_totient ps hnd hps p hp with ⟨t,ht⟩
+  have he : v*phi (primeProduct ps)+1=1+(v*t)*(p-1) := by
+    rw [ht]
+    simp only [Nat.mul_assoc,Nat.mul_left_comm,Nat.mul_comm,Nat.add_comm]
+  rw [he]
+  exact prime_shifted_power a p (v*t) (hps p hp)
+
 end NumberTheory.ModularRoots
