@@ -1543,4 +1543,13 @@ theorem grid_complete (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
   · rw [grid_length]
     simp only [positiveRange,List.length_map,List.length_range]
 
+theorem coprime_count_append (xs ys : List Int) (n : Int) :
+    coprimeCount (xs++ys) n=coprimeCount xs n+coprimeCount ys n := by
+  /-
+  Lemma: Counts add when lists are appended.
+  Proof: Filtering an append filters both parts, and the length
+  of their append is the sum of their lengths. QED
+  -/
+  simp only [coprimeCount,List.filter_append,List.length_append]
+
 end NumberTheory.ModularRoots
