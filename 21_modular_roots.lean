@@ -2555,4 +2555,50 @@ theorem quotient_root (cs : List Int) (r s : Int) (p : Nat) (hp : Prime p)
   · exact False.elim (hne (modeq_symm s r p ⟨by have := hp.1; omega,h⟩))
   · exact h
 
+theorem root_count (cs : List Int) (p : Nat) (hp : Prime p)
+    (hl : ¬ (p : Int) ∣ leading cs) (roots : List Int)
+    (hdist : roots.Pairwise (fun r s => ¬ Congruent r s p))
+    (hroots : ∀ r ∈ roots, (p : Int) ∣ evaluate cs r) :
+    roots.length ≤ cs.length-1 := by
+  /-
+  Lemma: A list of pairwise incongruent roots has at most one
+  fewer entries than the coefficient list, provided the prime
+  does not divide the leading coefficient.
+  Proof: Induct on the length of the coefficient list. An empty
+  list has leading coefficient zero, so is excluded. A nonzero
+  constant modulo p has no root. Otherwise choose the first root
+  r and divide by x-r. Every remaining root is a root of the
+  quotient, since it is incongruent to r. The quotient has one
+  fewer coefficient and the same leading coefficient. Induction
+  bounds the remaining roots by the smaller degree. Restoring r
+  adds one and gives the required bound. QED
+  -/
+  generalize hk : cs.length=k
+  induction k using Nat.strongRecOn generalizing cs roots with
+  | ind k ih =>
+    cases roots with
+    | nil => simp
+    | cons r rs =>
+      have hr := hroots r (by simp)
+      have hpair := List.pairwise_cons.mp hdist
+      have hdeg : 2 ≤ cs.length := by
+        cases cs with
+        | nil => exact False.elim (hl ⟨0,by simp [leading]⟩)
+        | cons a tail =>
+          cases tail with
+          | nil =>
+            have ha : (p : Int) ∣ a := by simpa [evaluate] using hr
+            exact False.elim (hl ha)
+          | cons b tail => simp
+      have hlen := quotient_length cs r (by intro he; subst cs; simp at hdeg)
+      have hlead : ¬ (p : Int) ∣ leading (quotient r cs) := by
+        rw [quotient_leading cs r hdeg]
+        exact hl
+      have hrest : ∀ s ∈ rs, (p : Int) ∣ evaluate (quotient r cs) s := by
+        intro s hs
+        exact quotient_root cs r s p hp hr (hroots s (by simp [hs])) (hpair.1 s hs)
+      have hb := ih (quotient r cs).length (by omega) (quotient r cs) hlead rs hpair.2 hrest rfl
+      simp only [List.length_cons]
+      omega
+
 end NumberTheory.ModularRoots
