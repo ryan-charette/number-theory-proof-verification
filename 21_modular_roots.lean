@@ -2937,4 +2937,33 @@ theorem order_count (p d : Nat) (hp : Prime p) (xs : List Int)
     change (a::xs).length ≤ (reducedResidues d).length
     simpa only [List.length_map] using hb
 
+theorem order_class_bound (p d : Nat) (hp : Prime p) :
+    (orderClass p d).length ≤ phi d := by
+  /-
+  Lemma: The number of representatives of order d is at most
+  phi(d). Proof: The selected representatives are distinct and
+  lie between one and p-1, so equality of their residue classes
+  would be equality of the representatives. They are coprime to
+  the prime p. The elementary power-cycle bound therefore applies.
+  QED
+  -/
+  have hnd : (orderClass p d).Nodup := (positive_range_nodup (p-1)).filter _
+  have hpair : ((orderClass p d).map (fun a : Nat => (a : Int))).Pairwise
+      (fun a b => ¬ Congruent a b p) := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ hnd
+    intro a b ha hb hab he
+    have ha' := (order_class_mem p d a).mp ha
+    have hb' := (order_class_mem p d b).mp hb
+    have heq := bounded_congruent_equal a b p (by omega) (by have := hp.1; omega)
+      (by omega) (by have := hp.1; omega) he
+    exact hab (by omega)
+  have h := order_count p d hp ((orderClass p d).map (fun a : Nat => (a : Int))) hpair (by
+    intro a ha
+    rcases List.mem_map.mp ha with ⟨b,hb,hba⟩
+    subst a
+    have hb' := (order_class_mem p d b).mp hb
+    exact ⟨small_prime_coprime p b hp hb'.1 (by have := hp.1; omega),hb'.2.2⟩)
+  simpa only [List.length_map] using h
+
 end NumberTheory.ModularRoots
