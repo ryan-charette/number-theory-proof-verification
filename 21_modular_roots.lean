@@ -2456,4 +2456,29 @@ theorem monomial_evaluate (k : Nat) (x : Int) : evaluate (monomial k) x=x^k := b
   | zero => simp [monomial,evaluate,Int.pow_zero]
   | succ k ih => simp only [monomial,evaluate,Int.zero_add,ih,Int.pow_succ,Int.mul_comm]
 
+def quotient (r : Int) : List Int → List Int
+  | [] => []
+  | [_] => []
+  | _ :: b :: cs => evaluate (b :: cs) r :: quotient r (b :: cs)
+
+theorem quotient_length (cs : List Int) (r : Int) (h : cs ≠ []) :
+    (quotient r cs).length+1=cs.length := by
+  /-
+  Lemma: Dividing a nonempty coefficient list by x-r removes
+  exactly one coefficient. Proof: A singleton has empty quotient.
+  For a longer list the recursion adds one coefficient to the
+  quotient of its tail. Apply induction to that nonempty tail.
+  QED
+  -/
+  induction cs with
+  | nil => exact False.elim (h rfl)
+  | cons a cs ih =>
+    cases cs with
+    | nil => rfl
+    | cons b cs =>
+      have he := ih (by simp)
+      simp only [quotient,List.length_cons]
+      simp only [List.length_cons] at he
+      omega
+
 end NumberTheory.ModularRoots
