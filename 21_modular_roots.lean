@@ -1572,4 +1572,16 @@ theorem coprime_count_congr (xs : List Int) (m n : Int)
     · have hn : gcd a n ≠ 1 := fun hn => hm (ha.mpr hn)
       simpa [coprimeCount,hm,hn] using ht
 
+theorem column_coprime_iff (i : Int) (m n : Nat) (hm : 0 < m)
+    (a : Int) (ha : a ∈ progression i m n) : gcd a m=1 ↔ gcd i m=1 := by
+  /-
+  Lemma: All entries of a column have the same coprimality
+  status with its step m.
+  Proof: Each entry is congruent to the starting value. Apply
+  preservation of coprimality in each direction. QED
+  -/
+  have h := column_congruent i m n hm a ha
+  exact ⟨fun hc => congruent_coprime a i m hc h,
+    fun hc => congruent_coprime i a m hc (modeq_symm a i m h)⟩
+
 end NumberTheory.ModularRoots
