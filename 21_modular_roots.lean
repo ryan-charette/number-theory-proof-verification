@@ -1431,4 +1431,35 @@ theorem column_congruent (i : Int) (m n : Nat) (hm : 0 < m)
   rw [he,Int.mul_comm (m : Int) j]
   omega
 
+theorem grid_nodup (m n : Nat) (hm : 0 < m) (is : List Nat)
+    (hnd : is.Nodup) (his : ∀ i ∈ is, 0 < i ∧ i ≤ m) :
+    (gridRows m n is).Nodup := by
+  /-
+  Lemma: Distinct columns starting between one and m produce
+  distinct entries in the array.
+  Proof: Each column has positive step and no repeated entries.
+  If entries in two columns were equal, their starting values
+  would be congruent modulo m. Both starts lie between one and
+  m, so they would be equal, contradicting distinctness of the
+  column list. Induction appends all the columns. QED
+  -/
+  induction is with
+  | nil => exact List.Pairwise.nil
+  | cons i is ih =>
+    have hp := List.pairwise_cons.mp hnd
+    have hi := his i (by simp)
+    apply List.pairwise_append.mpr
+    refine ⟨progression_nodup_positive i m n (by omega),
+      ih hp.2 (fun j hj => his j (by simp [hj])),?_⟩
+    intro a ha b hb hab
+    rcases (grid_mem m n is b).mp hb with ⟨j,hj,hbj⟩
+    have hj' := his j (by simp [hj])
+    have hai := column_congruent i m n hm a ha
+    have hbj' := column_congruent j m n hm b hbj
+    rw [hab] at hai
+    have hij := modeq_trans i b j m (modeq_symm b i m hai) hbj'
+    have he := positive_congruent_equal i j m (by omega) (by omega)
+      (by omega) (by omega) hij
+    exact hp.1 j hj (by omega)
+
 end NumberTheory.ModularRoots
