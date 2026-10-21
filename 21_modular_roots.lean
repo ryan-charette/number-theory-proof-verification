@@ -3045,4 +3045,14 @@ theorem count_by_labels (xs ds : List Nat) (f : Nat → Nat)
       ih (fun y hy => hlabels y (by simp [hy]))]
     simp only [List.length_cons]; omega
 
+def divisors (n : Nat) : List Nat := (positiveRange n).filter (fun d => decide (d ∣ n))
+
+theorem divisors_nodup (n : Nat) : (divisors n).Nodup := by
+  /-
+  Lemma: Each divisor is listed only once.
+  Proof: Filtering a list without repetitions cannot introduce one.
+  QED
+  -/
+  exact (positive_range_nodup n).filter _
+
 end NumberTheory.ModularRoots
