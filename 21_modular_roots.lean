@@ -2966,4 +2966,13 @@ theorem order_class_bound (p d : Nat) (hp : Prime p) :
     exact ⟨small_prime_coprime p b hp hb'.1 (by have := hp.1; omega),hb'.2.2⟩)
   simpa only [List.length_map] using h
 
+theorem sum_on_zero (ds : List Nat) : sumOn ds (fun _ => 0)=0 := by
+  /-
+  Lemma: A sum of zeros is zero.
+  Proof: Induction adds one zero at a time. QED
+  -/
+  induction ds with
+  | nil => rfl
+  | cons _d ds ih => simp only [sumOn,ih,Nat.zero_add]
+
 end NumberTheory.ModularRoots
