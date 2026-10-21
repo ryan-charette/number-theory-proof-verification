@@ -3770,4 +3770,22 @@ theorem nonzero_root_count (p k : Nat) (b : Int) (hp : Prime p) (hk : 0 < k)
       ⟨r,((root_residues_mem p k r b).mp hr).2⟩
     exact Or.inr (by simpa only [he] using h)
 
+theorem prime_root_count (p k : Nat) (b : Int) (hp : Prime p) (hk : 0 < k) :
+    ((p : Int) ∣ b ∧ (rootResidues p k b).length=1) ∨
+      (¬ (p : Int) ∣ b ∧ ((rootResidues p k b).length=0 ∨
+        (rootResidues p k b).length=(gcd (k : Int) (p-1 : Nat)).toNat)) := by
+  /-
+  Theorem: The corrected root count separates zero from nonzero
+  right-hand sides. If p divides b there is exactly one root
+  class. Otherwise there are zero or gcd(k,p-1) root classes.
+  Proof: Decide whether p divides b and apply the appropriate
+  count already proved. This retains all integer right-hand
+  sides and makes the necessary zero-residue exception explicit.
+  Exponent positivity matches the natural-number convention.
+  QED
+  -/
+  by_cases hb : (p : Int) ∣ b
+  · exact Or.inl ⟨hb,zero_root_count p k b hp hk hb⟩
+  · exact Or.inr ⟨hb,nonzero_root_count p k b hp hk hb⟩
+
 end NumberTheory.ModularRoots
