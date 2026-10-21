@@ -1028,4 +1028,15 @@ theorem root_is_coprime (x b : Int) (n k : Nat) (hk : 0 < k)
   rw [hc'] at hs
   exact gcd_one_combination x n ⟨t,s,by omega⟩
 
+theorem power_mul (a : Int) (i j : Nat) : (a^i)^j=a^(i*j) := by
+  /-
+  Lemma: Raising a power to another power multiplies exponents.
+  Proof: Induct on j. At zero both sides are one. The successor
+  multiplies the preceding power by a^i, which adds i to its
+  exponent and gives i*(j+1). QED
+  -/
+  induction j with
+  | zero => simp [Int.pow_zero]
+  | succ j ih => rw [Int.pow_succ,ih,Nat.mul_succ,power_add]
+
 end NumberTheory.ModularRoots
