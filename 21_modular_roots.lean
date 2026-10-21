@@ -951,4 +951,18 @@ theorem phi_positive (n : Nat) (hn : 0 < n) : 0 < phi n := by
   | nil => simp [h] at hm
   | cons a xs => simp only [phi,h,List.length_cons]; omega
 
+theorem root_exponents_exist (k n : Nat) (hk : 0 < k) (hn : 0 < n)
+    (hc : gcd (k : Int) (phi n)=1) :
+    ∃ u v : Nat, 0 < u ∧ 0 < v ∧ k*u=phi n*v+1 := by
+  /-
+  Theorem: A positive exponent k coprime to phi(n) has positive
+  integers u,v with k*u=phi(n)*v+1.
+  Proof: Phi(n) is positive. The positive Bezout construction
+  applied to k and phi(n) supplies the required two exponents.
+  It shifts an integer inverse by a sufficiently large multiple
+  of phi(n), making both coefficients positive. QED
+  -/
+  rcases positive_inverse_exponents k (phi n) hk (phi_positive n hn) hc with ⟨u,v,hu,hv,he⟩
+  exact ⟨u,v,hu,hv,by simpa only [Nat.add_comm,Nat.mul_comm] using he⟩
+
 end NumberTheory.ModularRoots
