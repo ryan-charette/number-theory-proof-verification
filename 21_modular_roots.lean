@@ -2021,4 +2021,29 @@ theorem squarefree_shifted_power (a : Int) (ps : List Nat) (hnd : ps.Nodup)
   rw [he]
   exact prime_shifted_power a p (v*t) (hps p hp)
 
+theorem squarefree_root_criterion (b : Int) (ps : List Nat) (hnd : ps.Nodup)
+    (hps : ∀ p ∈ ps, Prime p) (k u v : Nat) (he : k*u=phi (primeProduct ps)*v+1) :
+    ∀ x : Int, Congruent (x^k) b (primeProduct ps) ↔ Congruent x (b^u) (primeProduct ps) := by
+  /-
+  Theorem: For a square-free modulus n and k*u=phi(n)*v+1,
+  the roots of b form exactly the class b^u, for every integer b.
+  Proof: The square-free power identity makes (b^u)^k congruent
+  to b. Raising any root congruence to u makes its left side
+  return x, so every root is congruent to b^u. Conversely,
+  congruent representatives of b^u have the same k-th power.
+  QED
+  -/
+  have hb : Congruent ((b^u)^k) b (primeProduct ps) := by
+    rw [power_mul,Nat.mul_comm u k,he,Nat.mul_comm (phi (primeProduct ps)) v]
+    exact squarefree_shifted_power b ps hnd hps v
+  intro x
+  constructor
+  · intro hx
+    have h := modeq_pow (x^k) b (primeProduct ps) u hx
+    rw [power_mul,he,Nat.mul_comm (phi (primeProduct ps)) v] at h
+    exact modeq_trans _ _ _ (primeProduct ps)
+      (modeq_symm _ _ _ (squarefree_shifted_power x ps hnd hps v)) h
+  · intro hx
+    exact modeq_trans _ _ _ (primeProduct ps) (modeq_pow x (b^u) _ k hx) hb
+
 end NumberTheory.ModularRoots
