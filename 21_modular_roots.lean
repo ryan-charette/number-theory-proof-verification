@@ -1522,4 +1522,25 @@ theorem grid_length (m n : Nat) (is : List Nat) :
       List.length_range,ih,List.length_cons,Nat.add_mul,Nat.one_mul]
     omega
 
+theorem grid_complete (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
+    CompleteResidues (gridRows m n (positiveRange m)) (m*n) := by
+  /-
+  Lemma: The standard rectangular array is a complete residue
+  system modulo mn.
+  Proof: Its mn entries are distinct and lie between one and mn.
+  Congruent entries in that interval are equal. There are mn
+  entries, so the elementary full-length criterion proves
+  coverage of all residue classes. QED
+  -/
+  apply noncongruent_full_length_complete _ (m*n) (Nat.mul_pos hm hn)
+  · constructor
+    · exact grid_nodup m n hm _ (positive_range_nodup m)
+        (fun i hi => (positive_range_mem m i).mp hi)
+    · intro a ha b hb hab
+      have hba := grid_bounds m n hm a ha
+      have hbb := grid_bounds m n hm b hb
+      exact positive_congruent_equal a b (m*n : Nat) hba.1 hba.2 hbb.1 hbb.2 hab
+  · rw [grid_length]
+    simp only [positiveRange,List.length_map,List.length_range]
+
 end NumberTheory.ModularRoots
