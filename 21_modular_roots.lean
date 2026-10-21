@@ -2354,4 +2354,19 @@ theorem powers_congruent_ordered (a : Int) (n i j : Nat) (hn : 0 < n)
     rw [hsplit]
     simpa only [Int.one_mul] using modeq_mult _ 1 (a^i) (a^i) n hret (modeq_refl _ n (by omega))
 
+theorem powers_congruent_iff (a : Int) (n i j : Nat) (hn : 0 < n) (ha : gcd a n=1) :
+    Congruent (a^i) (a^j) n ↔ Congruent (i : Int) j (order a n) := by
+  /-
+  Lemma: Two powers of a coprime integer are congruent exactly
+  when their exponents are congruent modulo its order.
+  Proof: If j≤i, apply the ordered-exponent argument directly.
+  Otherwise reverse both congruences, apply that argument, and
+  reverse them again. QED
+  -/
+  by_cases hji : j ≤ i
+  · exact powers_congruent_ordered a n j i hn ha hji
+  · have h := powers_congruent_ordered a n i j hn ha (by omega)
+    exact ⟨fun hx => modeq_symm _ _ _ (h.mp (modeq_symm _ _ n hx)),
+      fun hx => modeq_symm _ _ n (h.mpr (modeq_symm _ _ _ hx))⟩
+
 end NumberTheory.ModularRoots
