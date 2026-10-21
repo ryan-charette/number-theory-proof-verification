@@ -1865,4 +1865,160 @@ theorem combine_prime_moduli (ps : List Nat) (hnd : ps.Nodup)
       (prime_coprime_remaining_product p ps hp ht hpair.1)
       (h p (by simp)) (ih hpair.2 ht (fun q hq => h q (by simp [hq])))
 
+theorem scaled_labels_injective (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1)
+    (i j : Nat) (hi : i < n) (hj : j < n)
+    (he : canonicalLabel ((i : Int)*a) n=canonicalLabel ((j : Int)*a) n) : i=j := by
+  /-
+  Lemma: Multiplication by a coprime integer gives distinct residue
+  labels to distinct canonical representatives. Proof: Equal labels
+  give i*a congruent to j*a. Cancel a; the representatives i and j
+  lie between zero and n-1, so their congruence makes them equal.
+  QED
+  -/
+  have h := (canonicalLabel_eq_iff _ _ n hn).mp he
+  have hcancel := cancel_coprime i j a n hc h
+  have hb := bounded_congruent_equal i j n (by omega) (by omega)
+    (by omega) (by omega) hcancel
+  omega
+
+theorem coprime_not_zero (a : Int) (n : Nat) (hn : 1 < n) (hc : gcd a n=1) :
+    ¬ Congruent a 0 n := by
+  /-
+  Lemma: A number coprime to a modulus greater than one cannot be
+  congruent to zero. Proof: Otherwise n divides a and n. It then
+  divides the Bezout combination one, forcing n≤1, a contradiction.
+  QED
+  -/
+  intro h
+  have ha : (n : Int) ∣ a := by simpa using h.2
+  rcases bezout a n with ⟨u,v,he⟩
+  rw [hc] at he
+  have hd := dvd_linear n a n u v ha (dvd_refl n)
+  rw [he] at hd
+  have hb := divisor_le_positive n 1 (by decide) hd
+  omega
+
+theorem nonzero_labels_perm (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
+    ((nonzeroResidues p).map (fun i : Nat => canonicalLabel ((i : Int)*a) p)).Perm
+      (nonzeroResidues p) := by
+  /-
+  Lemma: Multiplication by a coprime integer rearranges the nonzero
+  residue labels modulo a prime. Proof: Cancellation makes the
+  labels distinct. Each factor i and a is coprime to p, so their
+  product has a Bezout identity with p and cannot have label zero.
+  Thus all labels belong to the nonzero list. The lengths agree,
+  so the distinct-selection lemma gives the rearrangement. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hnd0 : (nonzeroResidues p).Nodup := (List.nodup_range p).erase 0
+  have hnd : ((nonzeroResidues p).map (fun i : Nat => canonicalLabel ((i : Int)*a) p)).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ hnd0
+    intro i j hi hj hne he
+    exact hne (scaled_labels_injective a p hn hc i j
+      ((nonzero_residues_mem p i).mp hi).2 ((nonzero_residues_mem p j).mp hj).2 he)
+  apply distinct_subset_perm _ _ hnd ?_ (by simp)
+  intro r hr
+  rcases List.mem_map.mp hr with ⟨i,hi,he⟩
+  subst r
+  have hib := (nonzero_residues_mem p i).mp hi
+  have hs := canonicalLabel_spec ((i : Int)*a) p hn
+  apply (nonzero_residues_mem p _).mpr
+  refine ⟨?_,hs.1⟩
+  have hzero : canonicalLabel ((i : Int)*a) p ≠ 0 := by
+    intro hz
+    rw [hz] at hs
+    have hcancel := cancel_coprime i 0 a p hc (by simpa using hs.2)
+    exact coprime_not_zero i p hp.1 (small_prime_coprime p i hp hib.1 hib.2) hcancel
+  omega
+
+theorem residue_product_congruent (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
+    Congruent (intProduct ((nonzeroResidues p).map (fun i : Nat => (i : Int)*a)))
+      (intProduct ((nonzeroResidues p).map (fun i : Nat => (i : Int)))) p := by
+  /-
+  Theorem: The product a*(2*a)*...*((p-1)*a) is congruent to
+  1*2*...*(p-1). Proof: Replace each factor by its canonical label.
+  The products are congruent because corresponding factors are.
+  The labels rearrange the nonzero canonical residues, so their
+  product equals the product of those residues. QED
+  -/
+  have h := product_congruent (nonzeroResidues p) (fun i : Nat => (i : Int)*a)
+    (fun i : Nat => (canonicalLabel ((i : Int)*a) p : Int)) p
+    (by have := hp.1; omega) (fun i _ => (canonicalLabel_spec _ p (by have := hp.1; omega)).2)
+  have he := product_perm _ _ ((nonzero_labels_perm a p hp hc).map (fun i : Nat => (i : Int)))
+  simp only [List.map_map,Function.comp_def] at he
+  rw [he] at h
+  exact h
+
+theorem fermat_coprime (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
+    Congruent (a^(p-1)) 1 p := by
+  /-
+  Theorem: For a prime p and an integer a relatively prime to p,
+  a^(p-1) is congruent to one modulo p.
+  Proof: Let P be the product of the positive integers below p.
+  The residue product theorem gives a^(p-1)*P congruent to P,
+  because scaling each of its p-1 factors extracts a^(p-1).
+  Each factor of P is coprime to p, hence so is P. Cancelling P
+  gives the asserted congruence. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hl : (nonzeroResidues p).length=p-1 := by
+    have he := List.length_erase_of_mem (by simp; omega : 0 ∈ List.range p)
+    simp only [List.length_range] at he
+    exact he
+  have h := residue_product_congruent a p hp hc
+  rw [scaled_product,hl] at h
+  have hprod := coprime_product ((nonzeroResidues p).map (fun i : Nat => (i : Int)))
+    p (by omega) (by
+      intro x hx
+      rcases List.mem_map.mp hx with ⟨i,hi,he⟩
+      subst x
+      have hib := (nonzero_residues_mem p i).mp hi
+      exact small_prime_coprime p i hp hib.1 hib.2)
+  exact cancel_coprime (a^(p-1)) 1 _ p hprod (by simpa using h)
+
+theorem prime_shifted_power (W : Int) (p k : Nat) (hp : Prime p) :
+    Congruent (W^(1+k*(p-1))) W p := by
+  /-
+  Lemma: Exponents one greater than a multiple of p-1 return W
+  modulo a prime p. Proof: If p divides W, the positive power
+  W^(k*(p-1))*W and W are both zero modulo p. Otherwise W is
+  coprime to p. Fermat's theorem, raised to power k, makes the
+  first factor one modulo p. Multiplying by W proves the claim.
+  This also includes k=0 and W=0. QED
+  -/
+  have hn : 0 < (p : Int) := by have := hp.1; omega
+  have he : W^(1+k*(p-1))=W^(k*(p-1))*W := by
+    rw [Nat.add_comm,Int.pow_succ]
+  rw [he]
+  by_cases hd : (p : Int) ∣ W
+  · have hz : Congruent W 0 p := ⟨hn,by simpa using hd⟩
+    have hm := modeq_mult _ (W^(k*(p-1))) W 0 p (modeq_refl _ _ hn) hz
+    simp only [Int.mul_zero] at hm
+    exact modeq_trans _ _ _ p hm (modeq_symm _ _ p hz)
+  · have hm := power_multiple_one W p (p-1) k (fermat_coprime W p hp (prime_coprime W p hp hd))
+    rw [Nat.mul_comm (p-1) k] at hm
+    simpa only [Int.one_mul] using modeq_mult _ 1 W W p hm (modeq_refl _ _ hn)
+
+theorem squarefree_shifted_power (a : Int) (ps : List Nat) (hnd : ps.Nodup)
+    (hps : ∀ p ∈ ps, Prime p) (v : Nat) :
+    Congruent (a^(v*phi (primeProduct ps)+1)) a (primeProduct ps) := by
+  /-
+  Theorem: For a product of distinct primes, raising any integer
+  to one more than a multiple of the totient returns it modulo
+  the product. No coprimality of the input is needed.
+  Proof: For each prime p in the product, write phi(n)=(p-1)*t.
+  The exponent is then 1+(v*t)*(p-1), which returns a modulo p:
+  Fermat handles nonmultiples of p, and multiples remain zero.
+  Combine the congruences over the distinct prime factors. QED
+  -/
+  apply combine_prime_moduli ps hnd hps
+  intro p hp
+  rcases prime_predecessor_divides_totient ps hnd hps p hp with ⟨t,ht⟩
+  have he : v*phi (primeProduct ps)+1=1+(v*t)*(p-1) := by
+    rw [ht]
+    simp only [Nat.mul_assoc,Nat.mul_left_comm,Nat.mul_comm,Nat.add_comm]
+  rw [he]
+  exact prime_shifted_power a p (v*t) (hps p hp)
+
 end NumberTheory.ModularRoots
