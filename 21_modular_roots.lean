@@ -891,4 +891,78 @@ theorem euler_shifted_power (a : Int) (n v : Nat) (hn : 0 < n) (ha : gcd a n=1) 
   rw [Int.pow_succ]
   simpa only [Int.one_mul] using modeq_mult _ 1 a a n h (modeq_refl a n (by omega))
 
+theorem positive_inverse_exponents (E n : Nat) (hE : 0 < E) (hn : 0 < n)
+    (hc : gcd (E : Int) n=1) :
+    ∃ D y : Nat, 0 < D ∧ 0 < y ∧ E*D=1+y*n := by
+  /-
+  Lemma: A positive integer E coprime to a positive n admits
+  positive D and y with ED=1+yn. Proof: Bezout gives E*u+n*v=1.
+  Replace u by its nonnegative representative b modulo n and
+  choose D=b+2n. Then D is positive and E*D is congruent to one.
+  Write E*D-1=n*y. Since E≥1 and D≥2n≥2, the left side is
+  positive, so y is positive as well. Thus both required integers
+  can be regarded as positive natural numbers. QED
+  -/
+  rcases bezout (E : Int) n with ⟨u,v,he⟩
+  rw [hc] at he
+  let b := canonicalLabel u n
+  let D := b+2*n
+  have hs := canonicalLabel_spec u n hn
+  have hDb : Congruent (D : Int) b n := by
+    refine ⟨by omega,2,?_⟩
+    dsimp [D]
+    simp only [Int.natCast_add,Int.natCast_mul]
+    omega
+  have hDu := modeq_trans _ _ _ n hDb (modeq_symm _ _ n hs.2)
+  have hEu : Congruent ((E : Int)*u) 1 n := by
+    refine ⟨by omega,-v,?_⟩
+    rw [Int.mul_neg]; omega
+  have hED := modeq_trans _ _ _ n
+    (modeq_mult E E D u n (modeq_refl _ _ (by omega)) hDu) hEu
+  rcases hED.2 with ⟨y,hy⟩
+  have hD : 2 ≤ D := by dsimp [D]; omega
+  have hbound := Int.mul_le_mul_of_nonneg_right (by omega : (1 : Int) ≤ E)
+    (by omega : (0 : Int) ≤ D)
+  simp only [Int.one_mul] at hbound
+  have hypos : 0 < y := by
+    by_cases hy0 : 0 < y
+    · exact hy0
+    · have hneg := Int.mul_nonneg (by omega : (0 : Int) ≤ n) (by omega : 0 ≤ -y)
+      rw [Int.mul_neg] at hneg
+      omega
+  have hycast : (y.toNat : Int)=y := Int.toNat_of_nonneg (by omega)
+  refine ⟨D,y.toNat,by omega,by omega,?_⟩
+  have heq : ((E*D : Nat) : Int)=((1+y.toNat*n : Nat) : Int) := by
+    simp only [Int.natCast_add,Int.natCast_mul,Int.natCast_one,hycast]
+    rw [Int.mul_comm y (n : Int)]
+    omega
+  omega
+
+theorem phi_positive (n : Nat) (hn : 0 < n) : 0 < phi n := by
+  /-
+  Lemma: Phi of a positive integer is positive.
+  Proof: One lies in the interval from one to n and is coprime
+  to n, as the combination 1*1+n*0=1 shows. Thus at least this
+  one representative is counted. QED
+  -/
+  have hc : gcd 1 (n : Int)=1 := gcd_one_right 1 n (by omega) ⟨1,0,by simp⟩
+  have hm : 1 ∈ reducedResidues n := (reduced_mem n 1).mpr ⟨by omega,hn,hc⟩
+  cases h : reducedResidues n with
+  | nil => simp [h] at hm
+  | cons a xs => simp only [phi,h,List.length_cons]; omega
+
+theorem root_exponents_exist (k n : Nat) (hk : 0 < k) (hn : 0 < n)
+    (hc : gcd (k : Int) (phi n)=1) :
+    ∃ u v : Nat, 0 < u ∧ 0 < v ∧ k*u=phi n*v+1 := by
+  /-
+  Theorem: A positive exponent k coprime to phi(n) has positive
+  integers u,v with k*u=phi(n)*v+1.
+  Proof: Phi(n) is positive. The positive Bezout construction
+  applied to k and phi(n) supplies the required two exponents.
+  It shifts an integer inverse by a sufficiently large multiple
+  of phi(n), making both coefficients positive. QED
+  -/
+  rcases positive_inverse_exponents k (phi n) hk (phi_positive n hn) hc with ⟨u,v,hu,hv,he⟩
+  exact ⟨u,v,hu,hv,by simpa only [Nat.add_comm,Nat.mul_comm] using he⟩
+
 end NumberTheory.ModularRoots
