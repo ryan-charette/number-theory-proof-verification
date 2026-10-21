@@ -615,4 +615,19 @@ theorem positive_congruent_equal (a b n : Int) (ha : 0 < a) (han : a ≤ n)
     (by omega) (by omega) hc
   omega
 
+theorem reduced_multiples_distinct (a : Int) (n i j : Nat) (hc : gcd a n=1)
+    (hi : i ∈ reducedResidues n) (hj : j ∈ reducedResidues n)
+    (h : Congruent (a*i) (a*j) n) : i=j := by
+  /-
+  Theorem: Multiplying different reduced representatives by a
+  coprime integer cannot make them congruent. Proof: Cancel a
+  from the congruence. The two original positive representatives
+  lie at most n, so uniqueness makes them equal. QED
+  -/
+  have hib := (reduced_mem n i).mp hi
+  have hjb := (reduced_mem n j).mp hj
+  have hcancel := cancel_coprime i j a n hc (by simpa only [Int.mul_comm] using h)
+  have he := positive_congruent_equal i j n (by omega) (by omega) (by omega) (by omega) hcancel
+  omega
+
 end NumberTheory.ModularRoots
