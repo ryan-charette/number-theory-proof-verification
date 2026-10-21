@@ -1156,4 +1156,18 @@ theorem prime_coprime (a : Int) (p : Nat) (hp : Prime p) (ha : ¬ (p : Int) ∣ 
     rw [he] at had
     exact False.elim (ha had)
 
+theorem distinct_primes_coprime (p q : Nat) (hp : Prime p) (hq : Prime q)
+    (hne : p ≠ q) : gcd (p : Int) q=1 := by
+  /-
+  Lemma: Distinct primes are relatively prime. Proof: If q divides
+  p, primality of p makes q either one or p. Both are excluded.
+  The prime coprimality criterion therefore gives gcd(p,q)=1. QED
+  -/
+  apply prime_coprime p q hq
+  intro hd
+  have hdn : q ∣ p := Int.ofNat_dvd.mp hd
+  rcases hp.2 q hdn with h | h
+  · have := hq.1; omega
+  · exact hne h.symm
+
 end NumberTheory.ModularRoots
