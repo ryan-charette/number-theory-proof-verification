@@ -1102,4 +1102,18 @@ theorem coprime_root_criterion (b : Int) (n k u v : Nat)
   · intro hx
     exact modeq_trans _ _ _ n (modeq_pow x (b^u) n k hx) hcandidate
 
+theorem coprime_roots_unique (b : Int) (n k : Nat) (hn : 0 < n) (hk : 0 < k)
+    (hb : gcd b n=1) (hc : gcd (k : Int) (phi n)=1) :
+    ∃ u v : Nat, 0 < u ∧ 0 < v ∧ k*u=phi n*v+1 ∧
+      ∀ x : Int, Congruent (x^k) b n ↔ Congruent x (b^u) n := by
+  /-
+  Theorem: A coprime right-hand side has a unique root class
+  when k is coprime to phi(n), and an inverse exponent constructs
+  that class. Proof: Choose positive u,v by Bezout, then apply
+  the root criterion. It gives both existence of b^u and the
+  characterization of every solution as congruent to b^u. QED
+  -/
+  rcases root_exponents_exist k n hk hn hc with ⟨u,v,hu,hv,he⟩
+  exact ⟨u,v,hu,hv,he,coprime_root_criterion b n k u v hn hk hb he⟩
+
 end NumberTheory.ModularRoots
