@@ -1186,4 +1186,616 @@ theorem prime_coprime_remaining_product (p : Nat) (ps : List Nat) (hp : Prime p)
     · intro he; subst q; exact hnot (by simp)
     · exact ih (fun r hr => hps r (by simp [hr])) (fun h => hnot (by simp [h]))
 
+theorem distinct_length_bound (xs ys : List Nat) (h : xs.Nodup)
+    (hsub : ∀ a ∈ xs, a ∈ ys) : xs.length ≤ ys.length := by
+  /-
+  Lemma: A list of distinct entries drawn from a list of available
+  values cannot be longer than that list.
+  Proof: Induct on the list of distinct entries. The empty case is
+  immediate. Remove the first entry from both lists. No entry in the
+  first tail equals the removed entry, so all its entries remain
+  available. Induction bounds the tail length. Restoring the removed
+  entry adds one to each length and proves the required bound. QED
+  -/
+  induction xs generalizing ys with
+  | nil => simp
+  | cons a xs ih =>
+    have hh := List.nodup_cons.mp h
+    have ha := hsub a (by simp)
+    have ht : ∀ b ∈ xs, b ∈ ys.erase a := by
+      intro b hb
+      have hne : b ≠ a := by intro he; subst b; exact hh.1 hb
+      exact (List.mem_erase_of_ne hne).mpr (hsub b (by simp [hb]))
+    have hb := ih (ys.erase a) hh.2 ht
+    have hl := List.length_erase_of_mem ha
+    have hn : 0 < ys.length := by
+      cases ys with
+      | nil => cases ha
+      | cons b bs => simp
+    simp only [List.length_cons]
+    omega
+
+theorem same_members_perm (xs ys : List Nat) (hx : xs.Nodup) (hy : ys.Nodup)
+    (h : ∀ i, i ∈ xs ↔ i ∈ ys) : xs.Perm ys := by
+  /-
+  Lemma: Two distinct lists with the same members are rearrangements.
+  Proof: Each list is drawn from the other, so the distinct-list
+  bound gives both length inequalities. The equal-length selection
+  theorem then gives the rearrangement. QED
+  -/
+  have h₁ := distinct_length_bound xs ys hx (fun i hi => (h i).mp hi)
+  have h₂ := distinct_length_bound ys xs hy (fun i hi => (h i).mpr hi)
+  exact distinct_subset_perm xs ys hx (fun i hi => (h i).mp hi) (by omega)
+
+def Noncongruent (reps : List Int) (n : Nat) : Prop :=
+  reps.Nodup ∧ ∀ a ∈ reps, ∀ b ∈ reps, a ≡ b [MOD (n : Int)] → a=b
+
+def CompleteResidues (reps : List Int) (n : Nat) : Prop :=
+  Noncongruent reps n ∧ ∀ a : Int, ∃ r : Int, r ∈ reps ∧ a ≡ r [MOD (n : Int)]
+
+noncomputable def coprimeCount (xs : List Int) (n : Int) : Nat :=
+  (xs.filter (fun a => decide (gcd a n=1))).length
+
+theorem complete_coprime_count (xs : List Int) (n : Nat) (hn : 0 < n)
+    (hs : CompleteResidues xs n) : coprimeCount xs n=phi n := by
+  /-
+  Theorem: Every complete residue system modulo n contains exactly
+  phi(n) entries coprime to n.
+  Proof: Replace each coprime entry by its positive representative
+  between one and n. Congruence preserves coprimality, so these
+  labels belong to the reduced list. Two equal labels would give
+  congruent original entries, hence the same entry. Conversely,
+  completeness supplies an entry congruent to any reduced label;
+  this entry is coprime, and its positive label is the one requested.
+  Thus the two lists have the same entries without repetitions,
+  and consequently have the same length. QED
+  -/
+  let ys := xs.filter (fun a => decide (gcd a (n : Int)=1))
+  have hymem : ∀ a ∈ ys, a ∈ xs ∧ gcd a n=1 := by
+    intro a ha
+    have h := List.mem_filter.mp ha
+    exact ⟨h.1,of_decide_eq_true h.2⟩
+  have hynd : ys.Nodup := hs.1.1.filter _
+  have hnd : (ys.map (fun a => positiveLabel a n)).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ hynd
+    intro a b ha hb hab he
+    have hla := (positiveLabel_spec a n hn).2.2
+    have hlb := (positiveLabel_spec b n hn).2.2
+    rw [he] at hla
+    exact hab (hs.1.2 a (hymem a ha).1 b (hymem b hb).1
+      (modeq_trans _ _ _ n hla (modeq_symm _ _ n hlb)))
+  have hperm : (ys.map (fun a => positiveLabel a n)).Perm (reducedResidues n) := by
+    apply same_members_perm _ _ hnd (reduced_nodup n)
+    intro i
+    constructor
+    · intro hi
+      rcases List.mem_map.mp hi with ⟨a,ha,hai⟩
+      subst i
+      have hl := positiveLabel_spec a n hn
+      exact (reduced_mem n _).mpr ⟨hl.1,hl.2.1,
+        congruent_coprime a (positiveLabel a n) n (hymem a ha).2 hl.2.2⟩
+    · intro hi
+      have hi' := (reduced_mem n i).mp hi
+      rcases hs.2 (i : Int) with ⟨a,ha,hia⟩
+      have hc := congruent_coprime i a n hi'.2.2 hia
+      have hl := positiveLabel_spec a n hn
+      have he := positive_congruent_equal i (positiveLabel a n) n
+        (by omega) (by omega) (by omega) (by omega)
+        (modeq_trans _ _ _ n hia hl.2.2)
+      exact List.mem_map.mpr ⟨a,List.mem_filter.mpr ⟨ha,by simpa using hc⟩,by omega⟩
+  have hlen := hperm.length_eq
+  simpa only [List.length_map,ys,coprimeCount,phi] using hlen
+
+theorem canonicalLabel_eq_iff (a b : Int) (n : Nat) (hn : 0 < n) :
+    canonicalLabel a n = canonicalLabel b n ↔ a ≡ b [MOD (n : Int)] := by
+  /-
+  Lemma: Two inputs have the same canonical label exactly when they
+  are congruent. Proof: Equal labels give a common representative;
+  transitivity yields congruence of the inputs. Conversely, congruent
+  inputs have congruent labels by symmetry and transitivity. Both
+  labels lie between zero and n-1, so they are equal. QED
+  -/
+  have ha := canonicalLabel_spec a n hn
+  have hb := canonicalLabel_spec b n hn
+  constructor
+  · intro he
+    have hac := ha.2
+    rw [he] at hac
+    exact modeq_trans a (canonicalLabel b n) b n hac (modeq_symm b _ n hb.2)
+  · intro h
+    have hlabels := modeq_trans (canonicalLabel a n) a (canonicalLabel b n) n
+      (modeq_symm a _ n ha.2) (modeq_trans a b _ n h hb.2)
+    have he := bounded_congruent_equal (canonicalLabel a n) (canonicalLabel b n) n
+      (by omega) (by omega) (by omega) (by omega) hlabels
+    omega
+
+theorem labels_distinct (reps : List Int) (n : Nat) (hn : 0 < n)
+    (h : Noncongruent reps n) : (reps.map (fun a => canonicalLabel a n)).Nodup := by
+  /-
+  Lemma: Replacing noncongruent representatives by their canonical
+  labels preserves distinctness. Proof: If two labels were equal,
+  the corresponding entries would be congruent. The hypothesis would
+  make those entries equal, contrary to their distinctness in the list.
+  QED
+  -/
+  apply List.pairwise_map.mpr
+  apply List.Pairwise.imp_of_mem ?_ h.1
+  intro a b ha hb hne he
+  exact hne (h.2 a ha b hb ((canonicalLabel_eq_iff a b n hn).mp he))
+
+theorem noncongruent_full_length_complete (reps : List Int) (n : Nat) (hn : 0 < n)
+    (h : Noncongruent reps n) (hlen : reps.length=n) : CompleteResidues reps n := by
+  /-
+  Theorem: Any n pairwise noncongruent integers form a complete
+  residue system modulo n.
+  Proof: Their canonical labels are n distinct members of 0,...,n-1.
+  If a label were missing, adjoining it would give n+1 distinct
+  members of a list with only n entries, contradicting the counting
+  bound. Thus the canonical label of any integer a occurs. Its
+  corresponding representative is congruent to a. This proves coverage;
+  noncongruence already gives uniqueness. QED
+  -/
+  refine ⟨h,?_⟩
+  intro a
+  let labels := reps.map (fun b => canonicalLabel b n)
+  have hnd : labels.Nodup := labels_distinct reps n hn h
+  have hsub : ∀ r ∈ labels, r ∈ List.range n := by
+    intro r hr
+    rcases List.mem_map.mp hr with ⟨b,_,he⟩
+    apply List.mem_range.mpr
+    have hb := canonicalLabel_spec b n hn
+    omega
+  have hmem : canonicalLabel a n ∈ labels := by
+    apply Classical.byContradiction
+    intro hnot
+    have hmore : (canonicalLabel a n :: labels).Nodup := List.nodup_cons.mpr ⟨hnot,hnd⟩
+    have hmoreSub : ∀ r ∈ canonicalLabel a n :: labels, r ∈ List.range n := by
+      intro r hr
+      rcases List.mem_cons.mp hr with he | ht
+      · subst r
+        exact List.mem_range.mpr (canonicalLabel_spec a n hn).1
+      · exact hsub r ht
+    have hb := distinct_length_bound (canonicalLabel a n :: labels) (List.range n) hmore hmoreSub
+    simp only [List.length_cons,List.length_range,labels,List.length_map,hlen] at hb
+    omega
+  rcases List.mem_map.mp hmem with ⟨b,hb,he⟩
+  exact ⟨b,hb,(canonicalLabel_eq_iff a b n hn).mp he.symm⟩
+
+def progression (k m : Int) (n : Nat) : List Int :=
+  (List.range n).map (fun j : Nat => k+(j : Int)*m)
+
+theorem progression_nodup_positive (i m : Int) (n : Nat) (hm : 0 < m) :
+    (progression i m n).Nodup := by
+  /-
+  Lemma: A progression with positive step has no repetitions.
+  Proof: Equality of two terms cancels the starting value and
+  then the nonzero step, leaving equal positions. QED
+  -/
+  apply List.pairwise_map.mpr
+  apply List.Pairwise.imp (R := fun j k : Nat => j ≠ k) ?_ (List.nodup_range n)
+  intro j k hjk he
+  have he' : (j : Int)*m=(k : Int)*m := by omega
+  have heq := Int.eq_of_mul_eq_mul_right (by omega : m ≠ 0) he'
+  exact hjk (by omega)
+
+def gridRows (m n : Nat) : List Nat → List Int
+  | [] => []
+  | i::is => progression i m n ++ gridRows m n is
+
+theorem grid_mem (m n : Nat) (is : List Nat) (a : Int) :
+    a ∈ gridRows m n is ↔ ∃ i ∈ is, a ∈ progression i m n := by
+  /-
+  Lemma: An array entry belongs to one of its listed columns.
+  Proof: Unfold the first column and use membership in an
+  append, then proceed through the remaining columns. QED
+  -/
+  induction is with
+  | nil => simp [gridRows]
+  | cons i is ih =>
+    simp only [gridRows,List.mem_append,ih,List.mem_cons]
+    constructor
+    · intro h
+      rcases h with h | ⟨j,hj,ha⟩
+      · exact ⟨i,Or.inl rfl,h⟩
+      · exact ⟨j,Or.inr hj,ha⟩
+    · rintro ⟨j,hj,ha⟩
+      rcases hj with hj | hj
+      · subst j; exact Or.inl ha
+      · exact Or.inr ⟨j,hj,ha⟩
+
+theorem progression_mem (k m a : Int) (n : Nat) :
+    a ∈ progression k m n ↔ ∃ j : Nat, j < n ∧ a=k+(j : Int)*m := by
+  /-
+  Lemma: An entry of a progression has its indicated position j,
+  with 0≤j<n. Proof: Unpack the map of the natural-number range.
+  The converse inserts that position into the mapped list. QED
+  -/
+  constructor
+  · intro h
+    rcases List.mem_map.mp h with ⟨j,hj,he⟩
+    exact ⟨j,List.mem_range.mp hj,he.symm⟩
+  · rintro ⟨j,hj,he⟩
+    exact List.mem_map.mpr ⟨j,List.mem_range.mpr hj,he.symm⟩
+
+theorem column_congruent (i : Int) (m n : Nat) (hm : 0 < m)
+    (a : Int) (ha : a ∈ progression i m n) : Congruent a i m := by
+  /-
+  Lemma: Every entry in the column with starting value i and
+  step m is congruent to i modulo m.
+  Proof: At position j its difference from i is j*m, explicitly
+  a multiple of m. QED
+  -/
+  rcases (progression_mem i m a n).mp ha with ⟨j,_,he⟩
+  refine ⟨by omega,(j : Int),?_⟩
+  rw [he,Int.mul_comm (m : Int) j]
+  omega
+
+theorem grid_nodup (m n : Nat) (hm : 0 < m) (is : List Nat)
+    (hnd : is.Nodup) (his : ∀ i ∈ is, 0 < i ∧ i ≤ m) :
+    (gridRows m n is).Nodup := by
+  /-
+  Lemma: Distinct columns starting between one and m produce
+  distinct entries in the array.
+  Proof: Each column has positive step and no repeated entries.
+  If entries in two columns were equal, their starting values
+  would be congruent modulo m. Both starts lie between one and
+  m, so they would be equal, contradicting distinctness of the
+  column list. Induction appends all the columns. QED
+  -/
+  induction is with
+  | nil => exact List.Pairwise.nil
+  | cons i is ih =>
+    have hp := List.pairwise_cons.mp hnd
+    have hi := his i (by simp)
+    apply List.pairwise_append.mpr
+    refine ⟨progression_nodup_positive i m n (by omega),
+      ih hp.2 (fun j hj => his j (by simp [hj])),?_⟩
+    intro a ha b hb hab
+    rcases (grid_mem m n is b).mp hb with ⟨j,hj,hbj⟩
+    have hj' := his j (by simp [hj])
+    have hai := column_congruent i m n hm a ha
+    have hbj' := column_congruent j m n hm b hbj
+    rw [hab] at hai
+    have hij := modeq_trans i b j m (modeq_symm b i m hai) hbj'
+    have he := positive_congruent_equal i j m (by omega) (by omega)
+      (by omega) (by omega) hij
+    exact hp.1 j hj (by omega)
+
+def positiveRange (n : Nat) : List Nat := (List.range n).map (fun i => i+1)
+
+theorem positive_range_nodup (n : Nat) : (positiveRange n).Nodup := by
+  /-
+  Lemma: The positive range has no repetitions.
+  Proof: Adding one to two different natural numbers cannot make
+  them equal; the original range has no repetitions. QED
+  -/
+  apply List.pairwise_map.mpr
+  apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range n)
+  intro i j h he
+  exact h (by omega)
+
+theorem positive_range_mem (n k : Nat) : k ∈ positiveRange n ↔ 0 < k ∧ k ≤ n := by
+  /-
+  Lemma: The positive range lists exactly the integers from one to n.
+  Proof: Its entries are j+1 for 0≤j<n. Subtracting one gives the
+  reverse correspondence. QED
+  -/
+  constructor
+  · intro h
+    rcases List.mem_map.mp h with ⟨j,hj,hjk⟩
+    have := List.mem_range.mp hj
+    omega
+  · intro h
+    exact List.mem_map.mpr ⟨k-1,List.mem_range.mpr (by omega),by omega⟩
+
+theorem grid_bounds (m n : Nat) (hm : 0 < m) (a : Int)
+    (ha : a ∈ gridRows m n (positiveRange m)) : 0 < a ∧ a ≤ (m*n : Nat) := by
+  /-
+  Lemma: The standard m-wide, n-high array has all its entries
+  between one and mn.
+  Proof: An entry is i+j*m, where 1≤i≤m and 0≤j<n. It is
+  positive, and it is at most (j+1)*m≤n*m=mn. QED
+  -/
+  rcases (grid_mem m n _ a).mp ha with ⟨i,hi,hai⟩
+  have hi' := (positive_range_mem m i).mp hi
+  rcases (progression_mem i m a n).mp hai with ⟨j,hj,he⟩
+  have hnonneg := Int.mul_nonneg (by omega : (0 : Int) ≤ j) (by omega : (0 : Int) ≤ m)
+  have hbound := Int.mul_le_mul_of_nonneg_right (by omega : (j : Int)+1 ≤ n)
+    (by omega : (0 : Int) ≤ m)
+  rw [Int.add_mul,Int.one_mul,Int.mul_comm (n : Int) m] at hbound
+  simp only [Int.natCast_mul]
+  omega
+
+theorem grid_length (m n : Nat) (is : List Nat) :
+    (gridRows m n is).length=is.length*n := by
+  /-
+  Lemma: An array with t columns, each of height n, has t*n
+  entries. Proof: Each progression has n entries. Appending
+  one more column adds n to the total, giving the formula
+  by induction on the column list. QED
+  -/
+  induction is with
+  | nil => simp only [gridRows,List.length_nil,Nat.zero_mul]
+  | cons i is ih =>
+    simp only [gridRows,List.length_append,progression,List.length_map,
+      List.length_range,ih,List.length_cons,Nat.add_mul,Nat.one_mul]
+    omega
+
+theorem grid_complete (m n : Nat) (hm : 0 < m) (hn : 0 < n) :
+    CompleteResidues (gridRows m n (positiveRange m)) (m*n) := by
+  /-
+  Lemma: The standard rectangular array is a complete residue
+  system modulo mn.
+  Proof: Its mn entries are distinct and lie between one and mn.
+  Congruent entries in that interval are equal. There are mn
+  entries, so the elementary full-length criterion proves
+  coverage of all residue classes. QED
+  -/
+  apply noncongruent_full_length_complete _ (m*n) (Nat.mul_pos hm hn)
+  · constructor
+    · exact grid_nodup m n hm _ (positive_range_nodup m)
+        (fun i hi => (positive_range_mem m i).mp hi)
+    · intro a ha b hb hab
+      have hba := grid_bounds m n hm a ha
+      have hbb := grid_bounds m n hm b hb
+      exact positive_congruent_equal a b (m*n : Nat) hba.1 hba.2 hbb.1 hbb.2 hab
+  · rw [grid_length]
+    simp only [positiveRange,List.length_map,List.length_range]
+
+theorem coprime_count_append (xs ys : List Int) (n : Int) :
+    coprimeCount (xs++ys) n=coprimeCount xs n+coprimeCount ys n := by
+  /-
+  Lemma: Counts add when lists are appended.
+  Proof: Filtering an append filters both parts, and the length
+  of their append is the sum of their lengths. QED
+  -/
+  simp only [coprimeCount,List.filter_append,List.length_append]
+
+theorem coprime_count_congr (xs : List Int) (m n : Int)
+    (h : ∀ a ∈ xs, gcd a m=1 ↔ gcd a n=1) :
+    coprimeCount xs m=coprimeCount xs n := by
+  /-
+  Lemma: Two coprimality tests with the same answers on a list
+  count the same entries. Proof: At the first entry the two
+  tests agree. Keep it in both lists or discard it from both,
+  then use induction for the remaining entries. QED
+  -/
+  induction xs with
+  | nil => rfl
+  | cons a xs ih =>
+    have ha := h a (by simp)
+    have ht := ih (fun b hb => h b (by simp [hb]))
+    by_cases hm : gcd a m=1
+    · have hn := ha.mp hm
+      simpa [coprimeCount,hm,hn] using congrArg Nat.succ ht
+    · have hn : gcd a n ≠ 1 := fun hn => hm (ha.mpr hn)
+      simpa [coprimeCount,hm,hn] using ht
+
+theorem column_coprime_iff (i : Int) (m n : Nat) (hm : 0 < m)
+    (a : Int) (ha : a ∈ progression i m n) : gcd a m=1 ↔ gcd i m=1 := by
+  /-
+  Lemma: All entries of a column have the same coprimality
+  status with its step m.
+  Proof: Each entry is congruent to the starting value. Apply
+  preservation of coprimality in each direction. QED
+  -/
+  have h := column_congruent i m n hm a ha
+  exact ⟨fun hc => congruent_coprime a i m hc h,
+    fun hc => congruent_coprime i a m hc (modeq_symm a i m h)⟩
+
+theorem progression_noncongruent (k m : Int) (n : Nat) (hn : 0 < n)
+    (hc : gcd m n=1) : Noncongruent (progression k m n) n := by
+  /-
+  Lemma: If the step m is coprime to n, the first n terms of a
+  progression are pairwise incongruent modulo n.
+  Proof: Congruence of positions i,j cancels the common start k.
+  Coprime cancellation then gives i congruent to j. Since both
+  positions lie between zero and n-1, they are equal. This also
+  proves that no two positions produce the same entry. QED
+  -/
+  have hindex : ∀ i j : Nat, i<n → j<n →
+      Congruent (k+(i : Int)*m) (k+(j : Int)*m) n → i=j := by
+    intro i j hi hj hij
+    have hmul : Congruent ((i : Int)*m) ((j : Int)*m) n := by
+      refine ⟨by omega,?_⟩
+      have he : (k+(i : Int)*m)-(k+(j : Int)*m)=(i : Int)*m-(j : Int)*m := by omega
+      have hdiv := hij.2
+      rw [he] at hdiv
+      exact hdiv
+    have he := bounded_congruent_equal i j n (by omega) (by omega)
+      (by omega) (by omega) (cancel_coprime i j m n hc hmul)
+    omega
+  constructor
+  · apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ (List.nodup_range n)
+    intro i j hi hj hij he
+    apply hij
+    apply hindex i j (List.mem_range.mp hi) (List.mem_range.mp hj)
+    rw [he]
+    exact ⟨by omega,0,by simp⟩
+  · intro a ha b hb hab
+    rcases (progression_mem k m a n).mp ha with ⟨i,hi,hai⟩
+    rcases (progression_mem k m b n).mp hb with ⟨j,hj,hbj⟩
+    rw [hai,hbj] at hab
+    have he := hindex i j hi hj hab
+    rw [hai,hbj,he]
+
+theorem progression_complete (k m : Int) (n : Nat) (hn : 0 < n)
+    (hc : gcd m n=1) : CompleteResidues (progression k m n) n := by
+  /-
+  Theorem: Any n-term arithmetic progression with step coprime
+  to n is a complete residue system modulo n.
+  Proof: Its n entries are pairwise incongruent by cancellation.
+  A list of n incongruent entries must cover all n possible
+  remainders, so it is complete. The starting point and step may
+  be arbitrary integers; n is positive. QED
+  -/
+  apply noncongruent_full_length_complete _ n hn (progression_noncongruent k m n hn hc)
+  simp only [progression,List.length_map,List.length_range]
+
+theorem column_product_count (i : Int) (m n : Nat) (hm : 0 < m) (hn : 0 < n)
+    (hc : gcd (m : Int) n=1) :
+    coprimeCount (progression i m n) (m*n : Nat)=if gcd i m=1 then phi n else 0 := by
+  /-
+  Lemma: For coprime positive m,n, a column contributes phi(n)
+  entries coprime to mn if its start is coprime to m, and zero
+  otherwise.
+  Proof: An entry is coprime to mn exactly when it is coprime
+  to both factors. Its condition modulo m is constant throughout
+  the column. If that condition fails, nothing qualifies. If it
+  holds, only coprimality to n remains. Step m is coprime to n,
+  so the column is a complete residue system modulo n and has
+  exactly phi(n) such entries. QED
+  -/
+  by_cases hi : gcd i m=1
+  · rw [if_pos hi]
+    have he : coprimeCount (progression i m n) (m*n : Nat)=
+        coprimeCount (progression i m n) n := by
+      apply coprime_count_congr
+      intro a ha
+      have ham := (column_coprime_iff i m n hm a ha).mpr hi
+      rw [Int.natCast_mul,coprime_product_iff]
+      exact ⟨fun h => h.2,fun h => ⟨ham,h⟩⟩
+    rw [he]
+    exact complete_coprime_count _ n hn (progression_complete i m n hn hc)
+  · rw [if_neg hi]
+    have hnone : ∀ a ∈ progression i m n, gcd a (m*n : Nat) ≠ 1 := by
+      intro a ha hab
+      rw [Int.natCast_mul,coprime_product_iff] at hab
+      exact hi ((column_coprime_iff i m n hm a ha).mp hab.1)
+    have hfilter : (progression i m n).filter (fun a => decide (gcd a (m*n : Nat)=1))=[] := by
+      apply List.filter_eq_nil.mpr
+      intro a ha
+      intro hd
+      exact hnone a ha (of_decide_eq_true hd)
+    simp only [coprimeCount,hfilter,List.length_nil]
+
+theorem grid_product_count (m n : Nat) (hm : 0 < m) (hn : 0 < n)
+    (hc : gcd (m : Int) n=1) (is : List Nat) :
+    coprimeCount (gridRows m n is) (m*n : Nat) =
+      phi n * (is.filter (fun i : Nat => decide (gcd (i : Int) m=1))).length := by
+  /-
+  Lemma: The total number of array entries coprime to mn is
+  phi(n) times the number of column starts coprime to m.
+  Proof: Each such column contributes phi(n), and the other
+  columns contribute zero. Add the column counts by induction.
+  QED
+  -/
+  induction is with
+  | nil => simp [gridRows,coprimeCount]
+  | cons i is ih =>
+    rw [gridRows,coprime_count_append,column_product_count i m n hm hn hc,ih]
+    by_cases hi : gcd (i : Int) m=1
+    · simp [hi,Nat.mul_add,Nat.add_comm]
+    · simp [hi]
+
+theorem phi_multiply (m n : Nat) (hm : 0 < m) (hn : 0 < n)
+    (hc : gcd (m : Int) n=1) : phi (m*n)=phi m*phi n := by
+  /-
+  Theorem: Phi is multiplicative on relatively prime positive
+  integers.
+  Proof: Arrange 1,...,mn into m columns of height n, with
+  entries i,i+m,...,i+(n-1)*m. There are phi(m) columns whose
+  starts are coprime to m. Each contributes exactly phi(n)
+  entries coprime to mn, because its progression is a complete
+  residue system modulo n. The other columns contribute none.
+  The array itself is a complete residue system modulo mn, so
+  its total count is phi(mn). Hence phi(mn)=phi(m)*phi(n).
+  The argument includes m=1 or n=1. QED
+  -/
+  have h := complete_coprime_count (gridRows m n (positiveRange m)) (m*n)
+    (Nat.mul_pos hm hn) (grid_complete m n hm hn)
+  rw [grid_product_count m n hm hn hc] at h
+  change phi n * phi m=phi (m*n) at h
+  rw [← h,Nat.mul_comm]
+
+def nonzeroResidues (n : Nat) : List Nat := (List.range n).erase 0
+
+theorem nonzero_residues_mem (n i : Nat) : i ∈ nonzeroResidues n ↔ 0 < i ∧ i < n := by
+  /-
+  Lemma: Removing zero from the canonical list leaves exactly the
+  positive integers below n. Proof: Membership in the range means
+  i<n. Its entries are distinct, so erasing zero removes precisely
+  zero. For i≠0 membership is unchanged. QED
+  -/
+  by_cases hi : i=0
+  · subst i
+    simp [nonzeroResidues,List.Nodup.not_mem_erase (List.nodup_range n)]
+  · rw [nonzeroResidues,List.mem_erase_of_ne hi,List.mem_range]
+    omega
+
+theorem small_prime_coprime (p i : Nat) (hp : Prime p) (hi : 0 < i) (hip : i < p) :
+    gcd (i : Int) p=1 := by
+  /-
+  Lemma: Each positive integer below p is relatively prime to p.
+  Proof: If p divided i, the divisor bound for positive i would
+  force p≤i. This contradicts i<p, so the preceding lemma applies.
+  QED
+  -/
+  apply prime_coprime i p hp
+  intro h
+  have hb := divisor_le_positive p i (by omega) h
+  omega
+
+theorem phi_prime (p : Nat) (hp : Prime p) : phi p=p-1 := by
+  /-
+  Lemma: There are p-1 reduced representatives for a prime p.
+  Proof: Every positive integer below p is coprime to p. The
+  remaining candidate p is not: a Bezout identity would make p
+  divide one. Thus the reduced list has exactly the nonzero
+  canonical entries, whose number is p-1. QED
+  -/
+  have hself : gcd (p : Int) p ≠ 1 := by
+    intro hc
+    rcases bezout (p : Int) p with ⟨u,v,he⟩
+    rw [hc] at he
+    have hd : (p : Int) ∣ 1 := ⟨u+v,by rw [Int.mul_add]; omega⟩
+    have hb := divisor_le_positive p 1 (by decide) hd
+    have := hp.1
+    omega
+  have hperm : (reducedResidues p).Perm (nonzeroResidues p) := by
+    apply same_members_perm _ _ (reduced_nodup p) ((List.nodup_range p).erase 0)
+    intro i
+    change i ∈ reducedResidues p ↔ i ∈ nonzeroResidues p
+    rw [reduced_mem,nonzero_residues_mem]
+    constructor
+    · rintro ⟨hi,hip,hc⟩
+      have hne : i ≠ p := by intro he; subst i; exact hself hc
+      exact ⟨hi,by omega⟩
+    · rintro ⟨hi,hip⟩
+      exact ⟨hi,by omega,small_prime_coprime p i hp hi hip⟩
+  have hl := List.length_erase_of_mem (by simp; have := hp.1; omega : 0 ∈ List.range p)
+  have he := hperm.length_eq
+  simp only [List.length_range] at hl
+  change (reducedResidues p).length=p-1
+  exact he.trans hl
+
+theorem prime_predecessor_divides_totient (ps : List Nat) (hnd : ps.Nodup)
+    (hps : ∀ q ∈ ps, Prime q) (p : Nat) (hp : p ∈ ps) :
+    p-1 ∣ phi (primeProduct ps) := by
+  /-
+  Lemma: If a square-free product contains p, its totient is a
+  multiple of p-1. Proof: Separate the first prime q from the
+  remaining product. The factors are coprime, so the totient
+  splits into phi(q) times the remaining totient. If p=q, the
+  first factor is p-1. Otherwise induction supplies the divisor
+  in the remaining factor. QED
+  -/
+  induction ps with
+  | nil => simp at hp
+  | cons q ps ih =>
+    have hq := hps q (by simp)
+    have ht : ∀ r ∈ ps, Prime r := fun r hr => hps r (by simp [hr])
+    have hpair := List.nodup_cons.mp hnd
+    rw [primeProduct,phi_multiply q (primeProduct ps)
+      (by have := hq.1; omega) (prime_product_positive ps ht)
+      (prime_coprime_remaining_product q ps hq ht hpair.1)]
+    rcases List.mem_cons.mp hp with he | hp
+    · subst p
+      rw [phi_prime q hq]
+      exact ⟨phi (primeProduct ps),rfl⟩
+    · rcases ih hpair.2 ht hp with ⟨t,he⟩
+      exact ⟨phi q*t,by rw [he]; simp only [Nat.mul_assoc,Nat.mul_left_comm,Nat.mul_comm]⟩
+
 end NumberTheory.ModularRoots
