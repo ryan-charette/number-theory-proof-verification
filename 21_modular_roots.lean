@@ -1170,4 +1170,20 @@ theorem distinct_primes_coprime (p q : Nat) (hp : Prime p) (hq : Prime q)
   · have := hq.1; omega
   · exact hne h.symm
 
+theorem prime_coprime_remaining_product (p : Nat) (ps : List Nat) (hp : Prime p)
+    (hps : ∀ q ∈ ps, Prime q) (hnot : p ∉ ps) : gcd (p : Int) (primeProduct ps)=1 := by
+  /-
+  Lemma: A prime is coprime to a product of other primes.
+  Proof: It is coprime to every different prime. Induction and
+  the coprime-product criterion combine these conditions. The
+  empty product one has the Bezout identity p*0+1*1=1. QED
+  -/
+  induction ps with
+  | nil => exact gcd_one_combination p 1 ⟨0,1,by simp⟩
+  | cons q ps ih =>
+    rw [primeProduct,Int.natCast_mul,coprime_product_iff]
+    refine ⟨distinct_primes_coprime p q hp (hps q (by simp)) ?_,?_⟩
+    · intro he; subst q; exact hnot (by simp)
+    · exact ih (fun r hr => hps r (by simp [hr])) (fun h => hnot (by simp [h]))
+
 end NumberTheory.ModularRoots
