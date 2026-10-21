@@ -2481,4 +2481,26 @@ theorem quotient_length (cs : List Int) (r : Int) (h : cs ≠ []) :
       simp only [List.length_cons] at he
       omega
 
+theorem quotient_leading (cs : List Int) (r : Int) (h : 2 ≤ cs.length) :
+    leading (quotient r cs)=leading cs := by
+  /-
+  Lemma: The quotient of a positive-degree polynomial by x-r has
+  the same leading coefficient. Proof: For a linear polynomial,
+  the quotient is its leading coefficient. For a longer list,
+  both leading coefficients lie in the corresponding tails.
+  Apply induction. Thus a nonzero leading coefficient cannot
+  disappear in synthetic division. QED
+  -/
+  induction cs with
+  | nil => simp at h
+  | cons a cs ih =>
+    cases cs with
+    | nil => simp at h
+    | cons b cs =>
+      cases cs with
+      | nil => simp [quotient,evaluate,leading]
+      | cons c cs =>
+        have he := ih (by simp)
+        simpa only [quotient,leading] using he
+
 end NumberTheory.ModularRoots
