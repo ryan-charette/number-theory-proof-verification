@@ -747,4 +747,23 @@ theorem bezout_product (a b c : Int)
     Int.mul_left_comm,Int.mul_comm,Int.mul_one] at he ⊢
   omega
 
+theorem gcd_one_combination (a n : Int) (h : ∃ u v : Int, a*u+n*v=1) : gcd a n=1 := by
+  /-
+  Lemma: A linear combination equal to one forces the gcd to be
+  one, without any sign restriction on either input. Proof: The
+  nonnegative gcd divides the combination one. It cannot be zero,
+  and a divisor of one is at most one, so it equals one. QED
+  -/
+  rcases h with ⟨u,v,he⟩
+  have hd := dvd_linear (gcd a n) a n u v (gcd_data a n).2.1 (gcd_data a n).2.2.1
+  rw [he] at hd
+  have hb := divisor_le_positive (gcd a n) 1 (by decide) hd
+  have hp := (gcd_data a n).1
+  have hz : gcd a n ≠ 0 := by
+    intro hzero
+    rcases hd with ⟨k,hk⟩
+    rw [hzero,Int.zero_mul] at hk
+    omega
+  omega
+
 end NumberTheory.ModularRoots
