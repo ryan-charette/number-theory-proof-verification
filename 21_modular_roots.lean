@@ -1584,4 +1584,41 @@ theorem column_coprime_iff (i : Int) (m n : Nat) (hm : 0 < m)
   exact ⟨fun hc => congruent_coprime a i m hc h,
     fun hc => congruent_coprime i a m hc (modeq_symm a i m h)⟩
 
+theorem progression_noncongruent (k m : Int) (n : Nat) (hn : 0 < n)
+    (hc : gcd m n=1) : Noncongruent (progression k m n) n := by
+  /-
+  Lemma: If the step m is coprime to n, the first n terms of a
+  progression are pairwise incongruent modulo n.
+  Proof: Congruence of positions i,j cancels the common start k.
+  Coprime cancellation then gives i congruent to j. Since both
+  positions lie between zero and n-1, they are equal. This also
+  proves that no two positions produce the same entry. QED
+  -/
+  have hindex : ∀ i j : Nat, i<n → j<n →
+      Congruent (k+(i : Int)*m) (k+(j : Int)*m) n → i=j := by
+    intro i j hi hj hij
+    have hmul : Congruent ((i : Int)*m) ((j : Int)*m) n := by
+      refine ⟨by omega,?_⟩
+      have he : (k+(i : Int)*m)-(k+(j : Int)*m)=(i : Int)*m-(j : Int)*m := by omega
+      have hdiv := hij.2
+      rw [he] at hdiv
+      exact hdiv
+    have he := bounded_congruent_equal i j n (by omega) (by omega)
+      (by omega) (by omega) (cancel_coprime i j m n hc hmul)
+    omega
+  constructor
+  · apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ (List.nodup_range n)
+    intro i j hi hj hij he
+    apply hij
+    apply hindex i j (List.mem_range.mp hi) (List.mem_range.mp hj)
+    rw [he]
+    exact ⟨by omega,0,by simp⟩
+  · intro a ha b hb hab
+    rcases (progression_mem k m a n).mp ha with ⟨i,hi,hai⟩
+    rcases (progression_mem k m b n).mp hb with ⟨j,hj,hbj⟩
+    rw [hai,hbj] at hab
+    have he := hindex i j hi hj hab
+    rw [hai,hbj,he]
+
 end NumberTheory.ModularRoots
