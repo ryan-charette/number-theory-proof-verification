@@ -1028,4 +1028,78 @@ theorem root_is_coprime (x b : Int) (n k : Nat) (hk : 0 < k)
   rw [hc'] at hs
   exact gcd_one_combination x n ⟨t,s,by omega⟩
 
+theorem power_mul (a : Int) (i j : Nat) : (a^i)^j=a^(i*j) := by
+  /-
+  Lemma: Raising a power to another power multiplies exponents.
+  Proof: Induct on j. At zero both sides are one. The successor
+  multiplies the preceding power by a^i, which adds i to its
+  exponent and gives i*(j+1). QED
+  -/
+  induction j with
+  | zero => simp [Int.pow_zero]
+  | succ j ih => rw [Int.pow_succ,ih,Nat.mul_succ,power_add]
+
+theorem modeq_pow_step (a b n : Int) (k : Nat)
+    (h : a ≡ b [MOD n]) (hk : a ^ k ≡ b ^ k [MOD n]) :
+    a ^ (k + 1) ≡ b ^ (k + 1) [MOD n] := by
+  /-
+  Theorem: Advance an exponent by one.
+  Proof: a ^ (k + 1) = a ^ k * a, and likewise for b.
+  Multiply the two assumed congruences. QED
+  -/
+  rw [Int.pow_succ, Int.pow_succ]
+  exact modeq_mult (a ^ k) (b ^ k) a b n hk h
+
+theorem modeq_pow (a b n : Int) (k : Nat) (h : a ≡ b [MOD n]) :
+    a ^ k ≡ b ^ k [MOD n] := by
+  /-
+  Theorem: Every natural-number power preserves congruence.
+  Proof: We use induction on k, including zero.
+
+  Base case: When k = 0, both powers are 1. We have already shown
+  that every integer is congruent to itself.
+
+  Inductive case: Suppose a ^ k is congruent to b ^ k modulo n.
+  We also know that a is congruent to b modulo n. Multiplying these
+  congruences gives
+
+    a ^ k * a ≡ b ^ k * b [MOD n].
+
+  These products are a ^ (k + 1) and b ^ (k + 1), as required.
+
+  QED
+  -/
+  induction k with
+  | zero =>
+    rw [Int.pow_zero, Int.pow_zero]
+    exact modeq_refl 1 n h.1
+  | succ k ih =>
+    exact modeq_pow_step a b n k h ih
+
+theorem coprime_root_criterion (b : Int) (n k u v : Nat)
+    (hn : 0 < n) (hk : 0 < k) (hb : gcd b n=1) (he : k*u=phi n*v+1) :
+    ∀ x : Int, Congruent (x^k) b n ↔ Congruent x (b^u) n := by
+  /-
+  Theorem: If k*u=phi(n)*v+1 and b is coprime to n, the roots
+  of x^k congruent to b are exactly the class b^u.
+  Proof: The candidate satisfies (b^u)^k=b^(k*u), which returns
+  b by Euler's theorem. Any solution x is coprime to n. Raising
+  its congruence to u gives x^(k*u) congruent to b^u, while the
+  left side returns x. Conversely, congruent inputs have
+  congruent k-th powers, so every representative of b^u works.
+  QED
+  -/
+  have hcandidate : Congruent ((b^u)^k) b n := by
+    rw [power_mul,Nat.mul_comm u k,he,Nat.mul_comm (phi n) v]
+    exact euler_shifted_power b n v hn hb
+  intro x
+  constructor
+  · intro hx
+    have hc := root_is_coprime x b n k hk hb hx
+    have hp := modeq_pow (x^k) b n u hx
+    rw [power_mul,he,Nat.mul_comm (phi n) v] at hp
+    exact modeq_trans x _ _ n (modeq_symm _ _ n (euler_shifted_power x n v hn hc)) hp
+  · intro hx
+    exact modeq_trans _ _ _ n (modeq_pow x (b^u) n k hx) hcandidate
+
 end NumberTheory.ModularRoots
