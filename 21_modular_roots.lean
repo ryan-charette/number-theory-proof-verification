@@ -1116,4 +1116,23 @@ theorem coprime_roots_unique (b : Int) (n k : Nat) (hn : 0 < n) (hk : 0 < k)
   rcases root_exponents_exist k n hk hn hc with ⟨u,v,hu,hv,he⟩
   exact ⟨u,v,hu,hv,he,coprime_root_criterion b n k u v hn hk hb he⟩
 
+def Prime (p : Nat) : Prop := 1 < p ∧ ∀ d : Nat, d ∣ p → d=1 ∨ d=p
+
+def primeProduct : List Nat → Nat
+  | [] => 1
+  | p::ps => p*primeProduct ps
+
+theorem prime_product_positive (ps : List Nat) (hp : ∀ p ∈ ps, Prime p) :
+    0 < primeProduct ps := by
+  /-
+  Lemma: A product of primes is positive, including the empty
+  product one. Proof: Induct on the list; each prime is positive
+  and the product of two positive integers is positive. QED
+  -/
+  induction ps with
+  | nil => exact (by decide : 0 < 1)
+  | cons p ps ih =>
+    exact Nat.mul_pos (by have := (hp p (by simp)).1; omega)
+      (ih (fun q hq => hp q (by simp [hq])))
+
 end NumberTheory.ModularRoots
