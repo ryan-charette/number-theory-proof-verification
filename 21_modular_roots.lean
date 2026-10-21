@@ -3067,4 +3067,25 @@ theorem divisors_mem (n d : Nat) (hn : 0 < n) :
   · intro h; exact ⟨h.1.1,h.2⟩
   · intro h; exact ⟨⟨h.1,Nat.le_of_dvd hn h.2⟩,h.2⟩
 
+theorem order_class_total (p : Nat) (hp : Prime p) :
+    sumOn (divisors (p-1)) (fun d => (orderClass p d).length)=p-1 := by
+  /-
+  Lemma: Summing the order counts over divisors of p-1 gives p-1.
+  Proof: Each nonzero representative is coprime to p. Fermat's
+  theorem and the order divisibility criterion put its positive
+  order among these divisors. Sorting the p-1 representatives by
+  this unique order counts each of them once. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hn' : 0 < p-1 := by have := hp.1; omega
+  have h := count_by_labels (positiveRange (p-1)) (divisors (p-1))
+    (fun a => order (a : Int) p) (divisors_nodup (p-1)) (by
+      intro a ha
+      have ha' := (positive_range_mem (p-1) a).mp ha
+      have hc := small_prime_coprime p a hp ha'.1 (by have := hp.1; omega)
+      apply (divisors_mem (p-1) _ hn').mpr
+      exact ⟨(order_spec a p hn hc).1,
+        (order_dvd_iff a p hn hc (p-1)).mp (fermat_coprime a p hp hc)⟩)
+  simpa only [orderClass,positiveRange,List.length_map,List.length_range] using h
+
 end NumberTheory.ModularRoots
