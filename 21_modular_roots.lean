@@ -965,4 +965,30 @@ theorem root_exponents_exist (k n : Nat) (hk : 0 < k) (hn : 0 < n)
   rcases positive_inverse_exponents k (phi n) hk (phi_positive n hn) hc with ⟨u,v,hu,hv,he⟩
   exact ⟨u,v,hu,hv,by simpa only [Nat.add_comm,Nat.mul_comm] using he⟩
 
+theorem coprime_product_iff (a m n : Int) :
+    gcd a (m*n)=1 ↔ gcd a m=1 ∧ gcd a n=1 := by
+  /-
+  Lemma: An integer is coprime to a product exactly when it is
+  coprime to each factor.
+  Proof: A Bezout identity a*u+(m*n)*v=1 is also an identity for
+  a,m and for a,n, by regrouping the second term. Conversely,
+  combining identities for a,m and a,n gives one for a,m*n.
+  The Bezout characterization proves both directions. QED
+  -/
+  constructor
+  · intro hc
+    rcases bezout a (m*n) with ⟨u,v,he⟩
+    rw [hc] at he
+    constructor
+    · apply gcd_one_combination a m
+      exact ⟨u,n*v,by simpa only [Int.mul_assoc] using he⟩
+    · apply gcd_one_combination a n
+      exact ⟨u,m*v,by simpa only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm] using he⟩
+  · rintro ⟨hm,hn⟩
+    rcases bezout a m with ⟨u,v,hu⟩
+    rcases bezout a n with ⟨s,t,hs⟩
+    rw [hm] at hu
+    rw [hn] at hs
+    exact gcd_one_combination a (m*n) (bezout_product a m n ⟨u,v,hu⟩ ⟨s,t,hs⟩)
+
 end NumberTheory.ModularRoots
