@@ -1362,4 +1362,21 @@ theorem noncongruent_full_length_complete (reps : List Int) (n : Nat) (hn : 0 < 
   rcases List.mem_map.mp hmem with ⟨b,hb,he⟩
   exact ⟨b,hb,(canonicalLabel_eq_iff a b n hn).mp he.symm⟩
 
+def progression (k m : Int) (n : Nat) : List Int :=
+  (List.range n).map (fun j : Nat => k+(j : Int)*m)
+
+theorem progression_nodup_positive (i m : Int) (n : Nat) (hm : 0 < m) :
+    (progression i m n).Nodup := by
+  /-
+  Lemma: A progression with positive step has no repetitions.
+  Proof: Equality of two terms cancels the starting value and
+  then the nonzero step, leaving equal positions. QED
+  -/
+  apply List.pairwise_map.mpr
+  apply List.Pairwise.imp (R := fun j k : Nat => j ≠ k) ?_ (List.nodup_range n)
+  intro j k hjk he
+  have he' : (j : Int)*m=(k : Int)*m := by omega
+  have heq := Int.eq_of_mul_eq_mul_right (by omega : m ≠ 0) he'
+  exact hjk (by omega)
+
 end NumberTheory.ModularRoots
