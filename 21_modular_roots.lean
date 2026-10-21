@@ -3551,4 +3551,21 @@ theorem small_solution_exists (a b n : Int) (hn : 0 < n)
   rw [Int.mul_neg]
   omega
 
+theorem all_integer_solutions (a b n x₀ x : Int) (hn : 0 < n)
+    (h₀ : Congruent (a*x₀) b n) :
+    Congruent (a*x) b n ↔ ∃ k : Int, x=x₀+(n/gcd a n)*k := by
+  /-
+  Corollary: All integer solutions are x₀+(n/d)*k, with k any integer
+  and d=gcd(a,n). Proof: The difference criterion says x-x₀=(n/d)*k
+  for some integer k. Moving x₀ across the equality gives the formula.
+  Conversely, the formula supplies the difference's divisibility witness.
+  QED
+  -/
+  rw [solution_difference_iff a b n x₀ x hn h₀]
+  constructor
+  · rintro ⟨k,hk⟩
+    exact ⟨k,by omega⟩
+  · rintro ⟨k,hk⟩
+    exact ⟨k,by omega⟩
+
 end NumberTheory.ModularRoots
