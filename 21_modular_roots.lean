@@ -3426,4 +3426,16 @@ theorem primitive_root_exists (p : Nat) (hp : Prime p) :
   | cons a xs =>
     exact ⟨a,(primitive_class_mem p a hp).mp (by rw [he]; simp)⟩
 
+theorem gcd_quotients (a b : Int) :
+    a = gcd a b * (a / gcd a b) ∧ b = gcd a b * (b / gcd a b) := by
+  /-
+  Theorem: Dividing either input by its gcd gives an exact integer factor.
+  Proof: The gcd divides both numbers. Exact division of an integer
+  multiple recovers its factor, so multiplication by the gcd recovers
+  the original number. Only this basic exact-division identity is used.
+  QED
+  -/
+  exact ⟨(Int.mul_ediv_cancel' (gcd_data a b).2.1).symm,
+    (Int.mul_ediv_cancel' (gcd_data a b).2.2.1).symm⟩
+
 end NumberTheory.ModularRoots
