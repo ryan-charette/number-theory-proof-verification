@@ -431,4 +431,20 @@ theorem modeq_trans (a b c n : Int)
     rw [← Int.add_sub_assoc, Int.sub_add_cancel] at h
     exact h
 
+theorem modeq_symm (a b n : Int) (h : a ≡ b [MOD n]) : b ≡ a [MOD n] := by
+  /-
+  Theorem: Reversing a congruence preserves it.
+  Proof: By the definition of congruence, n is positive and
+  a - b = n * k for some integer k. Then
+
+    b - a = -(a - b) = -(n * k) = n * (-k).
+
+  Use -k as the witness. QED
+  -/
+  rcases h with ⟨hn, k, hk⟩
+  constructor
+  · exact hn
+  · exists -k
+    rw [← Int.neg_sub a b, hk, Int.mul_neg]
+
 end NumberTheory.ModularRoots
