@@ -2702,4 +2702,36 @@ theorem primitive_index (a x : Int) (p : Nat) (hp : Prime p) (ha : PrimitiveRoot
   rw [ha.2] at hib
   exact ⟨i-1,by omega,by simpa only [Nat.sub_add_cancel hi] using hxi⟩
 
+theorem primitive_power_root_iff (a b : Int) (p k e j : Nat)
+    (hp : Prime p) (ha : PrimitiveRoot a p) (hb : Congruent b (a^j) p) :
+    Congruent ((a^(e+1))^k) b p ↔
+      Congruent ((k : Int)*e) ((j : Int)-k) (p-1 : Nat) := by
+  /-
+  Lemma: Writing a root as a^(e+1) changes its power congruence
+  into the linear congruence k*e congruent to j-k modulo p-1,
+  when b is congruent to a^j and a is primitive.
+  Proof: The k-th power is a^((e+1)*k). Equality of power classes
+  is equivalent to equality of exponents modulo p-1. Subtracting
+  the exponents gives k*e-(j-k), exactly the linear difference.
+  The shift by one lets the canonical exponents start at zero.
+  QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hpow := powers_congruent_iff a p ((e+1)*k) j hn ha.1
+  rw [ha.2] at hpow
+  have hdiff : (((e+1)*k : Nat) : Int)-(j : Int)=(k : Int)*e-((j : Int)-k) := by
+    simp only [Int.natCast_mul,Int.natCast_add,Int.natCast_one,Int.add_mul,Int.one_mul]
+    rw [Int.mul_comm (e : Int) k]
+    omega
+  constructor
+  · intro h
+    rw [power_mul] at h
+    have hexp := hpow.mp (modeq_trans _ _ _ p h hb)
+    exact ⟨hexp.1,by rw [← hdiff]; exact hexp.2⟩
+  · intro h
+    have hexp : Congruent (((e+1)*k : Nat) : Int) j (p-1 : Nat) :=
+      ⟨h.1,by rw [hdiff]; exact h.2⟩
+    rw [power_mul]
+    exact modeq_trans _ _ _ p (hpow.mpr hexp) (modeq_symm _ _ p hb)
+
 end NumberTheory.ModularRoots
