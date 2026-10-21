@@ -240,4 +240,17 @@ theorem modeq_refl (a n : Int) (hn : 0 < n) : a ≡ a [MOD n] := by
   · exists 0
     rw [Int.sub_self, Int.mul_zero]
 
+theorem power_add (a : Int) (i j : Nat) : a^(i+j)=a^i*a^j := by
+  /-
+  Lemma: Adding exponents multiplies the corresponding powers.
+  Proof: Induct on j. At zero the second factor is one. In the
+  successor step, the recursive rule for powers appends one factor
+  a. Apply the induction hypothesis and reassociate the product.
+  QED
+  -/
+  induction j with
+  | zero => simp [Int.pow_zero]
+  | succ j ih =>
+    rw [Nat.add_succ,Int.pow_succ,ih,Int.pow_succ,Int.mul_assoc]
+
 end NumberTheory.ModularRoots
