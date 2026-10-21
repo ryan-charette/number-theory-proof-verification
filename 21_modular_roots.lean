@@ -2975,4 +2975,16 @@ theorem sum_on_zero (ds : List Nat) : sumOn ds (fun _ => 0)=0 := by
   | nil => rfl
   | cons _d ds ih => simp only [sumOn,ih,Nat.zero_add]
 
+theorem sum_on_congr (ds : List Nat) (f g : Nat → Nat)
+    (h : ∀ d ∈ ds, f d=g d) : sumOn ds f=sumOn ds g := by
+  /-
+  Lemma: Equal summands give equal finite sums.
+  Proof: Match the first summands, then apply induction to the
+  remaining list. QED
+  -/
+  induction ds with
+  | nil => rfl
+  | cons d ds ih =>
+    simp only [sumOn,h d (by simp),ih (fun e he => h e (by simp [he]))]
+
 end NumberTheory.ModularRoots
