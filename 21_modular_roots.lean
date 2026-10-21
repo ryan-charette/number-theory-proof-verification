@@ -965,4 +965,67 @@ theorem root_exponents_exist (k n : Nat) (hk : 0 < k) (hn : 0 < n)
   rcases positive_inverse_exponents k (phi n) hk (phi_positive n hn) hc with ⟨u,v,hu,hv,he⟩
   exact ⟨u,v,hu,hv,by simpa only [Nat.add_comm,Nat.mul_comm] using he⟩
 
+theorem coprime_product_iff (a m n : Int) :
+    gcd a (m*n)=1 ↔ gcd a m=1 ∧ gcd a n=1 := by
+  /-
+  Lemma: An integer is coprime to a product exactly when it is
+  coprime to each factor.
+  Proof: A Bezout identity a*u+(m*n)*v=1 is also an identity for
+  a,m and for a,n, by regrouping the second term. Conversely,
+  combining identities for a,m and a,n gives one for a,m*n.
+  The Bezout characterization proves both directions. QED
+  -/
+  constructor
+  · intro hc
+    rcases bezout a (m*n) with ⟨u,v,he⟩
+    rw [hc] at he
+    constructor
+    · apply gcd_one_combination a m
+      exact ⟨u,n*v,by simpa only [Int.mul_assoc] using he⟩
+    · apply gcd_one_combination a n
+      exact ⟨u,m*v,by simpa only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm] using he⟩
+  · rintro ⟨hm,hn⟩
+    rcases bezout a m with ⟨u,v,hu⟩
+    rcases bezout a n with ⟨s,t,hs⟩
+    rw [hm] at hu
+    rw [hn] at hs
+    exact gcd_one_combination a (m*n) (bezout_product a m n ⟨u,v,hu⟩ ⟨s,t,hs⟩)
+
+theorem coprime_power_iff (a m : Int) (k : Nat) :
+    gcd a (m^(k+1))=1 ↔ gcd a m=1 := by
+  /-
+  Lemma: Coprimality to a positive power is equivalent to
+  coprimality to its base.
+  Proof: The first power is the base. For the induction step,
+  split m^(k+2) into m^(k+1)*m. Coprimality to this product is
+  equivalent to coprimality to both factors, which by induction
+  is just the single condition for m. QED
+  -/
+  induction k with
+  | zero => simp only [Nat.zero_add,Int.pow_succ,Int.pow_zero,Int.one_mul]
+  | succ k ih =>
+    rw [Int.pow_succ,coprime_product_iff,ih]
+    exact ⟨fun h => h.1,fun h => ⟨h,h⟩⟩
+
+theorem root_is_coprime (x b : Int) (n k : Nat) (hk : 0 < k)
+    (hb : gcd b n=1) (h : Congruent (x^k) b n) : gcd x n=1 := by
+  /-
+  Lemma: A positive-power root of a coprime residue is coprime
+  to the modulus. Proof: Congruence makes x^k coprime whenever
+  b is coprime. Coprimality to a positive power is equivalent to
+  coprimality to the base, using the product criterion. QED
+  -/
+  have hc := congruent_coprime b (x^k) n hb (modeq_symm _ _ n h)
+  -- Reverse the inputs using their Bezout identity.
+  have hswap : gcd (n : Int) (x^k)=1 := by
+    rcases bezout (x^k) n with ⟨s,t,he⟩
+    rw [hc] at he
+    exact gcd_one_combination n (x^k) ⟨t,s,by omega⟩
+  have he : k=(k-1)+1 := by omega
+  rw [he] at hswap
+  have hc' := (coprime_power_iff n x (k-1)).mp hswap
+  rcases bezout (n : Int) x with ⟨s,t,hs⟩
+  rw [hc'] at hs
+  exact gcd_one_combination x n ⟨t,s,by omega⟩
+
 end NumberTheory.ModularRoots
