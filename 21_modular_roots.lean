@@ -3677,4 +3677,78 @@ theorem canonical_solution_count (a b n : Int) (hn : 0 < n)
         ⟨i,hi,he⟩
       exact List.mem_map.mpr ⟨i,List.mem_range.mpr hi,he.symm⟩
 
+theorem nonzero_roots_count_when_solvable (p k : Nat) (b : Int) (hp : Prime p)
+    (hk : 0 < k) (hb : ¬ (p : Int) ∣ b) (hsol : ∃ x : Int, Congruent (x^k) b p) :
+    (rootResidues p k b).length=(gcd (k : Int) (p-1 : Nat)).toNat := by
+  /-
+  Theorem: A solvable positive-power congruence with nonzero
+  right-hand side modulo p has gcd(k,p-1) root classes.
+  Proof: Choose a primitive root a and write b congruent to a^j.
+  Express each nonzero residue as a^(e+1), with 0≤e<p-1. The
+  root condition becomes k*e congruent to j-k modulo p-1.
+  An existing root gives an exponent solution, so elementary
+  linear-congruence counting supplies exactly gcd(k,p-1)
+  canonical exponent solutions. Map them to the canonical labels
+  of a^(e+1). Distinct exponents have distinct labels. Every such
+  label is a root, and every root is coprime and has one of these
+  exponents. Thus the root and exponent lists have equal lengths.
+  The nonzero hypothesis is essential and is the approved
+  correction; the zero class was counted separately. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hd : 0 < p-1 := by have := hp.1; omega
+  have hbc := prime_coprime b p hp hb
+  rcases primitive_root_exists p hp with ⟨a,_,_,ha⟩
+  rcases primitive_index a b p hp ha hbc with ⟨j,_hj,hbj⟩
+  have hlinear : ∃ e : Int, Congruent ((k : Int)*e) (((j+1 : Nat) : Int)-k) (p-1 : Nat) := by
+    rcases hsol with ⟨x,hx⟩
+    have hxc := root_is_coprime x b p k hk hbc hx
+    rcases primitive_index a x p hp ha hxc with ⟨e,_,hxe⟩
+    have hroot := modeq_trans _ _ _ p (modeq_pow _ _ p k (modeq_symm _ _ p hxe)) hx
+    exact ⟨e,(primitive_power_root_iff a b p k e (j+1) hp ha hbj).mp hroot⟩
+  rcases canonical_solution_count k (((j+1 : Nat) : Int)-k) (p-1 : Nat) (by omega) hlinear with
+    ⟨es,hnd,hlen,hmem⟩
+  let label (e : Int) : Nat := canonicalLabel ((a : Int)^(e.toNat+1)) p
+  have hlabels : (es.map label).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ hnd
+    intro e f he hf hef heq
+    have he' := (hmem e).mp he
+    have hf' := (hmem f).mp hf
+    have hecast : (e.toNat : Int)=e := Int.toNat_of_nonneg he'.1
+    have hfcast : (f.toNat : Int)=f := Int.toNat_of_nonneg hf'.1
+    have h := primitive_labels_injective a p e.toNat f.toNat hp ha (by omega) (by omega) heq
+    exact hef (by omega)
+  have hperm : (es.map label).Perm (rootResidues p k b) := by
+    apply same_members_perm _ _ hlabels (root_residues_nodup p k b)
+    intro r
+    constructor
+    · intro hr
+      rcases List.mem_map.mp hr with ⟨e,he,her⟩
+      subst r
+      have he' := (hmem e).mp he
+      have hecast : (e.toNat : Int)=e := Int.toNat_of_nonneg he'.1
+      have hlin : Congruent ((k : Int)*e.toNat) (((j+1 : Nat) : Int)-k) (p-1 : Nat) := by
+        rw [hecast]; exact he'.2.2
+      have hroot := (primitive_power_root_iff a b p k e.toNat (j+1) hp ha hbj).mpr hlin
+      have hl := canonicalLabel_spec ((a : Int)^(e.toNat+1)) p hn
+      apply (root_residues_mem p k (label e) b).mpr
+      exact ⟨hl.1,modeq_trans _ _ _ p (modeq_pow _ _ p k (modeq_symm _ _ p hl.2)) hroot⟩
+    · intro hr
+      have hr' := (root_residues_mem p k r b).mp hr
+      have hrc := root_is_coprime r b p k hk hbc hr'.2
+      rcases primitive_index a r p hp ha hrc with ⟨e,he,hre⟩
+      have hroot := modeq_trans _ _ _ p (modeq_pow _ _ p k (modeq_symm _ _ p hre)) hr'.2
+      have hlin := (primitive_power_root_iff a b p k e (j+1) hp ha hbj).mp hroot
+      have hemem : (e : Int) ∈ es := (hmem e).mpr ⟨by omega,by omega,hlin⟩
+      have hl := canonicalLabel_spec ((a : Int)^(e+1)) p hn
+      have heq := bounded_congruent_equal r (canonicalLabel ((a : Int)^(e+1)) p) p
+        (by omega) (by omega) (by omega) (by omega) (modeq_trans _ _ _ p hre hl.2)
+      refine List.mem_map.mpr ⟨(e : Int),hemem,?_⟩
+      change canonicalLabel ((a : Int)^(e+1)) p=r
+      omega
+  have h := hperm.length_eq
+  rw [List.length_map,hlen] at h
+  exact h.symm
+
 end NumberTheory.ModularRoots
