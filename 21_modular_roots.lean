@@ -2158,4 +2158,200 @@ theorem zero_root_count (p k : Nat) (b : Int) (hp : Prime p) (hk : 0 < k)
       exact modeq_symm _ _ p hb0
   exact hperm.length_eq
 
+theorem repeated_powers (a : Int) (n : Nat) (hn : 0 < n) :
+    ∃ i j : Nat, 0 < i ∧ i < j ∧ Congruent (a^i) (a^j) n := by
+  /-
+  Theorem: Two distinct positive powers of any integer are congruent
+  modulo a positive n.
+  Proof: Label the n+1 powers a^1 through a^(n+1) by their canonical
+  remainders. If no two powers were congruent, all these labels
+  would be distinct. They lie in the list 0 through n-1, which
+  has only n entries. The elementary bound for distinct lists
+  would then give n+1≤n, a contradiction. QED
+  -/
+  apply Classical.byContradiction
+  intro hnot
+  let f : Nat → Nat := fun i => canonicalLabel (a^(i+1)) n
+  have hinj : ∀ i j : Nat, f i=f j → i=j := by
+    intro i j he
+    have hc := (canonicalLabel_eq_iff (a^(i+1)) (a^(j+1)) n hn).mp he
+    by_cases hij : i < j
+    · exact False.elim (hnot ⟨i+1,j+1,by omega,by omega,hc⟩)
+    · by_cases hji : j < i
+      · exact False.elim (hnot ⟨j+1,i+1,by omega,by omega,
+          modeq_symm _ _ n hc⟩)
+      · omega
+  have hnd : ((List.range (n+1)).map f).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range _)
+    intro i j hij he
+    exact hij (hinj i j he)
+  have hsub : ∀ r ∈ (List.range (n+1)).map f, r ∈ List.range n := by
+    intro r hr
+    rcases List.mem_map.mp hr with ⟨i,_,he⟩
+    subst r
+    exact List.mem_range.mpr (canonicalLabel_spec (a^(i+1)) n hn).1
+  have hb := distinct_length_bound _ _ hnd hsub
+  simp only [List.length_map,List.length_range] at hb
+  omega
+
+theorem coprime_power (a n : Int) (hn : 0 < n) (hcop : gcd a n=1) (j : Nat) :
+    gcd (a^j) n=1 := by
+  /-
+  Theorem: Every nonnegative power of a number relatively prime
+  to n remains relatively prime to n.
+  Proof: Bezout gives a*u+n*v=1. We prove by induction that n and
+  a^j have a linear combination equal to one. For j=0, a^0=1.
+  At the induction step, combine the identities for n with a^j
+  and with a to get an identity for n with a^j*a. Reorder its
+  terms and use the preceding lemma to identify the gcd as one.
+  This proof permits all integer bases, extending the positive-base
+  statement, and also includes exponent zero. QED
+  -/
+  rcases bezout a n with ⟨u,v,he⟩
+  rw [hcop] at he
+  have hb : ∃ s t : Int, n*s+a*t=1 := ⟨v,u,by omega⟩
+  have hp : ∀ k : Nat, ∃ s t : Int, n*s+a^k*t=1 := by
+    intro k
+    induction k with
+    | zero => exact ⟨0,1,by simp [Int.pow_zero]⟩
+    | succ k ih =>
+      simpa only [Int.pow_succ] using bezout_product n (a^k) a ih hb
+  rcases hp j with ⟨s,t,ht⟩
+  exact gcd_one_right (a^j) n hn ⟨t,s,by omega⟩
+
+theorem positive_power_one (a : Int) (n : Nat) (hn : 0 < n)
+    (hcop : gcd a n=1) : ∃ k : Nat, 0 < k ∧ Congruent (a^k) 1 n := by
+  /-
+  Theorem: A number relatively prime to a positive modulus has
+  a positive power congruent to one.
+  Proof: Choose i<j with a^i congruent to a^j. Reverse this
+  congruence and factor a^j=a^(j-i)*a^i. The power a^i is still
+  relatively prime to n, so it can be cancelled. This leaves
+  a^(j-i) congruent to one, and j-i is positive. QED
+  -/
+  rcases repeated_powers a n hn with ⟨i,j,_,hij,hc⟩
+  have he : a^j=a^(j-i)*a^i := by
+    rw [←power_add]
+    congr 1
+    omega
+  have hrev := modeq_symm _ _ n hc
+  rw [he] at hrev
+  have hcancel : Congruent (a^(j-i)*a^i) (1*a^i) n := by simpa using hrev
+  exact ⟨j-i,by omega,cancel_coprime (a^(j-i)) 1 (a^i) n
+    (coprime_power a n (by omega) hcop i) hcancel⟩
+
+
+
+/- Order is the least positive exponent returning to one. Outside
+   the positive, coprime case we use zero solely to make it total. -/
+
+noncomputable def order (a : Int) (n : Nat) : Nat :=
+  if h : 0 < n ∧ gcd a n=1 then
+    Classical.choose (least_natural (fun k => 0 < k ∧ Congruent (a^k) 1 n)
+      (positive_power_one a n h.1 h.2))
+  else 0
+
+theorem order_spec (a : Int) (n : Nat) (hn : 0 < n) (hcop : gcd a n=1) :
+    0 < order a n ∧ Congruent (a^(order a n)) 1 n ∧
+      ∀ k : Nat, 0 < k → Congruent (a^k) 1 n → order a n ≤ k := by
+  /-
+  Theorem: The order is positive, its power is congruent to one,
+  and it is no larger than any other positive exponent with that
+  property.
+  Proof: The positive-power theorem makes the collection of such
+  exponents nonempty. Well-ordering supplies a least member. The
+  definition chooses that member, so it belongs to the collection
+  and is at most every other member. QED
+
+  Positivity is explicit because Lean's natural numbers include
+  zero. No claim about the default value outside these hypotheses
+  is needed to define order for the textbook's coprime inputs.
+  -/
+  have hs := Classical.choose_spec
+    (least_natural (fun k => 0 < k ∧ Congruent (a^k) 1 n)
+      (positive_power_one a n hn hcop))
+  unfold order
+  rw [dif_pos ⟨hn,hcop⟩]
+  exact ⟨hs.1.1,hs.1.2,fun k hk hc => hs.2 k ⟨hk,hc⟩⟩
+
+theorem power_remainder (a : Int) (n : Nat) (hn : 0 < n)
+    (hc : gcd a n=1) (m : Nat) :
+    Congruent (a^m) (a^(m % order a n)) n := by
+  /-
+  Lemma: Dividing an exponent by the order does not change its
+  power's congruence class when the exponent is replaced by its
+  remainder. Proof: Put k=order(a,n). Division gives m=r+k*q.
+  The power a^(k*q) is congruent to one, so
+  a^m=a^r*a^(k*q) is congruent to a^r. QED
+  -/
+  have hs := order_spec a n hn hc
+  have hp := power_multiple_one a n (order a n) (m / order a n) hs.2.1
+  have he := Nat.mod_add_div m (order a n)
+  have h := modeq_mult (a^(m % order a n)) (a^(m % order a n))
+    (a^(order a n*(m / order a n))) 1 n
+    (modeq_refl _ _ (by omega)) hp
+  rw [←power_add,he,Int.mul_one] at h
+  exact h
+
+theorem order_dvd_iff (a : Int) (n : Nat) (hn : 0 < n)
+    (hc : gcd a n=1) (m : Nat) :
+    Congruent (a^m) 1 n ↔ order a n ∣ m := by
+  /-
+  Theorem: A power is congruent to one exactly when the order
+  divides its exponent. Proof: Divide m by k=order(a,n), leaving
+  remainder r<k. The remainder-power lemma shows that a^r is
+  congruent to one if a^m is. If r were positive, minimality of k
+  would give k≤r, a contradiction. Thus r=0 and k divides m.
+  Conversely, a multiple of the returning exponent k returns to
+  one by the multiplication lemma. QED
+  -/
+  have hs := order_spec a n hn hc
+  constructor
+  · intro hm
+    have hr := modeq_trans _ _ _ n (modeq_symm _ _ n (power_remainder a n hn hc m)) hm
+    have hlt := Nat.mod_lt m hs.1
+    have hz : m % order a n=0 := by
+      by_cases hpos : 0 < m % order a n
+      · have hmin := hs.2.2 _ hpos hr
+        omega
+      · omega
+    refine ⟨m / order a n,?_⟩
+    have he := Nat.mod_add_div m (order a n)
+    omega
+  · rintro ⟨q,rfl⟩
+    exact power_multiple_one a n (order a n) q hs.2.1
+
+theorem powers_congruent_ordered (a : Int) (n i j : Nat) (hn : 0 < n)
+    (ha : gcd a n=1) (hij : i ≤ j) :
+    Congruent (a^j) (a^i) n ↔ Congruent (j : Int) i (order a n) := by
+  /-
+  Lemma: For i≤j, equality of the two power classes is equivalent
+  to congruence of the exponents modulo the order.
+  Proof: Factor a^j=a^(j-i)*a^i. Coprime cancellation makes the
+  power congruence equivalent to a^(j-i) congruent to one. This
+  is equivalent to the order dividing j-i. Conversely, that
+  divisibility returns the first factor to one, and multiplication
+  by a^i restores the original power congruence. QED
+  -/
+  have hd := (order_spec a n hn ha).1
+  have hsplit : a^j=a^(j-i)*a^i := by
+    rw [← power_add]
+    congr 1
+    omega
+  constructor
+  · intro h
+    rw [hsplit] at h
+    have hc : Congruent (a^(j-i)*a^i) (1*a^i) n := by simpa only [Int.one_mul] using h
+    have hret := cancel_coprime (a^(j-i)) 1 (a^i) n (coprime_power a n (by omega) ha i) hc
+    have hdiv := Int.ofNat_dvd.mpr ((order_dvd_iff a n hn ha (j-i)).mp hret)
+    refine ⟨by omega,?_⟩
+    simpa only [Int.ofNat_sub hij] using hdiv
+  · intro h
+    have hdiv : order a n ∣ j-i := Int.ofNat_dvd.mp (by
+      simpa only [Int.ofNat_sub hij] using h.2)
+    have hret := (order_dvd_iff a n hn ha (j-i)).mpr hdiv
+    rw [hsplit]
+    simpa only [Int.one_mul] using modeq_mult _ 1 (a^i) (a^i) n hret (modeq_refl _ n (by omega))
+
 end NumberTheory.ModularRoots
