@@ -708,4 +708,24 @@ theorem gcd_one_right (a n : Int) (hn : 0 < n)
   have hp := gcd_positive a n (Or.inr (by omega))
   omega
 
+theorem congruent_coprime (a b n : Int) (hcop : gcd a n=1)
+    (h : Congruent a b n) : gcd b n=1 := by
+  /-
+  Theorem: Replacing a number by a congruent integer preserves
+  coprimality with the modulus.
+  Proof: Write a-b=n*q and a*u+n*v=1. Substitution gives
+  b*u+n*(q*u+v)=1. This is a Bezout identity for b and n,
+  so their gcd is one. QED
+  -/
+  rcases bezout a n with ⟨u,v,he⟩
+  rw [hcop] at he
+  rcases h.2 with ⟨q,hq⟩
+  apply gcd_one_right b n h.1
+  refine ⟨u,q*u+v,?_⟩
+  have ht := congrArg (fun z => z*u) hq
+  change (a-b)*u=(n*q)*u at ht
+  rw [Int.sub_mul,Int.mul_assoc] at ht
+  rw [Int.mul_add]
+  omega
+
 end NumberTheory.ModularRoots
