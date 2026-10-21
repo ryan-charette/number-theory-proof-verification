@@ -1798,4 +1798,71 @@ theorem prime_predecessor_divides_totient (ps : List Nat) (hnd : ps.Nodup)
     · rcases ih hpair.2 ht hp with ⟨t,he⟩
       exact ⟨phi q*t,by rw [he]; simp only [Nat.mul_assoc,Nat.mul_left_comm,Nat.mul_comm]⟩
 
+theorem product_divides (n m z : Int)
+    (hcop : ∃ u v : Int, n*u+m*v=1) :
+    (n ∣ z ∧ m ∣ z) ↔ n*m ∣ z := by
+  /-
+  Lemma: If n and m have a linear combination equal to one, their
+  product divides z exactly when each of them divides z.
+  Proof: Write z=n*i=m*j and n*u+m*v=1. Multiplication gives
+  z=z*(n*u+m*v)=n*m*(j*u+i*v). This is a product-divisibility
+  witness. Conversely, z=n*m*k exhibits factors n and m separately.
+  QED
+  -/
+  constructor
+  · rintro ⟨⟨i,hi⟩,⟨j,hj⟩⟩
+    rcases hcop with ⟨u,v,he⟩
+    refine ⟨j*u+i*v,?_⟩
+    have h₁ : z*(n*u)=(n*m)*(j*u) := by
+      rw [hj]
+      simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+    have h₂ : z*(m*v)=(n*m)*(i*v) := by
+      rw [hi]
+      simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+    calc
+      z = z*1 := by rw [Int.mul_one]
+      _ = z*(n*u+m*v) := congrArg (fun t => z*t) he.symm
+      _ = (n*m)*(j*u+i*v) := by rw [Int.mul_add,h₁,h₂,Int.mul_add]
+  · rintro ⟨k,hk⟩
+    constructor
+    · exact ⟨m*k,by rw [hk,Int.mul_assoc]⟩
+    · refine ⟨n*k,?_⟩
+      rw [hk]
+      simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+
+theorem combine_coprime_moduli (x a : Int) (n m : Nat)
+    (hc : gcd (n : Int) m=1) (hn : Congruent x a n) (hm : Congruent x a m) :
+    Congruent x a ((n : Int)*m) := by
+  /-
+  Theorem: Congruence to the same integer modulo two relatively
+  prime positive moduli implies congruence modulo their product.
+  Proof: Both moduli divide x-a. Their Bezout identity equals one,
+  so the product-divisibility lemma shows that their product
+  divides x-a. The product is positive, as required. QED
+  -/
+  have hb := bezout (n : Int) m
+  rw [hc] at hb
+  exact ⟨Int.mul_pos hn.1 hm.1,(product_divides n m (x-a) hb).mp ⟨hn.2,hm.2⟩⟩
+
+theorem combine_prime_moduli (ps : List Nat) (hnd : ps.Nodup)
+    (hps : ∀ p ∈ ps, Prime p) (a b : Int)
+    (h : ∀ p ∈ ps, Congruent a b p) : Congruent a b (primeProduct ps) := by
+  /-
+  Lemma: Congruence modulo each of a list of distinct primes
+  implies congruence modulo their product.
+  Proof: Induct on the list, combining the first prime with
+  the remaining product. They are coprime, so divisibility of
+  the difference by both implies divisibility by their product.
+  For the empty list every difference is a multiple of one. QED
+  -/
+  induction ps with
+  | nil => exact ⟨by decide,a-b,by simp [primeProduct]⟩
+  | cons p ps ih =>
+    have hp := hps p (by simp)
+    have ht : ∀ q ∈ ps, Prime q := fun q hq => hps q (by simp [hq])
+    have hpair := List.nodup_cons.mp hnd
+    exact combine_coprime_moduli a b p (primeProduct ps)
+      (prime_coprime_remaining_product p ps hp ht hpair.1)
+      (h p (by simp)) (ih hpair.2 ht (fun q hq => h q (by simp [hq])))
+
 end NumberTheory.ModularRoots
