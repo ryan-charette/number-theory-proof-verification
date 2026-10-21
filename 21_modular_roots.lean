@@ -2734,4 +2734,22 @@ theorem primitive_power_root_iff (a b : Int) (p k e j : Nat)
     rw [power_mul]
     exact modeq_trans _ _ _ p (hpow.mpr hexp) (modeq_symm _ _ p hb)
 
+theorem primitive_labels_injective (a : Int) (p i j : Nat) (hp : Prime p)
+    (ha : PrimitiveRoot a p) (hi : i<p-1) (hj : j<p-1)
+    (he : canonicalLabel (a^(i+1)) p=canonicalLabel (a^(j+1)) p) : i=j := by
+  /-
+  Lemma: Different positions in a primitive power cycle have
+  different canonical labels.
+  Proof: Equal labels give congruent powers, hence congruent
+  exponents modulo p-1. Those exponents lie between one and
+  p-1, where congruence implies equality. Subtract one. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hc := (canonicalLabel_eq_iff _ _ p hn).mp he
+  have he' := (powers_congruent_iff a p (i+1) (j+1) hn ha.1).mp hc
+  rw [ha.2] at he'
+  have h := positive_congruent_equal (i+1 : Nat) (j+1 : Nat) (p-1 : Nat)
+    (by omega) (by omega) (by omega) (by omega) he'
+  omega
+
 end NumberTheory.ModularRoots
