@@ -304,4 +304,19 @@ theorem modeq_mult (a b c d n : Int)
       ← Int.add_sub_assoc, Int.sub_add_cancel] at h
     exact h
 
+theorem power_multiple_one (a : Int) (n k q : Nat)
+    (hk : Congruent (a^k) 1 n) : Congruent (a^(k*q)) 1 n := by
+  /-
+  Lemma: If a^k is congruent to one, so is a^(k*q) for every
+  nonnegative q. Proof: Induct on q. The zero power is one.
+  Each successor adds k to the exponent, so the power is multiplied
+  by a^k. Multiplying the two congruences to one proves the step.
+  QED
+  -/
+  induction q with
+  | zero => simpa [Int.pow_zero] using modeq_refl 1 n hk.1
+  | succ q ih =>
+    rw [Nat.mul_succ,power_add]
+    simpa using modeq_mult _ 1 _ 1 n ih hk
+
 end NumberTheory.ModularRoots
