@@ -2046,4 +2046,22 @@ theorem squarefree_root_criterion (b : Int) (ps : List Nat) (hnd : ps.Nodup)
   · intro hx
     exact modeq_trans _ _ _ (primeProduct ps) (modeq_pow x (b^u) _ k hx) hb
 
+theorem squarefree_roots_unique (b : Int) (ps : List Nat) (hnd : ps.Nodup)
+    (hps : ∀ p ∈ ps, Prime p) (k : Nat) (hk : 0 < k)
+    (hc : gcd (k : Int) (phi (primeProduct ps))=1) :
+    ∃ u v : Nat, 0 < u ∧ 0 < v ∧ k*u=phi (primeProduct ps)*v+1 ∧
+      ∀ x : Int, Congruent (x^k) b (primeProduct ps) ↔ Congruent x (b^u) (primeProduct ps) := by
+  /-
+  Theorem: For a product of distinct primes, an exponent coprime
+  to the totient gives a unique root class for every right-hand
+  side. Proof: Choose positive inverse exponents by Bezout and
+  apply the square-free root criterion. A list of distinct prime
+  factors represents the modulus without assuming a library
+  square-free theorem. The empty list also covers modulus one.
+  QED
+  -/
+  rcases root_exponents_exist k (primeProduct ps) hk (prime_product_positive ps hps) hc with
+    ⟨u,v,hu,hv,he⟩
+  exact ⟨u,v,hu,hv,he,squarefree_root_criterion b ps hnd hps k u v he⟩
+
 end NumberTheory.ModularRoots
