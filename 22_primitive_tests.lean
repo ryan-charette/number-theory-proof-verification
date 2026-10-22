@@ -858,4 +858,20 @@ theorem product_perm (xs ys : List Int) (h : xs.Perm ys) : intProduct xs=intProd
   | swap a b xs => simp only [intProduct,Int.mul_left_comm]
   | trans _ _ ih₁ ih₂ => exact ih₁.trans ih₂
 
+theorem scaled_labels_injective (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1)
+    (i j : Nat) (hi : i < n) (hj : j < n)
+    (he : canonicalLabel ((i : Int)*a) n=canonicalLabel ((j : Int)*a) n) : i=j := by
+  /-
+  Lemma: Multiplication by a coprime integer gives distinct residue
+  labels to distinct canonical representatives. Proof: Equal labels
+  give i*a congruent to j*a. Cancel a; the representatives i and j
+  lie between zero and n-1, so their congruence makes them equal.
+  QED
+  -/
+  have h := (canonicalLabel_eq_iff _ _ n hn).mp he
+  have hcancel := cancel_coprime i j a n hc h
+  have hb := bounded_congruent_equal i j n (by omega) (by omega)
+    (by omega) (by omega) hcancel
+  omega
+
 end NumberTheory.PrimitiveTests
