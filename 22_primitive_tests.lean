@@ -1062,4 +1062,17 @@ theorem fermat_coprime (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
       exact small_prime_coprime p i hp hib.1 hib.2)
   exact cancel_coprime (a^(p-1)) 1 _ p hprod (by simpa using h)
 
+theorem prime_order_divides (a : Int) (p : Nat) (hp : Prime p)
+    (ha : ¬ (p : Int) ∣ a) : order a p ∣ p-1 := by
+  /-
+  Theorem: The order of an integer not divisible by a prime p
+  divides p-1.
+  Proof: Such an integer is coprime to p. Fermat's theorem says
+  that its (p-1)st power is congruent to one. The order divides
+  every exponent with that property, so it divides p-1. QED
+  -/
+  have hc := prime_coprime a p hp ha
+  exact (order_dvd_iff a p (by have := hp.1; omega) hc (p-1)).mp
+    (fermat_coprime a p hp hc)
+
 end NumberTheory.PrimitiveTests
