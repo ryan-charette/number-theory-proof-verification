@@ -945,4 +945,38 @@ theorem small_prime_coprime (p i : Nat) (hp : Prime p) (hi : 0 < i) (hip : i < p
   have hb := divisor_le_positive p i (by omega) h
   omega
 
+theorem nonzero_labels_perm (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
+    ((nonzeroResidues p).map (fun i : Nat => canonicalLabel ((i : Int)*a) p)).Perm
+      (nonzeroResidues p) := by
+  /-
+  Lemma: Multiplication by a coprime integer rearranges the nonzero
+  residue labels modulo a prime. Proof: Cancellation makes the
+  labels distinct. Each factor i and a is coprime to p, so their
+  product has a Bezout identity with p and cannot have label zero.
+  Thus all labels belong to the nonzero list. The lengths agree,
+  so the distinct-selection lemma gives the rearrangement. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hnd0 : (nonzeroResidues p).Nodup := (List.nodup_range p).erase 0
+  have hnd : ((nonzeroResidues p).map (fun i : Nat => canonicalLabel ((i : Int)*a) p)).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ hnd0
+    intro i j hi hj hne he
+    exact hne (scaled_labels_injective a p hn hc i j
+      ((nonzero_residues_mem p i).mp hi).2 ((nonzero_residues_mem p j).mp hj).2 he)
+  apply distinct_subset_perm _ _ hnd ?_ (by simp)
+  intro r hr
+  rcases List.mem_map.mp hr with ⟨i,hi,he⟩
+  subst r
+  have hib := (nonzero_residues_mem p i).mp hi
+  have hs := canonicalLabel_spec ((i : Int)*a) p hn
+  apply (nonzero_residues_mem p _).mpr
+  refine ⟨?_,hs.1⟩
+  have hzero : canonicalLabel ((i : Int)*a) p ≠ 0 := by
+    intro hz
+    rw [hz] at hs
+    have hcancel := cancel_coprime i 0 a p hc (by simpa using hs.2)
+    exact coprime_not_zero i p hp.1 (small_prime_coprime p i hp hib.1 hib.2) hcancel
+  omega
+
 end NumberTheory.PrimitiveTests
