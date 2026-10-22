@@ -509,4 +509,13 @@ theorem gcd_data (a b : Int) :
     omega
   · exact Classical.choose_spec (euclid_integer a b)
 
+theorem bezout (a b : Int) : ∃ x y : Int, a * x + b * y = gcd a b := by
+  /-
+  Theorem: The gcd of two integers is an integer linear combination.
+  Proof: These are the coefficients constructed by the Euclidean
+  procedure and back-substitution above. The construction also covers
+  the harmless extra case a = b = 0. QED
+  -/
+  exact (gcd_data a b).2.2.2
+
 end NumberTheory.PrimitiveTests
