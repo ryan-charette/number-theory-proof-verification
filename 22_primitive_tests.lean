@@ -932,4 +932,17 @@ theorem coprime_not_zero (a : Int) (n : Nat) (hn : 1 < n) (hc : gcd a n=1) :
   have hb := divisor_le_positive n 1 (by decide) hd
   omega
 
+theorem small_prime_coprime (p i : Nat) (hp : Prime p) (hi : 0 < i) (hip : i < p) :
+    gcd (i : Int) p=1 := by
+  /-
+  Lemma: Each positive integer below p is relatively prime to p.
+  Proof: If p divided i, the divisor bound for positive i would
+  force p≤i. This contradicts i<p, so the preceding lemma applies.
+  QED
+  -/
+  apply prime_coprime i p hp
+  intro h
+  have hb := divisor_le_positive p i (by omega) h
+  omega
+
 end NumberTheory.PrimitiveTests
