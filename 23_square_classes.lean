@@ -1937,4 +1937,26 @@ theorem sum_on_add (ds : List Nat) (f g : Nat → Nat) :
   | nil => rfl
   | cons d ds ih => simp only [sumOn,ih]; omega
 
+theorem sum_single_label (ds : List Nat) (a : Nat) (hnd : ds.Nodup)
+    (ha : a ∈ ds) : sumOn ds (fun d => if a=d then 1 else 0)=1 := by
+  /-
+  Lemma: Marking one label in a list without repetitions gives
+  total one. Proof: If the first label is a, all remaining marks
+  are zero. Otherwise its mark is zero and induction counts the
+  unique occurrence in the rest of the list. QED
+  -/
+  induction ds with
+  | nil => simp at ha
+  | cons d ds ih =>
+    have hpair := List.pairwise_cons.mp hnd
+    by_cases he : a=d
+    · subst a
+      have hz : sumOn ds (fun e => if d=e then 1 else 0)=0 := by
+        rw [sum_on_congr ds _ (fun _ => 0) (by
+          intro e he
+          exact if_neg (hpair.1 e he)),sum_on_zero]
+      simp [sumOn,hz]
+    · have ham : a ∈ ds := by rcases List.mem_cons.mp ha with h | h; exact False.elim (he h); exact h
+      simp only [sumOn,if_neg he,Nat.zero_add,ih hpair.2 ham]
+
 end NumberTheory.SquareClasses
