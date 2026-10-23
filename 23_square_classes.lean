@@ -353,4 +353,18 @@ theorem modeq_mult (a b c d n : Int)
       ← Int.add_sub_assoc, Int.sub_add_cancel] at h
     exact h
 
+theorem modeq_refl (a n : Int) (hn : 0 < n) : a ≡ a [MOD n] := by
+  /-
+  Theorem: Every integer is congruent to itself.
+  Proof: The modulus n is positive by hypothesis. Also,
+
+    a - a = 0 = n * 0.
+
+  Thus n divides a - a, using the integer 0. QED
+  -/
+  constructor
+  · exact hn
+  · exists 0
+    rw [Int.sub_self, Int.mul_zero]
+
 end NumberTheory.SquareClasses
