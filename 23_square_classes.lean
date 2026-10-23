@@ -2610,4 +2610,20 @@ theorem square_times_square (a b : Int) (p : Nat)
   rcases hb with ⟨y,hy⟩
   exact ⟨x*y,by rw [product_power]; exact modeq_mult _ _ _ _ p hx hy⟩
 
+theorem square_times_nonsquare (a b : Int) (p : Nat) (hp : Prime p)
+    (ho : p % 2=1) (ha : ¬ (p : Int) ∣ a) (hb : ¬ (p : Int) ∣ b)
+    (hsa : SquareClass a p) (hsb : ¬ SquareClass b p) : ¬ SquareClass (a*b) p := by
+  /-
+  Theorem: A nonzero square times a nonsquare is a nonsquare.
+  Proof: Their half-exponent powers are one and minus one.
+  The half-exponent power of their product is therefore minus
+  one. Euler's nonsquare criterion proves the assertion. QED
+  -/
+  apply (euler_nonsquare_criterion (a*b) p hp ho (nonzero_product a b p hp ha hb)).mpr
+  rw [product_power]
+  have h := modeq_mult _ 1 _ (-1) p
+    ((euler_square_criterion a p hp ho ha).mp hsa)
+    ((euler_nonsquare_criterion b p hp ho hb).mp hsb)
+  simpa only [Int.one_mul] using h
+
 end NumberTheory.SquareClasses
