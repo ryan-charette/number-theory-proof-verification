@@ -2719,4 +2719,30 @@ theorem power_value_count (b : Int) (p d : Nat) (hp : Prime p) (hd : 0 < d) (xs 
   rw [hlen] at hb
   omega
 
+noncomputable def squareEntries (xs : List Int) (p : Nat) : List Int := by
+  letI : DecidablePred (fun a : Int => SquareClass a p) := fun _ => Classical.propDecidable _
+  exact xs.filter (fun a => decide (¬ (p : Int) ∣ a ∧ SquareClass a p))
+
+noncomputable def nonsquareEntries (xs : List Int) (p : Nat) : List Int := by
+  letI : DecidablePred (fun a : Int => SquareClass a p) := fun _ => Classical.propDecidable _
+  exact xs.filter (fun a => decide (¬ (p : Int) ∣ a ∧ ¬ SquareClass a p))
+
+noncomputable def nonzeroEntries (xs : List Int) (p : Nat) : List Int :=
+  xs.filter (fun a => decide (¬ (p : Int) ∣ a))
+
+theorem square_partition (xs : List Int) (p : Nat) :
+    (squareEntries xs p).length+(nonsquareEntries xs p).length=(nonzeroEntries xs p).length := by
+  /-
+  Lemma: The nonzero entries split into squares and nonsquares.
+  Proof: Induct on the list. A zero class enters neither list.
+  Every other entry enters exactly one, according to whether
+  it is a square. Thus the two counts add to the nonzero count. QED
+  -/
+  letI : DecidablePred (fun a : Int => SquareClass a p) := fun _ => Classical.propDecidable _
+  induction xs with
+  | nil => rfl
+  | cons a xs ih =>
+    by_cases hz : (p : Int) ∣ a <;> by_cases hs : SquareClass a p <;>
+      simp_all [squareEntries,nonsquareEntries,nonzeroEntries,hz,hs,Nat.add_assoc,Nat.add_comm,Nat.add_left_comm]
+
 end NumberTheory.SquareClasses
