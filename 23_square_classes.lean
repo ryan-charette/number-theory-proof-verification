@@ -2766,4 +2766,19 @@ theorem positiveLabel_spec (a : Int) (n : Nat) (hn : 0 < n) :
   · rw [if_neg hz]
     exact ⟨by omega,by omega,hs.2⟩
 
+theorem positive_congruent_equal (a b n : Int) (ha : 0 < a) (han : a ≤ n)
+    (hb : 0 < b) (hbn : b ≤ n) (h : Congruent a b n) : a=b := by
+  /-
+  Lemma: Congruent representatives in the interval from one to n
+  are equal. Proof: Subtract one from each. Their difference is
+  unchanged, and both now lie between zero and n-1. The bounded
+  remainder uniqueness theorem makes them equal. QED
+  -/
+  have hc : Congruent (a-1) (b-1) n := by
+    rcases h with ⟨hn,q,hq⟩
+    exact ⟨hn,q,by omega⟩
+  have he := bounded_congruent_equal (a-1) (b-1) n (by omega) (by omega)
+    (by omega) (by omega) hc
+  omega
+
 end NumberTheory.SquareClasses
