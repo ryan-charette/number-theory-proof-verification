@@ -3229,4 +3229,41 @@ theorem paired_product (p : Nat) (hp : Prime p) (xs : List Nat) (hnd : xs.Nodup)
       rw [he]
       simpa only [List.map_cons,intProduct,Int.mul_assoc,Int.one_mul] using hm
 
+theorem inverse_exists_unique (p a : Nat) (hp : Prime p) (ha : 0 < a) (hap : a < p) :
+    ∃ b : Nat, 0 < b ∧ b < p ∧ Congruent ((a : Int)*b) 1 p ∧
+      ∀ c : Nat, 0 < c → c < p → Congruent ((a : Int)*c) 1 p → c=b := by
+  /-
+  Theorem: Every positive representative below a prime has exactly
+  one inverse in that range. Proof: Choose a*u+p*v=1 by Bezout
+  and reduce u to its canonical label b. Multiplication preserves
+  congruence, so a*b is congruent to one. The label cannot be zero,
+  since zero and one are different canonical representatives.
+  If c is another inverse, cancel a from a*c congruent to a*b;
+  bounded representatives are then equal. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hc := small_prime_coprime p a hp ha hap
+  rcases bezout (a : Int) p with ⟨u,v,he⟩
+  rw [hc] at he
+  let b := canonicalLabel u p
+  have hs := canonicalLabel_spec u p hn
+  have hu : Congruent ((a : Int)*u) 1 p := by
+    refine ⟨by omega,-v,?_⟩
+    rw [Int.mul_neg]; omega
+  have hm := modeq_mult (a : Int) a u b p (modeq_refl _ _ (by omega)) hs.2
+  have hb := modeq_trans _ _ _ p (modeq_symm _ _ p hm) hu
+  have hbpos : 0 < b := by
+    by_cases hz : b=0
+    · rw [hz,Int.natCast_zero,Int.mul_zero] at hb
+      have hf := bounded_congruent_equal 0 1 p (by omega) (by omega) (by omega)
+        (by have := hp.1; omega) hb
+      omega
+    · omega
+  refine ⟨b,hbpos,hs.1,hb,?_⟩
+  intro c hcpos hcp hcinv
+  have hprod := modeq_trans _ _ _ p hcinv (modeq_symm _ _ p hb)
+  have hcancel := cancel_coprime c b a p hc (by simpa only [Int.mul_comm] using hprod)
+  have heq := bounded_congruent_equal c b p (by omega) (by omega) (by omega) (by omega) hcancel
+  omega
+
 end NumberTheory.SquareClasses
