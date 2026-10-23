@@ -2626,4 +2626,19 @@ theorem square_times_nonsquare (a b : Int) (p : Nat) (hp : Prime p)
     ((euler_nonsquare_criterion b p hp ho hb).mp hsb)
   simpa only [Int.one_mul] using h
 
+theorem nonsquare_times_nonsquare (a b : Int) (p : Nat) (hp : Prime p)
+    (ho : p % 2=1) (ha : ¬ (p : Int) ∣ a) (hb : ¬ (p : Int) ∣ b)
+    (hsa : ¬ SquareClass a p) (hsb : ¬ SquareClass b p) : SquareClass (a*b) p := by
+  /-
+  Theorem: Two nonsquares have a square product modulo an odd prime.
+  Proof: Both half-exponent powers are minus one, so their product
+  has half-exponent power one. Apply Euler's square criterion. QED
+  -/
+  apply (euler_square_criterion (a*b) p hp ho (nonzero_product a b p hp ha hb)).mpr
+  rw [product_power]
+  have h := modeq_mult _ (-1) _ (-1) p
+    ((euler_nonsquare_criterion a p hp ho ha).mp hsa)
+    ((euler_nonsquare_criterion b p hp ho hb).mp hsb)
+  simpa using h
+
 end NumberTheory.SquareClasses
