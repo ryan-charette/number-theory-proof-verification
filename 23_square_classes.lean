@@ -302,4 +302,177 @@ theorem inverse_integer (a : Int) (p : Nat) (hp : Prime p)
   rw [Int.mul_neg]
   omega
 
+theorem dvd_mult_of_dvd_left (a b c : Int) (h : a ∣ b) : a ∣ b * c := by
+  /-
+  Theorem: If a divides b, then a divides b * c for any integer c.
+  Proof: If b = a * m, then
+
+    b * c = (a * m) * c = a * (m * c).
+
+  Use m * c as the witness. QED
+  -/
+  rcases h with ⟨m, hm⟩
+  exists m * c
+  rw [hm, Int.mul_assoc]
+
+theorem dvd_add (a b c : Int) (h₀ : a ∣ b) (h₁ : a ∣ c) : a ∣ b + c := by
+  /-
+  Theorem: A common divisor divides the sum.
+  Proof: Write b = a * m and c = a * n. Then
+
+    b + c = a * m + a * n    [Substitution]
+          = a * (m + n)      [Distributivity]
+
+  The integer m + n is the required witness. QED
+  -/
+  rcases h₀ with ⟨m, hm⟩
+  rcases h₁ with ⟨n, hn⟩
+  exists m + n
+  rw [hm, hn, Int.mul_add]
+
+theorem modeq_mult (a b c d n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : c ≡ d [MOD n]) : a * c ≡ b * d [MOD n] := by
+  /-
+  Theorem: Congruences can be multiplied.
+  Proof: We must show that n divides a * c - b * d. We can express
+  this difference in terms of a - b and c - d:
+
+    a * c - b * d = a * c - b * c + b * c - b * d
+                 = (a - b) * c + b * (c - d).
+
+  Since n divides a - b, it divides (a - b) * c. Similarly, since n
+  divides c - d, it divides b * (c - d). It therefore divides their
+  sum, which is a * c - b * d. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h₂ := dvd_mult_of_dvd_left n (a - b) c h₀.2
+    have h₃ := dvd_mult_of_dvd_left n (c - d) b h₁.2
+    have h := dvd_add n ((a - b) * c) ((c - d) * b) h₂ h₃
+    rw [Int.mul_comm (c - d) b, Int.sub_mul, Int.mul_sub,
+      ← Int.add_sub_assoc, Int.sub_add_cancel] at h
+    exact h
+
+theorem modeq_refl (a n : Int) (hn : 0 < n) : a ≡ a [MOD n] := by
+  /-
+  Theorem: Every integer is congruent to itself.
+  Proof: The modulus n is positive by hypothesis. Also,
+
+    a - a = 0 = n * 0.
+
+  Thus n divides a - a, using the integer 0. QED
+  -/
+  constructor
+  · exact hn
+  · exists 0
+    rw [Int.sub_self, Int.mul_zero]
+
+theorem modeq_add (a b c d n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : c ≡ d [MOD n]) : a + c ≡ b + d [MOD n] := by
+  /-
+  Theorem: Congruences can be added.
+  Proof: We must show that n divides (a + c) - (b + d).
+  Rearranging the additions and subtractions gives
+
+    (a + c) - (b + d) = (a - b) + (c - d).
+
+  By hypothesis, n divides each term on the right. Our theorem on
+  divisibility of sums shows that n divides the left side as well. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h := dvd_add n (a - b) (c - d) h₀.2 h₁.2
+    have heq : (a + c) - (b + d) = (a - b) + (c - d) := by
+      simp only [Int.sub_eq_add_neg, Int.neg_add, Int.add_assoc]
+      rw [Int.add_left_comm c (-b)]
+    rw [heq]
+    exact h
+
+theorem modeq_trans (a b c n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : b ≡ c [MOD n]) : a ≡ c [MOD n] := by
+  /-
+  Theorem: Two consecutive congruences combine.
+  Proof: The hypotheses tell us that n divides a - b and b - c.
+  Therefore n divides their sum. Adding the differences gives:
+
+    (a - b) + (b - c) = a - c.
+
+  Both differences are divisible by n, so their sum is too. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h := dvd_add n (a - b) (b - c) h₀.2 h₁.2
+    rw [← Int.add_sub_assoc, Int.sub_add_cancel] at h
+    exact h
+
+theorem cancel_coprime (a b c n : Int) (hcop : gcd c n=1)
+    (h : Congruent (a*c) (b*c) n) : Congruent a b n := by
+  /-
+  Theorem: A factor relatively prime to the modulus can be cancelled
+  from a congruence.
+  Proof: Write (a-b)*c=n*q and c*u+n*v=1. Multiplying the latter
+  identity by a-b and substituting the former gives
+  a-b=n*(q*u+(a-b)*v). This witness proves the desired congruence.
+  QED
+  -/
+  rcases bezout c n with ⟨u,v,he⟩
+  rw [hcop] at he
+  rcases h.2 with ⟨q,hq⟩
+  have hd : (a-b)*c=n*q := by rw [Int.sub_mul]; exact hq
+  refine ⟨h.1,q*u+(a-b)*v,?_⟩
+  calc
+    a-b = (a-b)*1 := by rw [Int.mul_one]
+    _ = (a-b)*(c*u+n*v) := congrArg (fun z => (a-b)*z) he.symm
+    _ = ((a-b)*c)*u+n*((a-b)*v) := by
+      rw [Int.mul_add,←Int.mul_assoc,Int.mul_left_comm (a-b) n v]
+    _ = n*(q*u+(a-b)*v) := by rw [hd,Int.mul_add,Int.mul_assoc]
+
+theorem modeq_symm (a b n : Int) (h : a ≡ b [MOD n]) : b ≡ a [MOD n] := by
+  /-
+  Theorem: Reversing a congruence preserves it.
+  Proof: By the definition of congruence, n is positive and
+  a - b = n * k for some integer k. Then
+
+    b - a = -(a - b) = -(n * k) = n * (-k).
+
+  Use -k as the witness. QED
+  -/
+  rcases h with ⟨hn, k, hk⟩
+  constructor
+  · exact hn
+  · exists -k
+    rw [← Int.neg_sub a b, hk, Int.mul_neg]
+
+theorem monic_quadratic (a b c : Int) (p : Nat) (hp : Prime p)
+    (ha : ¬ (p : Int) ∣ a) :
+    ∃ b' c' : Int, ∀ x : Int,
+      Congruent (a*x^2+b*x+c) 0 p ↔ Congruent (x^2+b'*x+c') 0 p := by
+  /-
+  Theorem: A quadratic with nonzero leading coefficient modulo a
+  prime has the same solutions as a monic quadratic.
+  Proof: Choose u with a*u congruent to one and put b'=u*b, c'=u*c.
+  Multiplying the monic expression by a gives an expression congruent
+  to the original quadratic. Cancellation of the coprime factor a
+  shows that one is zero exactly when the other is zero. QED
+  -/
+  rcases inverse_integer a p hp ha with ⟨u,hu⟩
+  have hn : 0 < (p : Int) := by have := hp.1; omega
+  refine ⟨u*b,u*c,fun x => ?_⟩
+  have hb := modeq_mult (a*u) 1 (b*x) (b*x) p hu (modeq_refl _ _ hn)
+  have hc := modeq_mult (a*u) 1 c c p hu (modeq_refl _ _ hn)
+  have he := modeq_add _ _ _ _ p (modeq_add _ _ _ _ p
+    (modeq_refl (a*x^2) p hn) hb) hc
+  simp only [Int.one_mul,Int.mul_assoc] at he
+  have he' : Congruent (a*(x^2+(u*b)*x+u*c)) (a*x^2+b*x+c) p := by
+    simpa only [Int.mul_add,Int.mul_assoc] using he
+  constructor
+  · intro h
+    have hz := modeq_trans _ _ _ p he' h
+    apply cancel_coprime _ 0 a p (prime_coprime a p hp ha)
+    simpa only [Int.mul_comm,Int.zero_mul,Int.mul_zero] using hz
+  · intro h
+    have hz := modeq_mult a a _ 0 p (modeq_refl _ _ hn) h
+    simp only [Int.mul_zero] at hz
+    exact modeq_trans _ _ _ p (modeq_symm _ _ p he') hz
+
 end NumberTheory.SquareClasses
