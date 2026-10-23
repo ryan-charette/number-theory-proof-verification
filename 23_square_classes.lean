@@ -3347,4 +3347,22 @@ theorem interior_inverse_exists (p a : Nat) (hp : Prime p)
   have hne := interior_inverses_distinct p a b hp (by omega) (by omega) hab
   exact hne (by omega)
 
+theorem interior_product (p : Nat) (hp : Prime p) (hp2 : 2 < p) :
+    Congruent (intProduct ((interiorResidues p).map (fun i : Nat => (i : Int)))) 1 p := by
+  /-
+  Theorem: The product of the integers from two through p-2 is
+  congruent to one for a prime p>2. Proof: The list is distinct.
+  Each entry has a different inverse in the same interval. Pair
+  these inverses using the preceding induction on finite lists.
+  For p=3 the list is empty and its product is one. QED
+  -/
+  apply paired_product p hp _ (((List.nodup_range p).erase 0).erase 1 |>.erase (p-1))
+  · intro a ha
+    have h := (interior_mem p a).mp ha
+    omega
+  · intro a ha
+    have h := (interior_mem p a).mp ha
+    rcases interior_inverse_exists p a hp h.1 h.2 with ⟨b,hb,hbp,hba,hab⟩
+    exact ⟨b,(interior_mem p b).mpr ⟨hb,hbp⟩,hba,hab⟩
+
 end NumberTheory.SquareClasses
