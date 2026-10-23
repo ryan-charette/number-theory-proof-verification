@@ -1049,4 +1049,31 @@ theorem coprime_product (xs : List Int) (n : Int) (hn : 0 < n)
   rcases hb with ⟨u,v,he⟩
   exact gcd_one_right _ n hn ⟨v,u,by omega⟩
 
+theorem fermat_coprime (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
+    Congruent (a^(p-1)) 1 p := by
+  /-
+  Theorem: For a prime p and an integer a relatively prime to p,
+  a^(p-1) is congruent to one modulo p.
+  Proof: Let P be the product of the positive integers below p.
+  The residue product theorem gives a^(p-1)*P congruent to P,
+  because scaling each of its p-1 factors extracts a^(p-1).
+  Each factor of P is coprime to p, hence so is P. Cancelling P
+  gives the asserted congruence. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hl : (nonzeroResidues p).length=p-1 := by
+    have he := List.length_erase_of_mem (by simp; omega : 0 ∈ List.range p)
+    simp only [List.length_range] at he
+    exact he
+  have h := residue_product_congruent a p hp hc
+  rw [scaled_product,hl] at h
+  have hprod := coprime_product ((nonzeroResidues p).map (fun i : Nat => (i : Int)))
+    p (by omega) (by
+      intro x hx
+      rcases List.mem_map.mp hx with ⟨i,hi,he⟩
+      subst x
+      have hib := (nonzero_residues_mem p i).mp hi
+      exact small_prime_coprime p i hp hib.1 hib.2)
+  exact cancel_coprime (a^(p-1)) 1 _ p hprod (by simpa using h)
+
 end NumberTheory.SquareClasses
