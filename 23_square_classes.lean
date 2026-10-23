@@ -3266,4 +3266,17 @@ theorem inverse_exists_unique (p a : Nat) (hp : Prime p) (ha : 0 < a) (hap : a <
   have heq := bounded_congruent_equal c b p (by omega) (by omega) (by omega) (by omega) hcancel
   omega
 
+theorem endpoint_inverses (p : Nat) (hp : Prime p) :
+    Congruent ((1 : Int)*1) 1 p ∧ Congruent (((p : Int)-1)*((p : Int)-1)) 1 p := by
+  /-
+  Theorem: One and p-1 are their own inverses modulo a prime.
+  Proof: The first product is one. For the second, subtracting one
+  from (p-1)^2 gives p*(p-2), an explicit multiple of p. QED
+  -/
+  constructor
+  · simpa using modeq_refl 1 p (by have := hp.1; omega)
+  · refine ⟨by have := hp.1; omega,(p : Int)-2,?_⟩
+    simp only [Int.mul_sub,Int.sub_mul,Int.one_mul,Int.mul_one]
+    omega
+
 end NumberTheory.SquareClasses
