@@ -2494,4 +2494,36 @@ theorem euler_square_criterion (a : Int) (p : Nat) (hp : Prime p)
     rw [power_mul,Nat.mul_comm j 2,←hj]
     exact modeq_symm _ _ p he
 
+theorem primitive_power_square (g : Int) (p k : Nat) (hp : Prime p)
+    (ho : p%2=1) (hg : PrimitiveRoot g p) :
+    SquareClass (g^k) p ↔ 2 ∣ k := by
+  /-
+  Theorem: A power of a primitive root modulo an odd prime is
+  a square exactly when its exponent is even.
+  Proof: Put h=(p-1)/2. If g^k is a square, Euler's criterion
+  makes g^(k*h) congruent to one. Its order 2h divides k*h,
+  and cancellation gives 2|k. Conversely, if k=2j, the power
+  is the square of g^j. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hh := odd_prime_data p hp ho
+  have hc := coprime_power g p (by omega) hg.1 k
+  have ha : ¬ (p : Int) ∣ g^k := by
+    intro hd
+    exact coprime_not_zero (g^k) p hp.1 hc ⟨by omega,by simpa using hd⟩
+  constructor
+  · intro hs
+    have he := (euler_square_criterion (g^k) p hp ho ha).mp hs
+    rw [power_mul] at he
+    have hd := (order_dvd_iff g p hn hg.1 (k*((p-1)/2))).mp he
+    rw [hg.2] at hd
+    have hd2 : 2*((p-1)/2) ∣ k*((p-1)/2) := by
+      rw [←hh.2.1]
+      exact hd
+    exact Nat.dvd_of_mul_dvd_mul_right hh.1 hd2
+  · rintro ⟨j,hj⟩
+    refine ⟨g^j,?_⟩
+    rw [power_mul,Nat.mul_comm j 2,←hj]
+    exact modeq_refl _ _ (by omega)
+
 end NumberTheory.SquareClasses
