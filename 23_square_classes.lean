@@ -3000,4 +3000,22 @@ theorem minus_one_square_form (p : Nat) (hp : Prime p) (ho : p%2=1) :
   · rintro ⟨k,hk⟩
     omega
 
+theorem minus_one_sign (p : Nat) (hp : Prime p) (ho : p%2=1) :
+    (p%4=1 → squareSign (-1) p=1) ∧ (p%4=3 → squareSign (-1) p= -1) := by
+  /-
+  Corollary: The sign of minus one is one for primes with remainder
+  one modulo four, and minus one for remainder three.
+  Proof: Apply the preceding square criterion in the definition
+  of the sign. QED
+  -/
+  constructor
+  · intro h
+    simp [squareSign,(minus_one_square p hp ho).mpr h]
+  · intro h
+    have hn : ¬ SquareClass (-1) p := by
+      intro hs
+      have := (minus_one_square p hp ho).mp hs
+      omega
+    simp [squareSign,hn]
+
 end NumberTheory.SquareClasses
