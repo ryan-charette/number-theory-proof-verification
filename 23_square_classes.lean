@@ -2677,4 +2677,46 @@ theorem square_sign_product (a b : Int) (p : Nat) (hp : Prime p)
     simp [squareSign,hs,ht,h]
   · simp [squareSign,hs,ht,nonsquare_times_nonsquare a b p hp ho ha hb hs ht]
 
+theorem power_value_count (b : Int) (p d : Nat) (hp : Prime p) (hd : 0 < d) (xs : List Int)
+    (hpair : xs.Pairwise (fun r s => ¬ Congruent r s p))
+    (hroot : ∀ x ∈ xs, Congruent (x^d) b p) : xs.length ≤ d := by
+  /-
+  Lemma: At most d incongruent integers satisfy x^d=b modulo p.
+  Proof: Use the coefficient list [-b,0,...,0,1] for x^d-b.
+  It has d+1 coefficients and leading coefficient one, which
+  the prime cannot divide. Each given solution is a root of this
+  polynomial. The elementary polynomial root bound applies. QED
+  -/
+  let cs : List Int := -b :: monomial (d-1)
+  have hlen : cs.length=d+1 := by simp only [cs,List.length_cons,monomial_length]; omega
+  have hlead : leading cs=1 := by
+    have hl := monomial_length (d-1)
+    cases he : monomial (d-1) with
+    | nil => rw [he] at hl; simp at hl
+    | cons c tail =>
+      change leading (-b::monomial (d-1))=1
+      rw [he]
+      change leading (c::tail)=1
+      rw [← he]
+      exact monomial_leading (d-1)
+  have hnot : ¬ (p : Int) ∣ leading cs := by
+    rw [hlead]
+    intro h
+    have hb := divisor_le_positive p 1 (by decide) h
+    have := hp.1
+    omega
+  have heval : ∀ x, evaluate cs x=x^d-b := by
+    intro x
+    change -b+x*evaluate (monomial (d-1)) x=x^d-b
+    rw [monomial_evaluate,Int.mul_comm x (x^(d-1)),← Int.pow_succ]
+    have he : d-1+1=d := by omega
+    rw [he]
+    omega
+  have hb := root_count cs p hp hnot xs hpair (by
+    intro x hx
+    rw [heval]
+    exact (hroot x hx).2)
+  rw [hlen] at hb
+  omega
+
 end NumberTheory.SquareClasses
