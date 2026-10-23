@@ -2099,4 +2099,18 @@ theorem reduced_nodup (n : Nat) : (reducedResidues n).Nodup := by
     exact hij (by omega)
   exact h.filter _
 
+theorem divisor_factor (n d : Nat) (hn : 0 < n) (hd : d ∣ n) :
+    0 < n/d ∧ (n/d)*d=n := by
+  /-
+  Lemma: For a divisor d of positive n, the complementary factor
+  n/d is positive and its product with d is n. Proof: Exact integer
+  division gives the product identity. A zero quotient would force
+  n=0, contrary to its positivity. QED
+  -/
+  have he := Nat.div_mul_cancel hd
+  refine ⟨?_,he⟩
+  by_cases hz : n/d=0
+  · rw [hz,Nat.zero_mul] at he; omega
+  · exact Nat.pos_of_ne_zero hz
+
 end NumberTheory.SquareClasses
