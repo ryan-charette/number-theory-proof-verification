@@ -3383,4 +3383,26 @@ theorem wilson (p : Nat) (hp : Prime p) : Congruent (factorial (p-1)) (-1) p := 
     have hm := modeq_mult _ (-1) _ 1 p hend (interior_product p hp hp2)
     simpa only [Int.mul_one] using hm
 
+theorem factorial_square_roots (k p : Nat) (hp : Prime p) (he : p=4*k+1) :
+    Congruent ((factorial (2*k))^2) (-1) p ∧
+    Congruent ((-factorial (2*k))^2) (-1) p := by
+  /-
+  Theorem: If p=4k+1 is prime, both (2k)! and its negative square
+  to minus one modulo p.
+  Proof: Reflect the top 2k factors of (p-1)! using the preceding
+  lemma. There are evenly many minus signs, leaving ((2k)!)^2.
+  Wilson's theorem makes the original factorial minus one. A
+  number and its negative have the same square. QED
+  -/
+  have hf := factorial_reflection p (2*k) (by have := hp.1; omega) (by omega)
+  have hd : p-1-2*k=2*k := by omega
+  rw [hd,neg_one_power] at hf
+  have hpar : (2*k)%2=0 := by omega
+  rw [if_pos hpar,Int.one_mul] at hf
+  have hh : Congruent ((factorial (2*k))^2) (-1) p := by
+    have h := modeq_trans _ _ _ p (modeq_symm _ _ p hf) (wilson p hp)
+    simpa only [Int.pow_succ,Int.pow_zero,Int.one_mul] using h
+  refine ⟨hh,?_⟩
+  simpa only [Int.pow_succ,Int.pow_zero,Int.one_mul,Int.neg_mul,Int.mul_neg,Int.neg_neg] using hh
+
 end NumberTheory.SquareClasses
