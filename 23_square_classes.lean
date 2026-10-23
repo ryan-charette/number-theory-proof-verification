@@ -3478,4 +3478,20 @@ theorem prime_divisor (n : Nat) (hn : 1 < n) :
       · exists t * b
         rw [heq, ht, Nat.mul_assoc]
 
+theorem prime_residue_mod_four (p : Nat) (hp : Prime p) (hne : p ≠ 2) :
+    p % 4 = 1 ∨ p % 4 = 3 := by
+  /-
+  Lemma: A prime other than two has remainder one or three modulo four.
+  Proof: The possible remainders are zero, one, two, and three. A
+  remainder zero or two makes p even. Then two divides p, so primality
+  forces p=2, contrary to the hypothesis. The other two remain. QED
+  -/
+  by_cases h : p % 4 = 1 ∨ p % 4 = 3
+  · exact h
+  · have heven : p % 2 = 0 := by omega
+    have hd : 2 ∣ p := ⟨p/2, by omega⟩
+    rcases hp.2 2 hd with ho | he
+    · omega
+    · exact False.elim (hne he.symm)
+
 end NumberTheory.SquareClasses
