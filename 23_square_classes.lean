@@ -285,4 +285,21 @@ theorem prime_coprime (a : Int) (p : Nat) (hp : Prime p) (ha : ¬ (p : Int) ∣ 
     rw [he] at had
     exact False.elim (ha had)
 
+def Congruent (a b n : Int) : Prop := 0 < n ∧ n ∣ a-b
+
+local notation:50 a " ≡ " b " [MOD " n "]" => Congruent a b n
+
+theorem inverse_integer (a : Int) (p : Nat) (hp : Prime p)
+    (ha : ¬ (p : Int) ∣ a) : ∃ u : Int, Congruent (a*u) 1 p := by
+  /-
+  Lemma: An integer not divisible by a prime has an inverse modulo
+  that prime. Proof: Bezout gives a*u+p*v=1, since their gcd is one.
+  Thus a*u-1=p*(-v), which proves the required congruence. QED
+  -/
+  rcases bezout a p with ⟨u,v,h⟩
+  rw [prime_coprime a p hp ha] at h
+  refine ⟨u,by have := hp.1; omega,-v,?_⟩
+  rw [Int.mul_neg]
+  omega
+
 end NumberTheory.SquareClasses
