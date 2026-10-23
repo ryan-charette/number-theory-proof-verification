@@ -2957,4 +2957,33 @@ theorem neg_one_power (k : Nat) :
     · have h' : (k+1)%2=0 := by omega
       simp [h,h']
 
+theorem minus_one_square (p : Nat) (hp : Prime p) (ho : p%2=1) :
+    SquareClass (-1) p ↔ p%4=1 := by
+  /-
+  Theorem: Minus one is a square modulo an odd prime exactly
+  when the prime has remainder one upon division by four.
+  Proof: Euler's criterion tests (-1)^((p-1)/2). This power is
+  one precisely when (p-1)/2 is even, equivalently p has
+  remainder one modulo four. An odd exponent gives minus one,
+  which is distinct from one modulo an odd prime. QED
+  -/
+  have ha : ¬ (p : Int) ∣ (-1) := by
+    intro h
+    have hd := Int.dvd_neg.mp h
+    have hb := divisor_le_positive (p : Int) 1 (by decide) hd
+    have := hp.1
+    omega
+  rw [euler_square_criterion (-1) p hp ho ha,neg_one_power]
+  by_cases he : ((p-1)/2)%2=0
+  · have hr : p%4=1 := by have := hp.1; omega
+    simp only [if_pos he]
+    exact ⟨fun _ => hr,fun _ => modeq_refl 1 p (by have := hp.1; omega)⟩
+  · have hr : p%4≠1 := by have := hp.1; omega
+    simp only [if_neg he]
+    constructor
+    · intro h
+      exact False.elim (one_not_neg_one p hp ho (modeq_symm _ _ p h))
+    · intro h
+      exact False.elim (hr h)
+
 end NumberTheory.SquareClasses
