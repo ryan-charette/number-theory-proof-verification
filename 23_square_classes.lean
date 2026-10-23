@@ -3154,4 +3154,19 @@ theorem factorial_interior (p : Nat) (hp : 2 < p) :
     omega
   rw [product_perm _ _ (hr.map (fun i : Nat => (i : Int)))]
 
+theorem prime_inverse_unique (p a b c : Nat) (hp : Prime p)
+    (ha : 0 < a) (hap : a < p) (hb : b < p) (hc : c < p)
+    (hab : Congruent ((a : Int)*b) 1 p) (hac : Congruent ((a : Int)*c) 1 p) : b=c := by
+  /-
+  Lemma: Two canonical inverses of the same nonzero representative
+  are equal. Proof: Their products with a are congruent to each
+  other. Cancel a, which is coprime to the prime, and use uniqueness
+  of representatives between zero and p-1. QED
+  -/
+  have hm := modeq_trans _ _ _ p hab (modeq_symm _ _ p hac)
+  have hd := cancel_coprime b c a p (small_prime_coprime p a hp ha hap)
+    (by simpa only [Int.mul_comm] using hm)
+  have he := bounded_congruent_equal b c p (by omega) (by omega) (by omega) (by omega) hd
+  omega
+
 end NumberTheory.SquareClasses
