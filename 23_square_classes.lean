@@ -2552,4 +2552,29 @@ theorem one_not_neg_one (p : Nat) (hp : Prime p) (hodd : p % 2=1) :
   intro h
   exact (odd_prime_data p hp hodd).2.2 (by simpa using h.2)
 
+theorem euler_nonsquare_criterion (a : Int) (p : Nat) (hp : Prime p)
+    (hodd : p % 2=1) (ha : ¬ (p : Int) ∣ a) :
+    ¬ SquareClass a p ↔ Congruent (a^((p-1)/2)) (-1) p := by
+  /-
+  Theorem: A nonzero class is a nonsquare exactly when its
+  half-exponent power is minus one.
+  Proof: The square of that power is a^(p-1), which is one.
+  Hence the power is one or minus one. The preceding criterion
+  associates one precisely with squares, and these two values
+  are distinct for an odd prime. QED
+  -/
+  have hh := odd_prime_data p hp hodd
+  have hret : Congruent ((a^((p-1)/2))^2) 1 p := by
+    rw [power_mul,Nat.mul_comm _ 2,←hh.2.1]
+    exact fermat_coprime a p hp (prime_coprime a p hp ha)
+  have hc := euler_square_criterion a p hp hodd ha
+  constructor
+  · intro hn
+    rcases square_one_cases _ p hp hret with h | h
+    · exact False.elim (hn (hc.mpr h))
+    · exact h
+  · intro h hs
+    exact one_not_neg_one p hp hodd
+      (modeq_trans _ _ _ p (modeq_symm _ _ p (hc.mp hs)) h)
+
 end NumberTheory.SquareClasses
