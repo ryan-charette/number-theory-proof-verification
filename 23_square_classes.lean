@@ -367,4 +367,25 @@ theorem modeq_refl (a n : Int) (hn : 0 < n) : a ≡ a [MOD n] := by
   · exists 0
     rw [Int.sub_self, Int.mul_zero]
 
+theorem modeq_add (a b c d n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : c ≡ d [MOD n]) : a + c ≡ b + d [MOD n] := by
+  /-
+  Theorem: Congruences can be added.
+  Proof: We must show that n divides (a + c) - (b + d).
+  Rearranging the additions and subtractions gives
+
+    (a + c) - (b + d) = (a - b) + (c - d).
+
+  By hypothesis, n divides each term on the right. Our theorem on
+  divisibility of sums shows that n divides the left side as well. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h := dvd_add n (a - b) (c - d) h₀.2 h₁.2
+    have heq : (a + c) - (b + d) = (a - b) + (c - d) := by
+      simp only [Int.sub_eq_add_neg, Int.neg_add, Int.add_assoc]
+      rw [Int.add_left_comm c (-b)]
+    rw [heq]
+    exact h
+
 end NumberTheory.SquareClasses
