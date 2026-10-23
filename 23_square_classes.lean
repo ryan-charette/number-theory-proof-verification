@@ -2841,4 +2841,37 @@ theorem complete_coprime_count (xs : List Int) (n : Nat) (hn : 0 < n)
   have hlen := hperm.length_eq
   simpa only [List.length_map,ys,coprimeCount,phi] using hlen
 
+theorem phi_prime (p : Nat) (hp : Prime p) : phi p=p-1 := by
+  /-
+  Lemma: There are p-1 reduced representatives for a prime p.
+  Proof: Every positive integer below p is coprime to p. The
+  remaining candidate p is not: a Bezout identity would make p
+  divide one. Thus the reduced list has exactly the nonzero
+  canonical entries, whose number is p-1. QED
+  -/
+  have hself : gcd (p : Int) p ≠ 1 := by
+    intro hc
+    rcases bezout (p : Int) p with ⟨u,v,he⟩
+    rw [hc] at he
+    have hd : (p : Int) ∣ 1 := ⟨u+v,by rw [Int.mul_add]; omega⟩
+    have hb := divisor_le_positive p 1 (by decide) hd
+    have := hp.1
+    omega
+  have hperm : (reducedResidues p).Perm (nonzeroResidues p) := by
+    apply same_members_perm _ _ (reduced_nodup p) ((List.nodup_range p).erase 0)
+    intro i
+    change i ∈ reducedResidues p ↔ i ∈ nonzeroResidues p
+    rw [reduced_mem,nonzero_residues_mem]
+    constructor
+    · rintro ⟨hi,hip,hc⟩
+      have hne : i ≠ p := by intro he; subst i; exact hself hc
+      exact ⟨hi,by omega⟩
+    · rintro ⟨hi,hip⟩
+      exact ⟨hi,by omega,small_prime_coprime p i hp hi hip⟩
+  have hl := List.length_erase_of_mem (by simp; have := hp.1; omega : 0 ∈ List.range p)
+  have he := hperm.length_eq
+  simp only [List.length_range] at hl
+  change (reducedResidues p).length=p-1
+  exact he.trans hl
+
 end NumberTheory.SquareClasses
