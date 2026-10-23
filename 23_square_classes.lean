@@ -3314,4 +3314,37 @@ theorem interior_inverses_distinct (p : Nat) (a b : Int) (hp : Prime p)
   subst b
   rcases self_inverse_endpoints p a hp (by omega) (by omega) h with h₁ | h₂ <;> omega
 
+theorem interior_inverse_exists (p a : Nat) (hp : Prime p)
+    (ha : 1 < a) (hap : a < p-1) :
+    ∃ b : Nat, 1 < b ∧ b < p-1 ∧ b ≠ a ∧ Congruent ((a : Int)*b) 1 p := by
+  /-
+  Lemma: Each interior representative has a different inverse
+  in the interior. Proof: Take its unique positive inverse b.
+  If b were one, its product with a would force a=1. If b were
+  p-1, both a and p-1 would invert p-1, forcing a=p-1.
+  Neither endpoint is allowed. Equality b=a is excluded by the
+  classification of self-inverse representatives. QED
+  -/
+  have hp1 := hp.1
+  rcases inverse_exists_unique p a hp (by omega) (by omega) with ⟨b,hb,hbp,hab,_⟩
+  have hb1 : b ≠ 1 := by
+    intro he
+    have hm : Congruent (a : Int) 1 p := by simpa [he] using hab
+    have heq := bounded_congruent_equal a 1 p (by omega) (by omega) (by omega) (by omega) hm
+    omega
+  have hblast : b ≠ p-1 := by
+    intro he
+    have hend : Congruent (((p-1 : Nat) : Int)*(p-1 : Nat)) 1 p := by
+      have hcast : ((p-1 : Nat) : Int)=(p : Int)-1 := by omega
+      rw [hcast]; exact (endpoint_inverses p hp).2
+    have hm : Congruent (((p-1 : Nat) : Int)*a) 1 p := by
+      simpa only [he,Int.mul_comm] using hab
+    have heq := prime_inverse_unique p (p-1) a (p-1) hp (by omega) (by omega)
+      (by omega) (by omega) hm hend
+    omega
+  refine ⟨b,by omega,by omega,?_,hab⟩
+  intro he
+  have hne := interior_inverses_distinct p a b hp (by omega) (by omega) hab
+  exact hne (by omega)
+
 end NumberTheory.SquareClasses
