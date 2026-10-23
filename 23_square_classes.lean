@@ -1076,4 +1076,17 @@ theorem fermat_coprime (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
       exact small_prime_coprime p i hp hib.1 hib.2)
   exact cancel_coprime (a^(p-1)) 1 _ p hprod (by simpa using h)
 
+theorem power_add (a : Int) (i j : Nat) : a^(i+j)=a^i*a^j := by
+  /-
+  Lemma: Adding exponents multiplies the corresponding powers.
+  Proof: Induct on j. At zero the second factor is one. In the
+  successor step, the recursive rule for powers appends one factor
+  a. Apply the induction hypothesis and reassociate the product.
+  QED
+  -/
+  induction j with
+  | zero => simp [Int.pow_zero]
+  | succ j ih =>
+    rw [Nat.add_succ,Int.pow_succ,ih,Int.pow_succ,Int.mul_assoc]
+
 end NumberTheory.SquareClasses
