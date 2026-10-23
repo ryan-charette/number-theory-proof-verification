@@ -2874,4 +2874,23 @@ theorem phi_prime (p : Nat) (hp : Prime p) : phi p=p-1 := by
   change (reducedResidues p).length=p-1
   exact he.trans hl
 
+theorem complete_nonzero_count (xs : List Int) (p : Nat) (hp : Prime p)
+    (hs : CompleteResidues xs p) : (nonzeroEntries xs p).length=p-1 := by
+  /-
+  Lemma: A complete residue system modulo a prime has p-1 nonzero
+  entries. Proof: An entry is coprime to p exactly when p does
+  not divide it. The number of coprime entries in any complete
+  system is phi(p), and phi(p)=p-1. QED
+  -/
+  have he : nonzeroEntries xs p=xs.filter (fun a => decide (gcd a p=1)) := by
+    apply List.filter_congr
+    intro a _
+    have hi : (¬ (p : Int) ∣ a) ↔ gcd a p=1 :=
+      ⟨prime_coprime a p hp,fun h hd => coprime_not_zero a p hp.1 h
+        ⟨by have := hp.1; omega,by simpa using hd⟩⟩
+    simp only [hi]
+  rw [he]
+  change coprimeCount xs p=p-1
+  rw [complete_coprime_count xs p (by have := hp.1; omega) hs,phi_prime p hp]
+
 end NumberTheory.SquareClasses
