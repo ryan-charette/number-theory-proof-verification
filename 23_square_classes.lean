@@ -2577,4 +2577,16 @@ theorem euler_nonsquare_criterion (a : Int) (p : Nat) (hp : Prime p)
     exact one_not_neg_one p hp hodd
       (modeq_trans _ _ _ p (modeq_symm _ _ p (hc.mp hs)) h)
 
+theorem product_power (a b : Int) (k : Nat) : (a*b)^k=a^k*b^k := by
+  /-
+  Lemma: A power of a product is the product of the powers.
+  Proof: At zero both sides are one. In the successor step,
+  use the preceding identity and rearrange the factors. QED
+  -/
+  induction k with
+  | zero => simp [Int.pow_zero]
+  | succ k ih =>
+    rw [Int.pow_succ,ih,Int.pow_succ,Int.pow_succ]
+    simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+
 end NumberTheory.SquareClasses
