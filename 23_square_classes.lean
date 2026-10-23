@@ -495,4 +495,18 @@ theorem divisor_le_positive (e d : Int) (hd : 0 < d) (he : e ∣ d) : e ≤ d :=
     exact hm
   · omega
 
+theorem odd_prime_data (p : Nat) (hp : Prime p) (hodd : p % 2=1) :
+    0 < (p-1)/2 ∧ p-1=2*((p-1)/2) ∧ ¬ (p : Int) ∣ 2 := by
+  /-
+  Lemma: For an odd prime, p-1 is twice a positive integer, and
+  p does not divide two. Proof: Oddness and p>1 give p>=3.
+  Division by two yields p-1=2*((p-1)/2). A positive divisor of
+  two is at most two, so p cannot divide two. QED
+  -/
+  have hp1 := hp.1
+  refine ⟨by omega,by omega,?_⟩
+  intro h
+  have := divisor_le_positive (p : Int) 2 (by omega) h
+  omega
+
 end NumberTheory.SquareClasses
