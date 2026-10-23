@@ -2526,4 +2526,21 @@ theorem primitive_power_square (g : Int) (p k : Nat) (hp : Prime p)
     rw [power_mul,Nat.mul_comm j 2,←hj]
     exact modeq_refl _ _ (by omega)
 
+theorem square_one_cases (z : Int) (p : Nat) (hp : Prime p)
+    (hz : Congruent (z^2) 1 p) : Congruent z 1 p ∨ Congruent z (-1) p := by
+  /-
+  Lemma: A square equal to one modulo a prime has base one or minus
+  one. Proof: Factor z^2-1=(z-1)*(z+1). A prime dividing this product
+  divides one of the factors, giving the two congruences. QED
+  -/
+  have he : z^2-1=(z-1)*(z+1) := by
+    simp only [Int.pow_succ,Int.pow_zero,Int.one_mul,Int.mul_one,
+      Int.sub_mul,Int.mul_add,Int.mul_sub,Int.one_mul]
+    omega
+  have hd := hz.2
+  rw [he] at hd
+  rcases prime_product_divides p (z-1) (z+1) hp hd with h | h
+  · exact Or.inl ⟨hz.1,h⟩
+  · exact Or.inr ⟨hz.1,by simpa using h⟩
+
 end NumberTheory.SquareClasses
