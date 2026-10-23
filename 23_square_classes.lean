@@ -3051,4 +3051,358 @@ theorem factorial_reflection (p k : Nat) (hp : 0 < p) (hk : k < p) :
     simpa only [factorial,Int.pow_succ,Int.neg_mul,Int.mul_neg,
       Int.mul_assoc,Int.mul_comm,Int.mul_left_comm,Int.one_mul,Int.mul_neg_one] using hf
 
+theorem product_append (xs ys : List Int) : intProduct (xs++ys)=intProduct xs*intProduct ys := by
+  /-
+  Lemma: The product of two joined lists is the product of their
+  products. Proof: Induct on the first list. Its empty product is
+  one; in the next case, use induction on the tail and reassociate
+  the leading factor. QED
+  -/
+  induction xs with
+  | nil => simp [intProduct]
+  | cons a xs ih =>
+    change a*intProduct (xs++ys)=(a*intProduct xs)*intProduct ys
+    rw [ih,Int.mul_assoc]
+
+theorem factorial_product (n : Nat) :
+    factorial n=intProduct (((List.range n).map (fun i => i+1)).map (fun i : Nat => (i : Int))) := by
+  /-
+  Lemma: The recursively defined factorial is the product of the
+  list 1,...,n. Proof: At zero both products are empty and equal
+  one. Increasing n appends n+1 to the list. Split off that final
+  factor and use induction; commutativity puts it in the order
+  used by the factorial recursion. QED
+  -/
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    simp only [factorial,List.range_succ,List.map_append,List.map_cons,List.map_nil,
+      product_append,intProduct,Int.mul_one]
+    rw [ih,Int.mul_comm]
+
+theorem factorial_residues (p : Nat) (hp : 0 < p) :
+    factorial (p-1)=intProduct ((nonzeroResidues p).map (fun i : Nat => (i : Int))) := by
+  /-
+  Lemma: The factorial of p-1 is the product of all positive
+  representatives below p. Proof: The list 1,...,p-1 has no
+  repeats, and its membership condition is exactly 0<i<p.
+  It therefore rearranges the nonzero residue list. Products
+  are unchanged by a rearrangement. QED
+  -/
+  have hnd : ((List.range (p-1)).map (fun i => i+1)).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range (p-1))
+    intro i j hij he
+    exact hij (by omega)
+  have hperm : ((List.range (p-1)).map (fun i => i+1)).Perm (nonzeroResidues p) := by
+    apply same_members_perm _ _ hnd ((List.nodup_range p).erase 0)
+    intro i
+    change i ∈ (List.range (p-1)).map (fun j => j+1) ↔ i ∈ nonzeroResidues p
+    simp only [List.mem_map,List.mem_range,nonzero_residues_mem]
+    constructor
+    · rintro ⟨j,hj,he⟩; omega
+    · rintro ⟨hi,hip⟩
+      exact ⟨i-1,by omega,by omega⟩
+  rw [factorial_product]
+  exact product_perm _ _ (hperm.map (fun i : Nat => (i : Int)))
+
+def interiorResidues (p : Nat) : List Nat := ((nonzeroResidues p).erase 1).erase (p-1)
+
+theorem interior_mem (p i : Nat) : i ∈ interiorResidues p ↔ 1 < i ∧ i < p-1 := by
+  /-
+  Lemma: Removing one and p-1 from the positive representatives
+  below p leaves exactly the interior representatives. Proof:
+  The original entries satisfy 0<i<p. Distinctness means erasing
+  an endpoint excludes it completely. The remaining inequalities
+  are precisely 1<i<p-1. QED
+  -/
+  have hnd : (nonzeroResidues p).Nodup := (List.nodup_range p).erase 0
+  unfold interiorResidues
+  rw [(hnd.erase 1).mem_erase_iff,hnd.mem_erase_iff,nonzero_residues_mem]
+  omega
+
+theorem factorial_interior (p : Nat) (hp : 2 < p) :
+    factorial (p-1)=((p : Int)-1)*intProduct ((interiorResidues p).map (fun i : Nat => (i : Int))) := by
+  /-
+  Lemma: For p>2, removing the two endpoints from the factorial
+  leaves (p-1) times the interior product. Proof: Rearrange the
+  positive residue list to place one first, then place p-1 first
+  in the remaining list. These are different entries. Removing
+  them gives the interior list, and the factor one disappears.
+  QED
+  -/
+  have hnd : (nonzeroResidues p).Nodup := (List.nodup_range p).erase 0
+  have hind : (interiorResidues p).Nodup := ((hnd.erase 1).erase (p-1))
+  letI : BEq Nat := instBEqOfDecidableEq
+  have h1 : 1 ∈ nonzeroResidues p := (nonzero_residues_mem p 1).mpr ⟨by omega,by omega⟩
+  have hlast : p-1 ∈ (nonzeroResidues p).erase 1 := by
+    apply (List.mem_erase_of_ne (by omega : p-1 ≠ 1)).mpr
+    exact (nonzero_residues_mem p (p-1)).mpr ⟨by omega,by omega⟩
+  have he1 := product_perm _ _ ((List.perm_cons_erase h1).map (fun i : Nat => (i : Int)))
+  have he2 := product_perm _ _ ((List.perm_cons_erase hlast).map (fun i : Nat => (i : Int)))
+  rw [factorial_residues p (by omega),he1]
+  simp only [List.map_cons,intProduct,Int.natCast_one,Int.one_mul]
+  rw [he2]
+  have hcast : ((p-1 : Nat) : Int)=(p : Int)-1 := by omega
+  simp only [List.map_cons,intProduct,hcast]
+  have hr : (((nonzeroResidues p).erase 1).erase (p-1)).Perm (interiorResidues p) := by
+    apply same_members_perm _ _ ((hnd.erase 1).erase (p-1))
+      hind
+    intro i
+    change i ∈ ((nonzeroResidues p).erase 1).erase (p-1) ↔ i ∈ interiorResidues p
+    rw [(hnd.erase 1).mem_erase_iff,hnd.mem_erase_iff,nonzero_residues_mem,interior_mem]
+    omega
+  rw [product_perm _ _ (hr.map (fun i : Nat => (i : Int)))]
+
+theorem prime_inverse_unique (p a b c : Nat) (hp : Prime p)
+    (ha : 0 < a) (hap : a < p) (hb : b < p) (hc : c < p)
+    (hab : Congruent ((a : Int)*b) 1 p) (hac : Congruent ((a : Int)*c) 1 p) : b=c := by
+  /-
+  Lemma: Two canonical inverses of the same nonzero representative
+  are equal. Proof: Their products with a are congruent to each
+  other. Cancel a, which is coprime to the prime, and use uniqueness
+  of representatives between zero and p-1. QED
+  -/
+  have hm := modeq_trans _ _ _ p hab (modeq_symm _ _ p hac)
+  have hd := cancel_coprime b c a p (small_prime_coprime p a hp ha hap)
+    (by simpa only [Int.mul_comm] using hm)
+  have he := bounded_congruent_equal b c p (by omega) (by omega) (by omega) (by omega) hd
+  omega
+
+theorem paired_product (p : Nat) (hp : Prime p) (xs : List Nat) (hnd : xs.Nodup)
+    (hb : ∀ a ∈ xs, 0 < a ∧ a < p)
+    (hpairs : ∀ a ∈ xs, ∃ b ∈ xs, b ≠ a ∧ Congruent ((a : Int)*b) 1 p) :
+    Congruent (intProduct (xs.map (fun a : Nat => (a : Int)))) 1 p := by
+  /-
+  Lemma: A distinct list closed under different inverse partners
+  has product congruent to one. Proof: Induct on its length.
+  The empty product is one. Pair the first entry a with its inverse
+  b and remove both. Any remaining entry c still has its partner:
+  a removed partner would, by uniqueness of inverses, force c to
+  be the other removed entry. Apply induction to the remaining
+  list. Rearranging the product puts a*b first, and both this pair
+  and the remaining product are congruent to one. QED
+  -/
+  letI : BEq Nat := instBEqOfDecidableEq
+  generalize hk : xs.length = k
+  induction k using Nat.strongRecOn generalizing xs with
+  | ind k ih =>
+    cases xs with
+    | nil => simpa [intProduct] using modeq_refl 1 p (by have := hp.1; omega)
+    | cons a tail =>
+      have hnod := List.nodup_cons.mp hnd
+      have ha := hb a (by simp)
+      rcases hpairs a (by simp) with ⟨b,hbin,hba,hab⟩
+      have hbt : b ∈ tail := (List.mem_cons.mp hbin).resolve_left hba
+      let rest := tail.erase b
+      have hrest : ∀ c ∈ rest, c ∈ tail := fun c hc => List.mem_of_mem_erase hc
+      have hbound : ∀ c ∈ rest, 0 < c ∧ c < p := fun c hc => hb c (by simp [hrest c hc])
+      have hremain : ∀ c ∈ rest, ∃ d ∈ rest, d ≠ c ∧ Congruent ((c : Int)*d) 1 p := by
+        intro c hc
+        have hct := hrest c hc
+        have hca : c ≠ a := by intro he; subst c; exact hnod.1 hct
+        have hcb : c ≠ b := by
+          intro he; subst c
+          exact hnod.2.not_mem_erase hc
+        rcases hpairs c (by simp [hct]) with ⟨d,hd,hdc,hcd⟩
+        have hda : d ≠ a := by
+          intro he; subst d
+          have hsame := prime_inverse_unique p a c b hp ha.1 ha.2 (hbound c hc).2
+            (hb b hbin).2 (by simpa only [Int.mul_comm] using hcd) hab
+          exact hcb hsame
+        have hdb : d ≠ b := by
+          intro he; subst d
+          have hsame := prime_inverse_unique p b c a hp (hb b hbin).1 (hb b hbin).2
+            (hbound c hc).2 ha.2 (by simpa only [Int.mul_comm] using hcd)
+            (by simpa only [Int.mul_comm] using hab)
+          exact hca hsame
+        have hdt : d ∈ tail := (List.mem_cons.mp hd).resolve_left hda
+        exact ⟨d,(List.mem_erase_of_ne hdb).mpr hdt,hdc,hcd⟩
+      have hlen : rest.length < k := by
+        have he := List.length_erase_of_mem hbt
+        simp only [List.length_cons] at hk
+        dsimp [rest]; omega
+      have hprod := ih rest.length hlen rest (hnod.2.erase b) hbound hremain rfl
+      have he := product_perm _ _ ((List.perm_cons_erase hbt).map (fun c : Nat => (c : Int)))
+      have hm := modeq_mult _ 1 _ 1 p hab hprod
+      change Congruent ((a : Int)*intProduct (tail.map (fun c : Nat => (c : Int)))) 1 p
+      rw [he]
+      simpa only [List.map_cons,intProduct,Int.mul_assoc,Int.one_mul] using hm
+
+theorem inverse_exists_unique (p a : Nat) (hp : Prime p) (ha : 0 < a) (hap : a < p) :
+    ∃ b : Nat, 0 < b ∧ b < p ∧ Congruent ((a : Int)*b) 1 p ∧
+      ∀ c : Nat, 0 < c → c < p → Congruent ((a : Int)*c) 1 p → c=b := by
+  /-
+  Theorem: Every positive representative below a prime has exactly
+  one inverse in that range. Proof: Choose a*u+p*v=1 by Bezout
+  and reduce u to its canonical label b. Multiplication preserves
+  congruence, so a*b is congruent to one. The label cannot be zero,
+  since zero and one are different canonical representatives.
+  If c is another inverse, cancel a from a*c congruent to a*b;
+  bounded representatives are then equal. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hc := small_prime_coprime p a hp ha hap
+  rcases bezout (a : Int) p with ⟨u,v,he⟩
+  rw [hc] at he
+  let b := canonicalLabel u p
+  have hs := canonicalLabel_spec u p hn
+  have hu : Congruent ((a : Int)*u) 1 p := by
+    refine ⟨by omega,-v,?_⟩
+    rw [Int.mul_neg]; omega
+  have hm := modeq_mult (a : Int) a u b p (modeq_refl _ _ (by omega)) hs.2
+  have hb := modeq_trans _ _ _ p (modeq_symm _ _ p hm) hu
+  have hbpos : 0 < b := by
+    by_cases hz : b=0
+    · rw [hz,Int.natCast_zero,Int.mul_zero] at hb
+      have hf := bounded_congruent_equal 0 1 p (by omega) (by omega) (by omega)
+        (by have := hp.1; omega) hb
+      omega
+    · omega
+  refine ⟨b,hbpos,hs.1,hb,?_⟩
+  intro c hcpos hcp hcinv
+  have hprod := modeq_trans _ _ _ p hcinv (modeq_symm _ _ p hb)
+  have hcancel := cancel_coprime c b a p hc (by simpa only [Int.mul_comm] using hprod)
+  have heq := bounded_congruent_equal c b p (by omega) (by omega) (by omega) (by omega) hcancel
+  omega
+
+theorem endpoint_inverses (p : Nat) (hp : Prime p) :
+    Congruent ((1 : Int)*1) 1 p ∧ Congruent (((p : Int)-1)*((p : Int)-1)) 1 p := by
+  /-
+  Theorem: One and p-1 are their own inverses modulo a prime.
+  Proof: The first product is one. For the second, subtracting one
+  from (p-1)^2 gives p*(p-2), an explicit multiple of p. QED
+  -/
+  constructor
+  · simpa using modeq_refl 1 p (by have := hp.1; omega)
+  · refine ⟨by have := hp.1; omega,(p : Int)-2,?_⟩
+    simp only [Int.mul_sub,Int.sub_mul,Int.one_mul,Int.mul_one]
+    omega
+
+theorem self_inverse_endpoints (p : Nat) (a : Int) (hp : Prime p) (ha : 0 < a)
+    (hap : a < p) (h : Congruent (a*a) 1 p) : a=1 ∨ a=(p : Int)-1 := by
+  /-
+  Lemma: A self-inverse representative modulo a prime is one or
+  p-1. Proof: Factor a*a-1=(a-1)*(a+1). The prime divides one
+  factor. If it divides a-1, that factor lies between zero and
+  p-1 and must be zero. If it divides a+1, the positive factor
+  lies at most p and is congruent to p, so it equals p. QED
+  -/
+  have hd : (p : Int) ∣ (a-1)*(a+1) := by
+    have he : (a-1)*(a+1)=a*a-1 := by
+      simp only [Int.sub_mul,Int.mul_add,Int.mul_one,Int.one_mul]; omega
+    rw [he]; exact h.2
+  rcases prime_product_divides p (a-1) (a+1) hp hd with h₁ | h₂
+  · have hc : Congruent (a-1) 0 p := ⟨h.1,by simpa using h₁⟩
+    have he := bounded_congruent_equal (a-1) 0 p (by omega) (by omega) (by omega) (by omega) hc
+    exact Or.inl (by omega)
+  · rcases h₂ with ⟨q,hq⟩
+    have hc : Congruent (a+1) p p := by
+      refine ⟨h.1,q-1,?_⟩
+      rw [Int.mul_sub,Int.mul_one]; omega
+    have he := positive_congruent_equal (a+1) p p (by omega) (by omega) (by omega) (by omega) hc
+    exact Or.inr (by omega)
+
+theorem interior_inverses_distinct (p : Nat) (a b : Int) (hp : Prime p)
+    (ha : 1 < a) (hap : a < (p : Int)-1) (h : Congruent (a*b) 1 p) : a ≠ b := by
+  /-
+  Theorem: An interior representative cannot equal its inverse.
+  Proof: Equality would make it self-inverse. Such a representative
+  is either one or p-1, both excluded by the strict bounds. QED
+  -/
+  intro he
+  subst b
+  rcases self_inverse_endpoints p a hp (by omega) (by omega) h with h₁ | h₂ <;> omega
+
+theorem interior_inverse_exists (p a : Nat) (hp : Prime p)
+    (ha : 1 < a) (hap : a < p-1) :
+    ∃ b : Nat, 1 < b ∧ b < p-1 ∧ b ≠ a ∧ Congruent ((a : Int)*b) 1 p := by
+  /-
+  Lemma: Each interior representative has a different inverse
+  in the interior. Proof: Take its unique positive inverse b.
+  If b were one, its product with a would force a=1. If b were
+  p-1, both a and p-1 would invert p-1, forcing a=p-1.
+  Neither endpoint is allowed. Equality b=a is excluded by the
+  classification of self-inverse representatives. QED
+  -/
+  have hp1 := hp.1
+  rcases inverse_exists_unique p a hp (by omega) (by omega) with ⟨b,hb,hbp,hab,_⟩
+  have hb1 : b ≠ 1 := by
+    intro he
+    have hm : Congruent (a : Int) 1 p := by simpa [he] using hab
+    have heq := bounded_congruent_equal a 1 p (by omega) (by omega) (by omega) (by omega) hm
+    omega
+  have hblast : b ≠ p-1 := by
+    intro he
+    have hend : Congruent (((p-1 : Nat) : Int)*(p-1 : Nat)) 1 p := by
+      have hcast : ((p-1 : Nat) : Int)=(p : Int)-1 := by omega
+      rw [hcast]; exact (endpoint_inverses p hp).2
+    have hm : Congruent (((p-1 : Nat) : Int)*a) 1 p := by
+      simpa only [he,Int.mul_comm] using hab
+    have heq := prime_inverse_unique p (p-1) a (p-1) hp (by omega) (by omega)
+      (by omega) (by omega) hm hend
+    omega
+  refine ⟨b,by omega,by omega,?_,hab⟩
+  intro he
+  have hne := interior_inverses_distinct p a b hp (by omega) (by omega) hab
+  exact hne (by omega)
+
+theorem interior_product (p : Nat) (hp : Prime p) (hp2 : 2 < p) :
+    Congruent (intProduct ((interiorResidues p).map (fun i : Nat => (i : Int)))) 1 p := by
+  /-
+  Theorem: The product of the integers from two through p-2 is
+  congruent to one for a prime p>2. Proof: The list is distinct.
+  Each entry has a different inverse in the same interval. Pair
+  these inverses using the preceding induction on finite lists.
+  For p=3 the list is empty and its product is one. QED
+  -/
+  apply paired_product p hp _ (((List.nodup_range p).erase 0).erase 1 |>.erase (p-1))
+  · intro a ha
+    have h := (interior_mem p a).mp ha
+    omega
+  · intro a ha
+    have h := (interior_mem p a).mp ha
+    rcases interior_inverse_exists p a hp h.1 h.2 with ⟨b,hb,hbp,hba,hab⟩
+    exact ⟨b,(interior_mem p b).mpr ⟨hb,hbp⟩,hba,hab⟩
+
+theorem wilson (p : Nat) (hp : Prime p) : Congruent (factorial (p-1)) (-1) p := by
+  /-
+  Theorem: For a prime p, the factorial of p-1 is congruent to -1.
+  Proof: If p=2, the factorial is one and its difference from -1
+  is two. Otherwise the interior factors pair to give one modulo
+  p. The endpoints contribute 1*(p-1), which is congruent to -1.
+  Multiplying these congruences proves the assertion. QED
+  -/
+  have hp1 := hp.1
+  by_cases he : p=2
+  · subst p
+    exact ⟨by decide,1,by decide⟩
+  · have hp2 : 2 < p := by omega
+    rw [factorial_interior p hp2]
+    have hend : Congruent ((p : Int)-1) (-1) p := ⟨by omega,1,by omega⟩
+    have hm := modeq_mult _ (-1) _ 1 p hend (interior_product p hp hp2)
+    simpa only [Int.mul_one] using hm
+
+theorem factorial_square_roots (k p : Nat) (hp : Prime p) (he : p=4*k+1) :
+    Congruent ((factorial (2*k))^2) (-1) p ∧
+    Congruent ((-factorial (2*k))^2) (-1) p := by
+  /-
+  Theorem: If p=4k+1 is prime, both (2k)! and its negative square
+  to minus one modulo p.
+  Proof: Reflect the top 2k factors of (p-1)! using the preceding
+  lemma. There are evenly many minus signs, leaving ((2k)!)^2.
+  Wilson's theorem makes the original factorial minus one. A
+  number and its negative have the same square. QED
+  -/
+  have hf := factorial_reflection p (2*k) (by have := hp.1; omega) (by omega)
+  have hd : p-1-2*k=2*k := by omega
+  rw [hd,neg_one_power] at hf
+  have hpar : (2*k)%2=0 := by omega
+  rw [if_pos hpar,Int.one_mul] at hf
+  have hh : Congruent ((factorial (2*k))^2) (-1) p := by
+    have h := modeq_trans _ _ _ p (modeq_symm _ _ p hf) (wilson p hp)
+    simpa only [Int.pow_succ,Int.pow_zero,Int.one_mul] using h
+  refine ⟨hh,?_⟩
+  simpa only [Int.pow_succ,Int.pow_zero,Int.one_mul,Int.neg_mul,Int.mul_neg,Int.neg_neg] using hh
+
 end NumberTheory.SquareClasses
