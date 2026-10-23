@@ -2025,4 +2025,32 @@ theorem power_remainder (a : Int) (n : Nat) (hn : 0 < n)
   rw [←power_add,he,Int.mul_one] at h
   exact h
 
+theorem order_dvd_iff (a : Int) (n : Nat) (hn : 0 < n)
+    (hc : gcd a n=1) (m : Nat) :
+    Congruent (a^m) 1 n ↔ order a n ∣ m := by
+  /-
+  Theorem: A power is congruent to one exactly when the order
+  divides its exponent. Proof: Divide m by k=order(a,n), leaving
+  remainder r<k. The remainder-power lemma shows that a^r is
+  congruent to one if a^m is. If r were positive, minimality of k
+  would give k≤r, a contradiction. Thus r=0 and k divides m.
+  Conversely, a multiple of the returning exponent k returns to
+  one by the multiplication lemma. QED
+  -/
+  have hs := order_spec a n hn hc
+  constructor
+  · intro hm
+    have hr := modeq_trans _ _ _ n (modeq_symm _ _ n (power_remainder a n hn hc m)) hm
+    have hlt := Nat.mod_lt m hs.1
+    have hz : m % order a n=0 := by
+      by_cases hpos : 0 < m % order a n
+      · have hmin := hs.2.2 _ hpos hr
+        omega
+      · omega
+    refine ⟨m / order a n,?_⟩
+    have he := Nat.mod_add_div m (order a n)
+    omega
+  · rintro ⟨q,rfl⟩
+    exact power_multiple_one a n (order a n) q hs.2.1
+
 end NumberTheory.SquareClasses
