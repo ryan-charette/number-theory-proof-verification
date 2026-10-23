@@ -1453,4 +1453,24 @@ theorem monomial_length (k : Nat) : (monomial k).length=k+1 := by
   | zero => rfl
   | succ k ih => simp only [monomial,List.length_cons,ih]
 
+def leading : List Int → Int
+  | [] => 0
+  | [a] => a
+  | _ :: b :: cs => leading (b :: cs)
+
+theorem monomial_leading (k : Nat) : leading (monomial k)=1 := by
+  /-
+  Lemma: A monomial has leading coefficient one. Proof: The
+  constant monomial is [1]. Adding a zero in front of a nonempty
+  list leaves its final coefficient unchanged. Apply induction.
+  QED
+  -/
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    have hl := monomial_length k
+    cases he : monomial k with
+    | nil => rw [he] at hl; simp at hl
+    | cons b cs => simpa only [monomial,he,leading] using ih
+
 end NumberTheory.SquareClasses
