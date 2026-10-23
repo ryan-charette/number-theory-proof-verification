@@ -3121,4 +3121,37 @@ theorem interior_mem (p i : Nat) : i ∈ interiorResidues p ↔ 1 < i ∧ i < p-
   rw [(hnd.erase 1).mem_erase_iff,hnd.mem_erase_iff,nonzero_residues_mem]
   omega
 
+theorem factorial_interior (p : Nat) (hp : 2 < p) :
+    factorial (p-1)=((p : Int)-1)*intProduct ((interiorResidues p).map (fun i : Nat => (i : Int))) := by
+  /-
+  Lemma: For p>2, removing the two endpoints from the factorial
+  leaves (p-1) times the interior product. Proof: Rearrange the
+  positive residue list to place one first, then place p-1 first
+  in the remaining list. These are different entries. Removing
+  them gives the interior list, and the factor one disappears.
+  QED
+  -/
+  have hnd : (nonzeroResidues p).Nodup := (List.nodup_range p).erase 0
+  have hind : (interiorResidues p).Nodup := ((hnd.erase 1).erase (p-1))
+  letI : BEq Nat := instBEqOfDecidableEq
+  have h1 : 1 ∈ nonzeroResidues p := (nonzero_residues_mem p 1).mpr ⟨by omega,by omega⟩
+  have hlast : p-1 ∈ (nonzeroResidues p).erase 1 := by
+    apply (List.mem_erase_of_ne (by omega : p-1 ≠ 1)).mpr
+    exact (nonzero_residues_mem p (p-1)).mpr ⟨by omega,by omega⟩
+  have he1 := product_perm _ _ ((List.perm_cons_erase h1).map (fun i : Nat => (i : Int)))
+  have he2 := product_perm _ _ ((List.perm_cons_erase hlast).map (fun i : Nat => (i : Int)))
+  rw [factorial_residues p (by omega),he1]
+  simp only [List.map_cons,intProduct,Int.natCast_one,Int.one_mul]
+  rw [he2]
+  have hcast : ((p-1 : Nat) : Int)=(p : Int)-1 := by omega
+  simp only [List.map_cons,intProduct,hcast]
+  have hr : (((nonzeroResidues p).erase 1).erase (p-1)).Perm (interiorResidues p) := by
+    apply same_members_perm _ _ ((hnd.erase 1).erase (p-1))
+      hind
+    intro i
+    change i ∈ ((nonzeroResidues p).erase 1).erase (p-1) ↔ i ∈ interiorResidues p
+    rw [(hnd.erase 1).mem_erase_iff,hnd.mem_erase_iff,nonzero_residues_mem,interior_mem]
+    omega
+  rw [product_perm _ _ (hr.map (fun i : Nat => (i : Int)))]
+
 end NumberTheory.SquareClasses
