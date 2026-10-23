@@ -549,4 +549,17 @@ theorem complete_square (b c : Int) (p : Nat) (hp : Prime p) (hodd : p % 2=1) :
       simpa only [he,Int.sub_zero] using h.2
     exact modeq_trans _ _ _ p (modeq_symm _ _ p hh) hz
 
+def SquareClass (a : Int) (p : Nat) : Prop := ∃ x : Int, Congruent (x^2) a p
+
+theorem square_class_congruent (a b : Int) (p : Nat) (h : Congruent a b p) :
+    SquareClass a p ↔ SquareClass b p := by
+  /-
+  Lemma: Congruent integers are either both squares or both nonsquares.
+  Proof: A square congruent to one is congruent to the other by
+  transitivity. Use the reverse congruence for the converse. QED
+  -/
+  constructor
+  · rintro ⟨x,hx⟩; exact ⟨x,modeq_trans _ _ _ p hx h⟩
+  · rintro ⟨x,hx⟩; exact ⟨x,modeq_trans _ _ _ p hx (modeq_symm _ _ p h)⟩
+
 end NumberTheory.SquareClasses
