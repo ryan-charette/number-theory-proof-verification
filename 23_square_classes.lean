@@ -2745,4 +2745,152 @@ theorem square_partition (xs : List Int) (p : Nat) :
     by_cases hz : (p : Int) ∣ a <;> by_cases hs : SquareClass a p <;>
       simp_all [squareEntries,nonsquareEntries,nonzeroEntries,hz,hs,Nat.add_assoc,Nat.add_comm,Nat.add_left_comm]
 
+noncomputable def positiveLabel (a : Int) (n : Nat) : Nat :=
+  if canonicalLabel a n=0 then n else canonicalLabel a n
+
+theorem positiveLabel_spec (a : Int) (n : Nat) (hn : 0 < n) :
+    0 < positiveLabel a n ∧ positiveLabel a n ≤ n ∧ Congruent a (positiveLabel a n) n := by
+  /-
+  Lemma: Every integer has a positive representative at most n.
+  Proof: Use its canonical label unless that label is zero. Replace
+  zero by n, which is congruent to zero; otherwise the canonical
+  bounds already give a positive representative below n. QED
+  -/
+  have hs := canonicalLabel_spec a n hn
+  unfold positiveLabel
+  by_cases hz : canonicalLabel a n=0
+  · rw [if_pos hz]
+    have hs0 : Congruent a 0 n := by simpa only [hz,Int.natCast_zero] using hs.2
+    refine ⟨hn,Nat.le_refl _,modeq_trans a 0 n n hs0 ?_⟩
+    exact ⟨by omega,-1,by simp⟩
+  · rw [if_neg hz]
+    exact ⟨by omega,by omega,hs.2⟩
+
+theorem positive_congruent_equal (a b n : Int) (ha : 0 < a) (han : a ≤ n)
+    (hb : 0 < b) (hbn : b ≤ n) (h : Congruent a b n) : a=b := by
+  /-
+  Lemma: Congruent representatives in the interval from one to n
+  are equal. Proof: Subtract one from each. Their difference is
+  unchanged, and both now lie between zero and n-1. The bounded
+  remainder uniqueness theorem makes them equal. QED
+  -/
+  have hc : Congruent (a-1) (b-1) n := by
+    rcases h with ⟨hn,q,hq⟩
+    exact ⟨hn,q,by omega⟩
+  have he := bounded_congruent_equal (a-1) (b-1) n (by omega) (by omega)
+    (by omega) (by omega) hc
+  omega
+
+def Noncongruent (reps : List Int) (n : Nat) : Prop :=
+  reps.Nodup ∧ ∀ a ∈ reps, ∀ b ∈ reps, a ≡ b [MOD (n : Int)] → a=b
+
+def CompleteResidues (reps : List Int) (n : Nat) : Prop :=
+  Noncongruent reps n ∧ ∀ a : Int, ∃ r : Int, r ∈ reps ∧ a ≡ r [MOD (n : Int)]
+
+noncomputable def coprimeCount (xs : List Int) (n : Int) : Nat :=
+  (xs.filter (fun a => decide (gcd a n=1))).length
+
+theorem complete_coprime_count (xs : List Int) (n : Nat) (hn : 0 < n)
+    (hs : CompleteResidues xs n) : coprimeCount xs n=phi n := by
+  /-
+  Theorem: Every complete residue system modulo n contains exactly
+  phi(n) entries coprime to n.
+  Proof: Replace each coprime entry by its positive representative
+  between one and n. Congruence preserves coprimality, so these
+  labels belong to the reduced list. Two equal labels would give
+  congruent original entries, hence the same entry. Conversely,
+  completeness supplies an entry congruent to any reduced label;
+  this entry is coprime, and its positive label is the one requested.
+  Thus the two lists have the same entries without repetitions,
+  and consequently have the same length. QED
+  -/
+  let ys := xs.filter (fun a => decide (gcd a (n : Int)=1))
+  have hymem : ∀ a ∈ ys, a ∈ xs ∧ gcd a n=1 := by
+    intro a ha
+    have h := List.mem_filter.mp ha
+    exact ⟨h.1,of_decide_eq_true h.2⟩
+  have hynd : ys.Nodup := hs.1.1.filter _
+  have hnd : (ys.map (fun a => positiveLabel a n)).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ hynd
+    intro a b ha hb hab he
+    have hla := (positiveLabel_spec a n hn).2.2
+    have hlb := (positiveLabel_spec b n hn).2.2
+    rw [he] at hla
+    exact hab (hs.1.2 a (hymem a ha).1 b (hymem b hb).1
+      (modeq_trans _ _ _ n hla (modeq_symm _ _ n hlb)))
+  have hperm : (ys.map (fun a => positiveLabel a n)).Perm (reducedResidues n) := by
+    apply same_members_perm _ _ hnd (reduced_nodup n)
+    intro i
+    constructor
+    · intro hi
+      rcases List.mem_map.mp hi with ⟨a,ha,hai⟩
+      subst i
+      have hl := positiveLabel_spec a n hn
+      exact (reduced_mem n _).mpr ⟨hl.1,hl.2.1,
+        congruent_coprime a (positiveLabel a n) n (hymem a ha).2 hl.2.2⟩
+    · intro hi
+      have hi' := (reduced_mem n i).mp hi
+      rcases hs.2 (i : Int) with ⟨a,ha,hia⟩
+      have hc := congruent_coprime i a n hi'.2.2 hia
+      have hl := positiveLabel_spec a n hn
+      have he := positive_congruent_equal i (positiveLabel a n) n
+        (by omega) (by omega) (by omega) (by omega)
+        (modeq_trans _ _ _ n hia hl.2.2)
+      exact List.mem_map.mpr ⟨a,List.mem_filter.mpr ⟨ha,by simpa using hc⟩,by omega⟩
+  have hlen := hperm.length_eq
+  simpa only [List.length_map,ys,coprimeCount,phi] using hlen
+
+theorem phi_prime (p : Nat) (hp : Prime p) : phi p=p-1 := by
+  /-
+  Lemma: There are p-1 reduced representatives for a prime p.
+  Proof: Every positive integer below p is coprime to p. The
+  remaining candidate p is not: a Bezout identity would make p
+  divide one. Thus the reduced list has exactly the nonzero
+  canonical entries, whose number is p-1. QED
+  -/
+  have hself : gcd (p : Int) p ≠ 1 := by
+    intro hc
+    rcases bezout (p : Int) p with ⟨u,v,he⟩
+    rw [hc] at he
+    have hd : (p : Int) ∣ 1 := ⟨u+v,by rw [Int.mul_add]; omega⟩
+    have hb := divisor_le_positive p 1 (by decide) hd
+    have := hp.1
+    omega
+  have hperm : (reducedResidues p).Perm (nonzeroResidues p) := by
+    apply same_members_perm _ _ (reduced_nodup p) ((List.nodup_range p).erase 0)
+    intro i
+    change i ∈ reducedResidues p ↔ i ∈ nonzeroResidues p
+    rw [reduced_mem,nonzero_residues_mem]
+    constructor
+    · rintro ⟨hi,hip,hc⟩
+      have hne : i ≠ p := by intro he; subst i; exact hself hc
+      exact ⟨hi,by omega⟩
+    · rintro ⟨hi,hip⟩
+      exact ⟨hi,by omega,small_prime_coprime p i hp hi hip⟩
+  have hl := List.length_erase_of_mem (by simp; have := hp.1; omega : 0 ∈ List.range p)
+  have he := hperm.length_eq
+  simp only [List.length_range] at hl
+  change (reducedResidues p).length=p-1
+  exact he.trans hl
+
+theorem complete_nonzero_count (xs : List Int) (p : Nat) (hp : Prime p)
+    (hs : CompleteResidues xs p) : (nonzeroEntries xs p).length=p-1 := by
+  /-
+  Lemma: A complete residue system modulo a prime has p-1 nonzero
+  entries. Proof: An entry is coprime to p exactly when p does
+  not divide it. The number of coprime entries in any complete
+  system is phi(p), and phi(p)=p-1. QED
+  -/
+  have he : nonzeroEntries xs p=xs.filter (fun a => decide (gcd a p=1)) := by
+    apply List.filter_congr
+    intro a _
+    have hi : (¬ (p : Int) ∣ a) ↔ gcd a p=1 :=
+      ⟨prime_coprime a p hp,fun h hd => coprime_not_zero a p hp.1 h
+        ⟨by have := hp.1; omega,by simpa using hd⟩⟩
+    simp only [hi]
+  rw [he]
+  change coprimeCount xs p=p-1
+  rw [complete_coprime_count xs p (by have := hp.1; omega) hs,phi_prime p hp]
+
 end NumberTheory.SquareClasses
