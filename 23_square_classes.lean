@@ -2358,4 +2358,20 @@ theorem expanded_fractions_length (n : Nat) (ds : List Nat) :
   | nil => rfl
   | cons d ds ih => simp only [expandedFractions,List.length_append,List.length_map,ih,sumOn,phi]
 
+noncomputable def divisorSum (n : Nat) : Nat := sumOn (divisors n) phi
+
+theorem totient_divisor_sum (n : Nat) (hn : 0 < n) : divisorSum n=n := by
+  /-
+  Theorem: Adding phi(d) over the positive divisors of n gives n.
+  Proof: Group the fractions 1/n,...,n/n by their denominators
+  after reduction. The preceding correspondence places exactly
+  phi(d) of them in the row for d, and counts each fraction once.
+  The original list has n entries, giving the identity. This is
+  the elementary reduced-fraction proof of the divisor-sum formula.
+  QED
+  -/
+  have h := (reduced_fraction_correspondence n hn).length_eq
+  rw [expanded_fractions_length] at h
+  simpa only [divisorSum,positiveRange,List.length_map,List.length_range] using h
+
 end NumberTheory.SquareClasses
