@@ -679,4 +679,25 @@ theorem coprime_power_iff (a m : Int) (k : Nat) :
     rw [Int.pow_succ,coprime_product_iff,ih]
     exact ⟨fun h => h.1,fun h => ⟨h,h⟩⟩
 
+theorem root_is_coprime (x b : Int) (n k : Nat) (hk : 0 < k)
+    (hb : gcd b n=1) (h : Congruent (x^k) b n) : gcd x n=1 := by
+  /-
+  Lemma: A positive-power root of a coprime residue is coprime
+  to the modulus. Proof: Congruence makes x^k coprime whenever
+  b is coprime. Coprimality to a positive power is equivalent to
+  coprimality to the base, using the product criterion. QED
+  -/
+  have hc := congruent_coprime b (x^k) n hb (modeq_symm _ _ n h)
+  -- Reverse the inputs using their Bezout identity.
+  have hswap : gcd (n : Int) (x^k)=1 := by
+    rcases bezout (x^k) n with ⟨s,t,he⟩
+    rw [hc] at he
+    exact gcd_one_combination n (x^k) ⟨t,s,by omega⟩
+  have he : k=(k-1)+1 := by omega
+  rw [he] at hswap
+  have hc' := (coprime_power_iff n x (k-1)).mp hswap
+  rcases bezout (n : Int) x with ⟨s,t,hs⟩
+  rw [hc'] at hs
+  exact gcd_one_combination x n ⟨t,s,by omega⟩
+
 end NumberTheory.SquareClasses
