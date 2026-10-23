@@ -3051,4 +3051,17 @@ theorem factorial_reflection (p k : Nat) (hp : 0 < p) (hk : k < p) :
     simpa only [factorial,Int.pow_succ,Int.neg_mul,Int.mul_neg,
       Int.mul_assoc,Int.mul_comm,Int.mul_left_comm,Int.one_mul,Int.mul_neg_one] using hf
 
+theorem product_append (xs ys : List Int) : intProduct (xs++ys)=intProduct xs*intProduct ys := by
+  /-
+  Lemma: The product of two joined lists is the product of their
+  products. Proof: Induct on the first list. Its empty product is
+  one; in the next case, use induction on the tail and reassociate
+  the leading factor. QED
+  -/
+  induction xs with
+  | nil => simp [intProduct]
+  | cons a xs ih =>
+    change a*intProduct (xs++ys)=(a*intProduct xs)*intProduct ys
+    rw [ih,Int.mul_assoc]
+
 end NumberTheory.SquareClasses
