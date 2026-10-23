@@ -443,4 +443,36 @@ theorem modeq_symm (a b n : Int) (h : a ≡ b [MOD n]) : b ≡ a [MOD n] := by
   · exists -k
     rw [← Int.neg_sub a b, hk, Int.mul_neg]
 
+theorem monic_quadratic (a b c : Int) (p : Nat) (hp : Prime p)
+    (ha : ¬ (p : Int) ∣ a) :
+    ∃ b' c' : Int, ∀ x : Int,
+      Congruent (a*x^2+b*x+c) 0 p ↔ Congruent (x^2+b'*x+c') 0 p := by
+  /-
+  Theorem: A quadratic with nonzero leading coefficient modulo a
+  prime has the same solutions as a monic quadratic.
+  Proof: Choose u with a*u congruent to one and put b'=u*b, c'=u*c.
+  Multiplying the monic expression by a gives an expression congruent
+  to the original quadratic. Cancellation of the coprime factor a
+  shows that one is zero exactly when the other is zero. QED
+  -/
+  rcases inverse_integer a p hp ha with ⟨u,hu⟩
+  have hn : 0 < (p : Int) := by have := hp.1; omega
+  refine ⟨u*b,u*c,fun x => ?_⟩
+  have hb := modeq_mult (a*u) 1 (b*x) (b*x) p hu (modeq_refl _ _ hn)
+  have hc := modeq_mult (a*u) 1 c c p hu (modeq_refl _ _ hn)
+  have he := modeq_add _ _ _ _ p (modeq_add _ _ _ _ p
+    (modeq_refl (a*x^2) p hn) hb) hc
+  simp only [Int.one_mul,Int.mul_assoc] at he
+  have he' : Congruent (a*(x^2+(u*b)*x+u*c)) (a*x^2+b*x+c) p := by
+    simpa only [Int.mul_add,Int.mul_assoc] using he
+  constructor
+  · intro h
+    have hz := modeq_trans _ _ _ p he' h
+    apply cancel_coprime _ 0 a p (prime_coprime a p hp ha)
+    simpa only [Int.mul_comm,Int.zero_mul,Int.mul_zero] using hz
+  · intro h
+    have hz := modeq_mult a a _ 0 p (modeq_refl _ _ hn) h
+    simp only [Int.mul_zero] at hz
+    exact modeq_trans _ _ _ p (modeq_symm _ _ p he') hz
+
 end NumberTheory.SquareClasses
