@@ -2314,4 +2314,36 @@ theorem reduced_fraction_expansion (n k : Nat) (hn : 0 < n)
   refine ⟨d,i,hd,⟨g,by rw [hnd,Nat.mul_comm]⟩,(reduced_mem d i).mpr ⟨hi,hid,hcop⟩,?_⟩
   rw [hquot]; exact hki
 
+theorem reduced_fraction_correspondence (n : Nat) (hn : 0 < n) :
+    (expandedFractions n (divisors n)).Perm (positiveRange n) := by
+  /-
+  Theorem: Reducing 1/n,...,n/n gives a one-to-one correspondence
+  with the reduced fractions i/d for positive divisors d of n.
+  Proof: Reduction supplies every numerator in the original range.
+  Conversely expansion of 1≤i≤d gives 1≤(n/d)*i≤n. Distinct
+  reduced fractions have distinct expansions, as just proved.
+  Thus the two lists contain the same entries without repetitions.
+  The fractions are represented by integer numerator-denominator
+  pairs, so no rational-number machinery is required. QED
+  -/
+  apply same_members_perm _ _
+    (expanded_fractions_nodup n hn _ (divisors_nodup n)
+      (fun d hd => (divisors_mem n d hn).mp hd)) (positive_range_nodup n)
+  intro k
+  constructor
+  · intro hk
+    rcases (expanded_fractions_mem n k _).mp hk with ⟨d,hd,i,hi,hk⟩
+    have hd' := (divisors_mem n d hn).mp hd
+    have hi' := (reduced_mem d i).mp hi
+    have hq := divisor_factor n d hn hd'.2
+    apply (positive_range_mem n k).mpr
+    constructor
+    · rw [hk]; exact Nat.mul_pos hq.1 hi'.1
+    · have := Nat.mul_le_mul_left (n/d) hi'.2.1
+      omega
+  · intro hk
+    have hk' := (positive_range_mem n k).mp hk
+    rcases reduced_fraction_expansion n k hn hk'.1 hk'.2 with ⟨d,i,hd,hdn,hi,hki⟩
+    exact (expanded_fractions_mem n k _).mpr ⟨d,(divisors_mem n d hn).mpr ⟨hd,hdn⟩,i,hi,hki⟩
+
 end NumberTheory.SquareClasses
