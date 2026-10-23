@@ -2986,4 +2986,18 @@ theorem minus_one_square (p : Nat) (hp : Prime p) (ho : p%2=1) :
     · intro h
       exact False.elim (hr h)
 
+theorem minus_one_square_form (p : Nat) (hp : Prime p) (ho : p%2=1) :
+    SquareClass (-1) p ↔ ∃ k : Int, (p : Int)=4*k+1 := by
+  /-
+  Corollary: Minus one is a square exactly when p=4k+1 for an
+  integer k. Proof: Division by four identifies remainder one
+  with this equation; the quotient supplies k. QED
+  -/
+  rw [minus_one_square p hp ho]
+  constructor
+  · intro h
+    exact ⟨(p/4 : Nat),by omega⟩
+  · rintro ⟨k,hk⟩
+    omega
+
 end NumberTheory.SquareClasses
