@@ -3515,4 +3515,44 @@ theorem divides_initialProduct (d n : Nat) (hd : 0 < d) (hle : d ≤ n) :
       rw [initialProduct, ht]
       simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
 
+theorem prime_one_mod_four_above (n : Nat) :
+    ∃ p : Nat, Prime p ∧ n < p ∧ p%4=1 := by
+  /-
+  Theorem: There are primes congruent to one modulo four above
+  every bound, and hence infinitely many such primes.
+  Proof: Let M be the product of the positive integers at most n,
+  with empty product one, and put N=(2M)^2+1. Choose a prime
+  divisor p of N. The number N is odd, so p is odd. The square
+  (2M)^2 is minus one modulo p, forcing p to be one modulo four.
+  If p were at most n, it would divide M and consequently divide
+  both (2M)^2 and (2M)^2+1, forcing it to divide one. This is
+  impossible. Thus p exceeds n. QED
+  -/
+  let M := initialProduct n
+  let N := (2*M)*(2*M)+1
+  have hmpos : 0 < M := initialProduct_positive n
+  have hprod : 0 < (2*M)*(2*M) := Nat.mul_pos (by omega) (by omega)
+  rcases prime_divisor N (by dsimp [N]; omega) with ⟨p,hp,hpd⟩
+  have hp1 := hp.1
+  have hne : p≠2 := by
+    intro he
+    subst p
+    have hd := Nat.mod_eq_zero_of_dvd hpd
+    simp [N,Nat.add_mod,Nat.mul_mod] at hd
+  have hmod := prime_residue_mod_four p hp hne
+  have ho : p%2=1 := by omega
+  have hs : SquareClass (-1) p := by
+    refine ⟨(2*M : Nat),by omega,?_⟩
+    have hd : (p : Int) ∣ (N : Int) := Int.ofNat_dvd.mpr hpd
+    simpa only [N,Int.natCast_add,Int.natCast_mul,Int.natCast_one,
+      Int.pow_succ,Int.pow_zero,Int.one_mul,Int.sub_neg] using hd
+  refine ⟨p,hp,?_,(minus_one_square p hp ho).mp hs⟩
+  apply Nat.lt_of_not_ge
+  intro hle
+  have hm : p ∣ M := divides_initialProduct p n (by omega) hle
+  have hz := Nat.mod_eq_zero_of_dvd hm
+  have hn := Nat.mod_eq_zero_of_dvd hpd
+  have hone : 1%p=1 := Nat.mod_eq_of_lt hp1
+  simp [N,Nat.add_mod,Nat.mul_mod,hz,hone] at hn
+
 end NumberTheory.SquareClasses
