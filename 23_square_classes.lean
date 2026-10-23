@@ -2905,4 +2905,39 @@ theorem filtered_noncongruent (xs : List Int) (p : Nat) (h : Noncongruent xs p)
   intro a b ha hb hab hc
   exact hab (h.2 a (List.mem_filter.mp ha).1 b (List.mem_filter.mp hb).1 hc)
 
+theorem half_square_classes (xs : List Int) (p : Nat) (hp : Prime p)
+    (ho : p % 2=1) (hs : CompleteResidues xs p) :
+    (squareEntries xs p).length=(p-1)/2 ∧
+    (nonsquareEntries xs p).length=(p-1)/2 := by
+  /-
+  Theorem: In any complete residue system modulo an odd prime,
+  exactly half of the nonzero entries are squares and half are
+  nonsquares. Proof: Put h=(p-1)/2. Euler's criterion places the
+  squares among roots of x^h-1 and the nonsquares among roots
+  of x^h+1. Each polynomial has degree h and leading coefficient
+  one, so each list has at most h entries. The two lists together
+  have p-1=2h entries. Both bounds must therefore be equalities.
+  QED
+
+  This proves both the perfect-square and quadratic-residue
+  formulations. Oddness is required for the approved correction.
+  -/
+  have hh := odd_prime_data p hp ho
+  letI : DecidablePred (fun a : Int => SquareClass a p) := fun _ => Classical.propDecidable _
+  have hb := power_value_count 1 p ((p-1)/2) hp hh.1 (squareEntries xs p)
+    (filtered_noncongruent xs p hs.1 _) (by
+      intro a ha
+      have h := List.mem_filter.mp ha
+      have hi : ¬ (p : Int) ∣ a ∧ SquareClass a p := of_decide_eq_true h.2
+      exact (euler_square_criterion a p hp ho hi.1).mp hi.2)
+  have hn := power_value_count (-1) p ((p-1)/2) hp hh.1 (nonsquareEntries xs p)
+    (filtered_noncongruent xs p hs.1 _) (by
+      intro a ha
+      have h := List.mem_filter.mp ha
+      have hi : ¬ (p : Int) ∣ a ∧ ¬ SquareClass a p := of_decide_eq_true h.2
+      exact (euler_nonsquare_criterion a p hp ho hi.1).mp hi.2)
+  have ht := square_partition xs p
+  rw [complete_nonzero_count xs p hp hs] at ht
+  omega
+
 end NumberTheory.SquareClasses
