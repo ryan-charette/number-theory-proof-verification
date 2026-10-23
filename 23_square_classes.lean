@@ -3279,4 +3279,28 @@ theorem endpoint_inverses (p : Nat) (hp : Prime p) :
     simp only [Int.mul_sub,Int.sub_mul,Int.one_mul,Int.mul_one]
     omega
 
+theorem self_inverse_endpoints (p : Nat) (a : Int) (hp : Prime p) (ha : 0 < a)
+    (hap : a < p) (h : Congruent (a*a) 1 p) : a=1 ∨ a=(p : Int)-1 := by
+  /-
+  Lemma: A self-inverse representative modulo a prime is one or
+  p-1. Proof: Factor a*a-1=(a-1)*(a+1). The prime divides one
+  factor. If it divides a-1, that factor lies between zero and
+  p-1 and must be zero. If it divides a+1, the positive factor
+  lies at most p and is congruent to p, so it equals p. QED
+  -/
+  have hd : (p : Int) ∣ (a-1)*(a+1) := by
+    have he : (a-1)*(a+1)=a*a-1 := by
+      simp only [Int.sub_mul,Int.mul_add,Int.mul_one,Int.one_mul]; omega
+    rw [he]; exact h.2
+  rcases prime_product_divides p (a-1) (a+1) hp hd with h₁ | h₂
+  · have hc : Congruent (a-1) 0 p := ⟨h.1,by simpa using h₁⟩
+    have he := bounded_congruent_equal (a-1) 0 p (by omega) (by omega) (by omega) (by omega) hc
+    exact Or.inl (by omega)
+  · rcases h₂ with ⟨q,hq⟩
+    have hc : Congruent (a+1) p p := by
+      refine ⟨h.1,q-1,?_⟩
+      rw [Int.mul_sub,Int.mul_one]; omega
+    have he := positive_congruent_equal (a+1) p p (by omega) (by omega) (by omega) (by omega) hc
+    exact Or.inr (by omega)
+
 end NumberTheory.SquareClasses
