@@ -2641,4 +2641,21 @@ theorem nonsquare_times_nonsquare (a b : Int) (p : Nat) (hp : Prime p)
     ((euler_nonsquare_criterion b p hp ho hb).mp hsb)
   simpa using h
 
+noncomputable def squareSign (a : Int) (p : Nat) : Int :=
+  @ite Int (SquareClass a p) (Classical.propDecidable _) 1 (-1)
+
+theorem euler_sign (a : Int) (p : Nat) (hp : Prime p)
+    (ho : p % 2=1) (ha : ¬ (p : Int) ∣ a) :
+    Congruent (a^((p-1)/2)) (squareSign a p) p := by
+  /-
+  Theorem: The half-exponent power is congruent to the sign that
+  is one for squares and minus one for nonsquares.
+  Proof: Split into the square and nonsquare cases and apply
+  the corresponding Euler criterion. QED
+  -/
+  letI : DecidablePred (fun a : Int => SquareClass a p) := fun _ => Classical.propDecidable _
+  by_cases hs : SquareClass a p
+  · simpa [squareSign,hs] using (euler_square_criterion a p hp ho ha).mp hs
+  · simpa [squareSign,hs] using (euler_nonsquare_criterion a p hp ho ha).mp hs
+
 end NumberTheory.SquareClasses
