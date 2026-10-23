@@ -2781,4 +2781,64 @@ theorem positive_congruent_equal (a b n : Int) (ha : 0 < a) (han : a ≤ n)
     (by omega) (by omega) hc
   omega
 
+def Noncongruent (reps : List Int) (n : Nat) : Prop :=
+  reps.Nodup ∧ ∀ a ∈ reps, ∀ b ∈ reps, a ≡ b [MOD (n : Int)] → a=b
+
+def CompleteResidues (reps : List Int) (n : Nat) : Prop :=
+  Noncongruent reps n ∧ ∀ a : Int, ∃ r : Int, r ∈ reps ∧ a ≡ r [MOD (n : Int)]
+
+noncomputable def coprimeCount (xs : List Int) (n : Int) : Nat :=
+  (xs.filter (fun a => decide (gcd a n=1))).length
+
+theorem complete_coprime_count (xs : List Int) (n : Nat) (hn : 0 < n)
+    (hs : CompleteResidues xs n) : coprimeCount xs n=phi n := by
+  /-
+  Theorem: Every complete residue system modulo n contains exactly
+  phi(n) entries coprime to n.
+  Proof: Replace each coprime entry by its positive representative
+  between one and n. Congruence preserves coprimality, so these
+  labels belong to the reduced list. Two equal labels would give
+  congruent original entries, hence the same entry. Conversely,
+  completeness supplies an entry congruent to any reduced label;
+  this entry is coprime, and its positive label is the one requested.
+  Thus the two lists have the same entries without repetitions,
+  and consequently have the same length. QED
+  -/
+  let ys := xs.filter (fun a => decide (gcd a (n : Int)=1))
+  have hymem : ∀ a ∈ ys, a ∈ xs ∧ gcd a n=1 := by
+    intro a ha
+    have h := List.mem_filter.mp ha
+    exact ⟨h.1,of_decide_eq_true h.2⟩
+  have hynd : ys.Nodup := hs.1.1.filter _
+  have hnd : (ys.map (fun a => positiveLabel a n)).Nodup := by
+    apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ hynd
+    intro a b ha hb hab he
+    have hla := (positiveLabel_spec a n hn).2.2
+    have hlb := (positiveLabel_spec b n hn).2.2
+    rw [he] at hla
+    exact hab (hs.1.2 a (hymem a ha).1 b (hymem b hb).1
+      (modeq_trans _ _ _ n hla (modeq_symm _ _ n hlb)))
+  have hperm : (ys.map (fun a => positiveLabel a n)).Perm (reducedResidues n) := by
+    apply same_members_perm _ _ hnd (reduced_nodup n)
+    intro i
+    constructor
+    · intro hi
+      rcases List.mem_map.mp hi with ⟨a,ha,hai⟩
+      subst i
+      have hl := positiveLabel_spec a n hn
+      exact (reduced_mem n _).mpr ⟨hl.1,hl.2.1,
+        congruent_coprime a (positiveLabel a n) n (hymem a ha).2 hl.2.2⟩
+    · intro hi
+      have hi' := (reduced_mem n i).mp hi
+      rcases hs.2 (i : Int) with ⟨a,ha,hia⟩
+      have hc := congruent_coprime i a n hi'.2.2 hia
+      have hl := positiveLabel_spec a n hn
+      have he := positive_congruent_equal i (positiveLabel a n) n
+        (by omega) (by omega) (by omega) (by omega)
+        (modeq_trans _ _ _ n hia hl.2.2)
+      exact List.mem_map.mpr ⟨a,List.mem_filter.mpr ⟨ha,by simpa using hc⟩,by omega⟩
+  have hlen := hperm.length_eq
+  simpa only [List.length_map,ys,coprimeCount,phi] using hlen
+
 end NumberTheory.SquareClasses
