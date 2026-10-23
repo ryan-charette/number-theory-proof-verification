@@ -2893,4 +2893,16 @@ theorem complete_nonzero_count (xs : List Int) (p : Nat) (hp : Prime p)
   change coprimeCount xs p=p-1
   rw [complete_coprime_count xs p (by have := hp.1; omega) hs,phi_prime p hp]
 
+theorem filtered_noncongruent (xs : List Int) (p : Nat) (h : Noncongruent xs p)
+    (f : Int → Bool) : (xs.filter f).Pairwise (fun a b => ¬ Congruent a b p) := by
+  /-
+  Lemma: Filtering a list of distinct residue classes preserves
+  pairwise incongruence. Proof: Filtered entries belong to the
+  original list. Congruence would make them equal there, which
+  contradicts the preserved absence of repetitions. QED
+  -/
+  apply List.Pairwise.imp_of_mem ?_ (h.1.filter f)
+  intro a b ha hb hab hc
+  exact hab (h.2 a (List.mem_filter.mp ha).1 b (List.mem_filter.mp hb).1 hc)
+
 end NumberTheory.SquareClasses
