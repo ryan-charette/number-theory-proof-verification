@@ -2940,4 +2940,21 @@ theorem half_square_classes (xs : List Int) (p : Nat) (hp : Prime p)
   rw [complete_nonzero_count xs p hp hs] at ht
   omega
 
+theorem neg_one_power (k : Nat) :
+    (-1 : Int)^k=if k%2=0 then 1 else -1 := by
+  /-
+  Lemma: Even powers of minus one are one, and odd powers are
+  minus one. Proof: The zeroth power is one. Multiplication by
+  minus one switches the sign as the parity switches. QED
+  -/
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    rw [Int.pow_succ,ih]
+    by_cases h : k%2=0
+    · have h' : (k+1)%2≠0 := by omega
+      simp [h,h']
+    · have h' : (k+1)%2=0 := by omega
+      simp [h,h']
+
 end NumberTheory.SquareClasses
