@@ -2589,4 +2589,14 @@ theorem product_power (a b : Int) (k : Nat) : (a*b)^k=a^k*b^k := by
     rw [Int.pow_succ,ih,Int.pow_succ,Int.pow_succ]
     simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
 
+theorem nonzero_product (a b : Int) (p : Nat) (hp : Prime p)
+    (ha : ¬ (p : Int) ∣ a) (hb : ¬ (p : Int) ∣ b) : ¬ (p : Int) ∣ a*b := by
+  /-
+  Lemma: The product of two nonzero classes modulo a prime is
+  nonzero. Proof: Divisibility of the product would force
+  divisibility of one of its factors. QED
+  -/
+  intro h
+  exact (prime_product_divides p a b hp h).elim ha hb
+
 end NumberTheory.SquareClasses
