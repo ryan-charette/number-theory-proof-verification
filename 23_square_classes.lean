@@ -2658,4 +2658,23 @@ theorem euler_sign (a : Int) (p : Nat) (hp : Prime p)
   · simpa [squareSign,hs] using (euler_square_criterion a p hp ho ha).mp hs
   · simpa [squareSign,hs] using (euler_nonsquare_criterion a p hp ho ha).mp hs
 
+theorem square_sign_product (a b : Int) (p : Nat) (hp : Prime p)
+    (ho : p % 2=1) (ha : ¬ (p : Int) ∣ a) (hb : ¬ (p : Int) ∣ b) :
+    squareSign (a*b) p=squareSign a p*squareSign b p := by
+  /-
+  Theorem: The square sign is multiplicative on nonzero classes.
+  Proof: There are four cases. Two squares give a square product;
+  one square and one nonsquare give a nonsquare product; two
+  nonsquares give a square product. These are exactly the four
+  multiplication rules for the signs one and minus one. QED
+  -/
+  letI : DecidablePred (fun a : Int => SquareClass a p) := fun _ => Classical.propDecidable _
+  by_cases hs : SquareClass a p <;> by_cases ht : SquareClass b p
+  · simp [squareSign,hs,ht,square_times_square a b p hs ht]
+  · simp [squareSign,hs,ht,square_times_nonsquare a b p hp ho ha hb hs ht]
+  · have h := square_times_nonsquare b a p hp ho hb ha ht hs
+    rw [Int.mul_comm b a] at h
+    simp [squareSign,hs,ht,h]
+  · simp [squareSign,hs,ht,nonsquare_times_nonsquare a b p hp ho ha hb hs ht]
+
 end NumberTheory.SquareClasses
