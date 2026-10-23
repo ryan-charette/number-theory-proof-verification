@@ -3405,4 +3405,154 @@ theorem factorial_square_roots (k p : Nat) (hp : Prime p) (he : p=4*k+1) :
   refine ⟨hh,?_⟩
   simpa only [Int.pow_succ,Int.pow_zero,Int.one_mul,Int.neg_mul,Int.mul_neg,Int.neg_neg] using hh
 
+def initialProduct : Nat → Nat
+  | 0 => 1
+  | n+1 => (n+1) * initialProduct n
+
+theorem initialProduct_positive (n : Nat) : 0 < initialProduct n := by
+  /-
+  Lemma: The product of the integers from one through n is positive.
+  Proof: The empty product is one. Each next product multiplies a
+  positive preceding product by the positive integer n+1. Induction
+  therefore proves positivity for every n. QED
+  -/
+  induction n with
+  | zero => decide
+  | succ n ih => exact Nat.mul_pos (by omega) ih
+
+theorem nonprime_factors (n : Nat) (hn : 1 < n) (hp : ¬ Prime n) :
+    ∃ a b : Nat, 1 < a ∧ a < n ∧ 1 < b ∧ b < n ∧ n = a * b := by
+  /-
+  Theorem: A nonprime number greater than one is a product of two
+  numbers strictly between one and itself.
+  Proof: Since n is not prime, it has a divisor a other than one and n.
+  Write n=a*b. Neither factor is zero. The factor b cannot be one,
+  since that would give a=n. Both factors are therefore at least two.
+  Each divides n and is at most n; equality would force the other
+  factor to be one. Thus both factors are strictly smaller than n. QED
+  -/
+  have hex : ∃ a : Nat, a ∣ n ∧ a ≠ 1 ∧ a ≠ n := by
+    apply Classical.byContradiction
+    intro he
+    apply hp
+    constructor
+    · exact hn
+    · intro a ha
+      by_cases h₁ : a = 1
+      · exact Or.inl h₁
+      · by_cases h₂ : a = n
+        · exact Or.inr h₂
+        · exact False.elim (he ⟨a, ha, h₁, h₂⟩)
+  rcases hex with ⟨a, ha, ha₁, han⟩
+  rcases ha with ⟨b, heq⟩
+  have ha₀ : a ≠ 0 := by intro hz; rw [hz, Nat.zero_mul] at heq; omega
+  have hb₀ : b ≠ 0 := by intro hz; rw [hz, Nat.mul_zero] at heq; omega
+  have hb₁ : b ≠ 1 := by intro ho; rw [ho, Nat.mul_one] at heq; omega
+  have hal := Nat.le_of_dvd (by omega : 0 < n) (show a ∣ n from ⟨b, heq⟩)
+  have hbl := Nat.le_of_dvd (by omega : 0 < n) (show b ∣ n from ⟨a, by rw [Nat.mul_comm]; exact heq⟩)
+  have hbn : b ≠ n := by
+    intro hbn
+    have ht : b * a = b * 1 := by rw [Nat.mul_one, Nat.mul_comm]; omega
+    have haeq := Nat.eq_of_mul_eq_mul_left (by omega : 0 < b) ht
+    exact ha₁ haeq
+  exists a, b
+  exact ⟨by omega, by omega, by omega, by omega, heq⟩
+
+theorem prime_divisor (n : Nat) (hn : 1 < n) :
+    ∃ p : Nat, Prime p ∧ p ∣ n := by
+  /-
+  Theorem: Every natural number greater than one has a prime divisor.
+  Proof: Use strong induction on n. If n is prime, take n itself.
+  Otherwise n=a*b with 1<a<n. By induction a has a prime divisor p.
+  If a=p*t, then n=p*(t*b), so p also divides n. QED
+  -/
+  induction n using Nat.strongRecOn with
+  | ind n ih =>
+    by_cases hp : Prime n
+    · exact ⟨n, hp, ⟨1, by rw [Nat.mul_one]⟩⟩
+    · rcases nonprime_factors n hn hp with ⟨a, b, ha, han, _, _, heq⟩
+      rcases ih a han ha with ⟨p, hpp, t, ht⟩
+      exists p
+      constructor
+      · exact hpp
+      · exists t * b
+        rw [heq, ht, Nat.mul_assoc]
+
+theorem prime_residue_mod_four (p : Nat) (hp : Prime p) (hne : p ≠ 2) :
+    p % 4 = 1 ∨ p % 4 = 3 := by
+  /-
+  Lemma: A prime other than two has remainder one or three modulo four.
+  Proof: The possible remainders are zero, one, two, and three. A
+  remainder zero or two makes p even. Then two divides p, so primality
+  forces p=2, contrary to the hypothesis. The other two remain. QED
+  -/
+  by_cases h : p % 4 = 1 ∨ p % 4 = 3
+  · exact h
+  · have heven : p % 2 = 0 := by omega
+    have hd : 2 ∣ p := ⟨p/2, by omega⟩
+    rcases hp.2 2 hd with ho | he
+    · omega
+    · exact False.elim (hne he.symm)
+
+theorem divides_initialProduct (d n : Nat) (hd : 0 < d) (hle : d ≤ n) :
+    d ∣ initialProduct n := by
+  /-
+  Lemma: Every positive integer at most n divides the product of the
+  integers from one through n.
+  Proof: Induct on n. There is no positive integer at most zero.
+  At the next step, if d=n+1 it is the newly added factor. Otherwise
+  d≤n, so write the preceding product as d*t by induction. The new
+  product is then d*((n+1)*t), giving the required quotient. QED
+  -/
+  induction n with
+  | zero => omega
+  | succ n ih =>
+    by_cases he : d = n+1
+    · subst d
+      exact ⟨initialProduct n, rfl⟩
+    · rcases ih (by omega) with ⟨t, ht⟩
+      exists (n+1)*t
+      rw [initialProduct, ht]
+      simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
+
+theorem prime_one_mod_four_above (n : Nat) :
+    ∃ p : Nat, Prime p ∧ n < p ∧ p%4=1 := by
+  /-
+  Theorem: There are primes congruent to one modulo four above
+  every bound, and hence infinitely many such primes.
+  Proof: Let M be the product of the positive integers at most n,
+  with empty product one, and put N=(2M)^2+1. Choose a prime
+  divisor p of N. The number N is odd, so p is odd. The square
+  (2M)^2 is minus one modulo p, forcing p to be one modulo four.
+  If p were at most n, it would divide M and consequently divide
+  both (2M)^2 and (2M)^2+1, forcing it to divide one. This is
+  impossible. Thus p exceeds n. QED
+  -/
+  let M := initialProduct n
+  let N := (2*M)*(2*M)+1
+  have hmpos : 0 < M := initialProduct_positive n
+  have hprod : 0 < (2*M)*(2*M) := Nat.mul_pos (by omega) (by omega)
+  rcases prime_divisor N (by dsimp [N]; omega) with ⟨p,hp,hpd⟩
+  have hp1 := hp.1
+  have hne : p≠2 := by
+    intro he
+    subst p
+    have hd := Nat.mod_eq_zero_of_dvd hpd
+    simp [N,Nat.add_mod,Nat.mul_mod] at hd
+  have hmod := prime_residue_mod_four p hp hne
+  have ho : p%2=1 := by omega
+  have hs : SquareClass (-1) p := by
+    refine ⟨(2*M : Nat),by omega,?_⟩
+    have hd : (p : Int) ∣ (N : Int) := Int.ofNat_dvd.mpr hpd
+    simpa only [N,Int.natCast_add,Int.natCast_mul,Int.natCast_one,
+      Int.pow_succ,Int.pow_zero,Int.one_mul,Int.sub_neg] using hd
+  refine ⟨p,hp,?_,(minus_one_square p hp ho).mp hs⟩
+  apply Nat.lt_of_not_ge
+  intro hle
+  have hm : p ∣ M := divides_initialProduct p n (by omega) hle
+  have hz := Nat.mod_eq_zero_of_dvd hm
+  have hn := Nat.mod_eq_zero_of_dvd hpd
+  have hone : 1%p=1 := Nat.mod_eq_of_lt hp1
+  simp [N,Nat.add_mod,Nat.mul_mod,hz,hone] at hn
+
 end NumberTheory.SquareClasses
