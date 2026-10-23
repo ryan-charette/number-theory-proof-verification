@@ -3018,4 +3018,37 @@ theorem minus_one_sign (p : Nat) (hp : Prime p) (ho : p%2=1) :
       omega
     simp [squareSign,hn]
 
+def factorial : Nat → Int
+  | 0 => 1
+  | n+1 => ((n+1 : Nat) : Int)*factorial n
+
+theorem factorial_reflection (p k : Nat) (hp : 0 < p) (hk : k < p) :
+    Congruent (factorial (p-1))
+      ((-1 : Int)^k*factorial k*factorial (p-1-k)) p := by
+  /-
+  Lemma: Removing the top k factors from (p-1)! modulo p gives
+    (p-1)! congruent to (-1)^k*k!*(p-1-k)!.
+  Proof: Induct on k. Initially no factor is removed. At the next
+  step the top remaining factor is p-1-k, congruent to -(k+1).
+  Its magnitude extends k! to (k+1)! and its sign contributes
+  one more factor of minus one. QED
+  -/
+  induction k with
+  | zero => simpa [factorial,Int.pow_zero] using modeq_refl (factorial (p-1)) p (by omega)
+  | succ k ih =>
+    have hi := ih (by omega)
+    have he : p-1-k=(p-1-(k+1))+1 := by omega
+    rw [he,factorial] at hi
+    have hfactor : Congruent (((p-1-(k+1))+1 : Nat) : Int) (-((k+1 : Nat) : Int)) p := by
+      refine ⟨by omega,1,?_⟩
+      simp only [Int.mul_one]
+      omega
+    have ht := modeq_mult _ _ (factorial (p-1-(k+1))) (factorial (p-1-(k+1))) p
+      hfactor (modeq_refl _ _ (by omega))
+    have ht' := modeq_mult ((-1 : Int)^k*factorial k) ((-1 : Int)^k*factorial k) _ _ p
+      (modeq_refl _ _ (by omega)) ht
+    have hf := modeq_trans _ _ _ p hi ht'
+    simpa only [factorial,Int.pow_succ,Int.neg_mul,Int.mul_neg,
+      Int.mul_assoc,Int.mul_comm,Int.mul_left_comm,Int.one_mul,Int.mul_neg_one] using hf
+
 end NumberTheory.SquareClasses
