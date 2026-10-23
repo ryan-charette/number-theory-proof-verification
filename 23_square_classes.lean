@@ -2599,4 +2599,15 @@ theorem nonzero_product (a b : Int) (p : Nat) (hp : Prime p)
   intro h
   exact (prime_product_divides p a b hp h).elim ha hb
 
+theorem square_times_square (a b : Int) (p : Nat)
+    (ha : SquareClass a p) (hb : SquareClass b p) : SquareClass (a*b) p := by
+  /-
+  Theorem: The product of two square classes is a square class.
+  Proof: If x^2 is congruent to a and y^2 to b, then (x*y)^2
+  is congruent to a*b, by multiplying the congruences. QED
+  -/
+  rcases ha with ⟨x,hx⟩
+  rcases hb with ⟨y,hy⟩
+  exact ⟨x*y,by rw [product_power]; exact modeq_mult _ _ _ _ p hx hy⟩
+
 end NumberTheory.SquareClasses
