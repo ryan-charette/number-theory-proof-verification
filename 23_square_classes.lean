@@ -509,4 +509,44 @@ theorem odd_prime_data (p : Nat) (hp : Prime p) (hodd : p % 2=1) :
   have := divisor_le_positive (p : Int) 2 (by omega) h
   omega
 
+theorem complete_square (b c : Int) (p : Nat) (hp : Prime p) (hodd : p % 2=1) :
+    ∃ alpha beta : Int, ∀ x : Int,
+      Congruent (x^2+b*x+c) 0 p ↔ Congruent ((x+alpha)^2) beta p := by
+  /-
+  Theorem: Over an odd prime modulus a translation changes a monic
+  quadratic equation into a square equation.
+  Proof: Invert two modulo p. Choose alpha with 2*alpha congruent
+  to b, and put beta=alpha^2-c. Expanding gives
+    (x+alpha)^2-beta = x^2+2*alpha*x+c.
+  This is congruent to x^2+b*x+c. Hence their being zero is
+  equivalent. The odd-prime hypothesis is the approved correction;
+  it is needed to invert two. QED
+  -/
+  rcases inverse_integer 2 p hp (odd_prime_data p hp hodd).2.2 with ⟨u,hu⟩
+  have hn : 0 < (p : Int) := by have := hp.1; omega
+  let alpha := u*b
+  have ha : Congruent (2*alpha) b p := by
+    simpa only [alpha,Int.mul_assoc,Int.one_mul] using
+      modeq_mult (2*u) 1 b b p hu (modeq_refl _ _ hn)
+  refine ⟨alpha,alpha^2-c,fun x => ?_⟩
+  have hh := modeq_add _ _ _ _ p
+    (modeq_add _ _ _ _ p (modeq_refl (x^2) p hn)
+      (modeq_mult _ b x x p ha (modeq_refl _ _ hn)))
+    (modeq_refl c p hn)
+  have he : (x+alpha)^2-(alpha^2-c)=x^2+(2*alpha)*x+c := by
+    simp only [Int.pow_succ,Int.pow_zero,Int.mul_one,Int.one_mul,Int.add_mul,Int.mul_add]
+    rw [Int.mul_comm x alpha,Int.mul_assoc 2 alpha x]
+    omega
+  constructor
+  · intro h
+    have hz := modeq_trans _ _ _ p hh h
+    refine ⟨hn,?_⟩
+    rw [he]
+    simpa only [Int.sub_zero] using hz.2
+  · intro h
+    have hz : Congruent (x^2+(2*alpha)*x+c) 0 p := by
+      refine ⟨hn,?_⟩
+      simpa only [he,Int.sub_zero] using h.2
+    exact modeq_trans _ _ _ p (modeq_symm _ _ p hh) hz
+
 end NumberTheory.SquareClasses
