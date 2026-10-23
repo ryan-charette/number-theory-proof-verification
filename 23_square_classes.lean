@@ -3169,4 +3169,64 @@ theorem prime_inverse_unique (p a b c : Nat) (hp : Prime p)
   have he := bounded_congruent_equal b c p (by omega) (by omega) (by omega) (by omega) hd
   omega
 
+theorem paired_product (p : Nat) (hp : Prime p) (xs : List Nat) (hnd : xs.Nodup)
+    (hb : ∀ a ∈ xs, 0 < a ∧ a < p)
+    (hpairs : ∀ a ∈ xs, ∃ b ∈ xs, b ≠ a ∧ Congruent ((a : Int)*b) 1 p) :
+    Congruent (intProduct (xs.map (fun a : Nat => (a : Int)))) 1 p := by
+  /-
+  Lemma: A distinct list closed under different inverse partners
+  has product congruent to one. Proof: Induct on its length.
+  The empty product is one. Pair the first entry a with its inverse
+  b and remove both. Any remaining entry c still has its partner:
+  a removed partner would, by uniqueness of inverses, force c to
+  be the other removed entry. Apply induction to the remaining
+  list. Rearranging the product puts a*b first, and both this pair
+  and the remaining product are congruent to one. QED
+  -/
+  letI : BEq Nat := instBEqOfDecidableEq
+  generalize hk : xs.length = k
+  induction k using Nat.strongRecOn generalizing xs with
+  | ind k ih =>
+    cases xs with
+    | nil => simpa [intProduct] using modeq_refl 1 p (by have := hp.1; omega)
+    | cons a tail =>
+      have hnod := List.nodup_cons.mp hnd
+      have ha := hb a (by simp)
+      rcases hpairs a (by simp) with ⟨b,hbin,hba,hab⟩
+      have hbt : b ∈ tail := (List.mem_cons.mp hbin).resolve_left hba
+      let rest := tail.erase b
+      have hrest : ∀ c ∈ rest, c ∈ tail := fun c hc => List.mem_of_mem_erase hc
+      have hbound : ∀ c ∈ rest, 0 < c ∧ c < p := fun c hc => hb c (by simp [hrest c hc])
+      have hremain : ∀ c ∈ rest, ∃ d ∈ rest, d ≠ c ∧ Congruent ((c : Int)*d) 1 p := by
+        intro c hc
+        have hct := hrest c hc
+        have hca : c ≠ a := by intro he; subst c; exact hnod.1 hct
+        have hcb : c ≠ b := by
+          intro he; subst c
+          exact hnod.2.not_mem_erase hc
+        rcases hpairs c (by simp [hct]) with ⟨d,hd,hdc,hcd⟩
+        have hda : d ≠ a := by
+          intro he; subst d
+          have hsame := prime_inverse_unique p a c b hp ha.1 ha.2 (hbound c hc).2
+            (hb b hbin).2 (by simpa only [Int.mul_comm] using hcd) hab
+          exact hcb hsame
+        have hdb : d ≠ b := by
+          intro he; subst d
+          have hsame := prime_inverse_unique p b c a hp (hb b hbin).1 (hb b hbin).2
+            (hbound c hc).2 ha.2 (by simpa only [Int.mul_comm] using hcd)
+            (by simpa only [Int.mul_comm] using hab)
+          exact hca hsame
+        have hdt : d ∈ tail := (List.mem_cons.mp hd).resolve_left hda
+        exact ⟨d,(List.mem_erase_of_ne hdb).mpr hdt,hdc,hcd⟩
+      have hlen : rest.length < k := by
+        have he := List.length_erase_of_mem hbt
+        simp only [List.length_cons] at hk
+        dsimp [rest]; omega
+      have hprod := ih rest.length hlen rest (hnod.2.erase b) hbound hremain rfl
+      have he := product_perm _ _ ((List.perm_cons_erase hbt).map (fun c : Nat => (c : Int)))
+      have hm := modeq_mult _ 1 _ 1 p hab hprod
+      change Congruent ((a : Int)*intProduct (tail.map (fun c : Nat => (c : Int)))) 1 p
+      rw [he]
+      simpa only [List.map_cons,intProduct,Int.mul_assoc,Int.one_mul] using hm
+
 end NumberTheory.SquareClasses
