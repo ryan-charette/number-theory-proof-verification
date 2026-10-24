@@ -2885,4 +2885,18 @@ theorem range_sum_congr (n : Nat) (f g : Nat → Nat)
   | zero => rfl
   | succ n ih => rw [rangeSum,rangeSum,ih (fun i hi => h i (by omega)),h n (by omega)]
 
+theorem range_sum_parity (n : Nat) (f g : Nat → Nat)
+    (h : ∀ i<n, f i%2=g i%2) : rangeSum n f%2=rangeSum n g%2 := by
+  /-
+  Lemma: Termwise equal parities give equal parities of sums.
+  Proof: Induct and reduce each addition modulo two. QED
+  -/
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    simp only [rangeSum]
+    have hi := ih (fun i hi => h i (by omega))
+    have he := h n (by omega)
+    omega
+
 end NumberTheory.ResidueSigns
