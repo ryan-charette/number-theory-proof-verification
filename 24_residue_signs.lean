@@ -3061,4 +3061,23 @@ theorem half_floor_bound (p q i : Nat) (hp : Prime p) (hq : Prime q)
   dsimp [n] at hd
   omega
 
+theorem strict_multiple_quotient (p x j : Nat) (hp : 0<p) (hx : ¬ p ∣ x) :
+    p*(j+1)<x ↔ j<x/p := by
+  /-
+  Lemma: When x is not divisible by p, positive multiples below
+  x are indexed by j<x/p. Proof: The division inequality gives
+  (j+1)p<=x exactly when j+1<=floor(x/p). Equality of the multiple
+  with x is excluded by the nondivisibility hypothesis. QED
+  -/
+  constructor
+  · intro h
+    have he : (j+1)*p≤x := by rw [Nat.mul_comm]; omega
+    have := (Nat.le_div_iff_mul_le hp).mpr he
+    omega
+  · intro h
+    have he := (Nat.le_div_iff_mul_le hp).mp (by omega : j+1≤x/p)
+    have hn : p*(j+1)≠x := fun he => hx ⟨j+1,he.symm⟩
+    rw [Nat.mul_comm] at he
+    omega
+
 end NumberTheory.ResidueSigns
