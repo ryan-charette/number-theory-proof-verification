@@ -2582,4 +2582,46 @@ theorem primitive_index (a x : Int) (p : Nat) (hp : Prime p) (ha : PrimitiveRoot
   rw [ha.2] at hib
   exact ⟨i-1,by omega,by simpa only [Nat.sub_add_cancel hi] using hxi⟩
 
+def SquareClass (a : Int) (p : Nat) : Prop := ∃ x : Int, Congruent (x^2) a p
+
+theorem euler_square_criterion (a : Int) (p : Nat) (hp : Prime p)
+    (hodd : p % 2=1) (ha : ¬ (p : Int) ∣ a) :
+    SquareClass a p ↔ Congruent (a^((p-1)/2)) 1 p := by
+  /-
+  Theorem: A nonzero class modulo an odd prime is a square exactly
+  when its half-exponent power is one.
+  Proof: Put h=(p-1)/2. If a=x^2, then x is coprime to p and
+  a^h=x^(2h)=x^(p-1) is one by Fermat.
+  Conversely choose a primitive root g and write a congruent to g^i.
+  If a^h is one, the order p-1=2h divides i*h. Cancel h to obtain
+  2|i. Writing i=2j shows a congruent to (g^j)^2. QED
+  -/
+  have hn : 0 < p := by have := hp.1; omega
+  have hh := odd_prime_data p hp hodd
+  have hc := prime_coprime a p hp ha
+  constructor
+  · rintro ⟨x,hx⟩
+    have hxc := root_is_coprime x a p 2 (by decide) hc hx
+    have hf := fermat_coprime x p hp hxc
+    have he : (x^2)^((p-1)/2)=x^(p-1) := by rw [power_mul,←hh.2.1]
+    have ht := modeq_pow _ _ p ((p-1)/2) hx
+    rw [he] at ht
+    exact modeq_trans _ _ _ p (modeq_symm _ _ p ht) hf
+  · intro h
+    rcases primitive_root_exists p hp with ⟨g,_hgpos,_hglt,hg⟩
+    rcases primitive_index g a p hp hg hc with ⟨e,_he,he⟩
+    have ht := modeq_pow _ _ p ((p-1)/2) he
+    rw [power_mul] at ht
+    have hd := (order_dvd_iff g p hn hg.1 ((e+1)*((p-1)/2))).mp
+      (modeq_trans _ _ _ p (modeq_symm _ _ p ht) h)
+    rw [hg.2] at hd
+    have hd2 : 2*((p-1)/2) ∣ (e+1)*((p-1)/2) := by
+      rw [←hh.2.1]
+      exact hd
+    have hd' : 2 ∣ e+1 := Nat.dvd_of_mul_dvd_mul_right hh.1 hd2
+    rcases hd' with ⟨j,hj⟩
+    refine ⟨(g : Int)^j,?_⟩
+    rw [power_mul,Nat.mul_comm j 2,←hj]
+    exact modeq_symm _ _ p he
+
 end NumberTheory.ResidueSigns
