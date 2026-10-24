@@ -2947,4 +2947,42 @@ theorem negative_count_sum (n : Nat) (r : Nat → Int) :
   | succ n ih =>
     simp [List.range_succ,negative_count_append,negativeCount,rangeSum,ih]
 
+theorem floor_parity_term (p a i : Nat) (hp : Prime p) (ho : p%2=1) (hao : a%2=1) :
+    (((i+1)*a)/p+(if centered (((i+1)*a : Nat) : Int) p<0 then 1 else 0)+
+      magnitude (centered (((i+1)*a : Nat) : Int) p))%2=(i+1)%2 := by
+  /-
+  Lemma: For odd a and p, the quotient, centering sign, and
+  centered magnitude together have the parity of the position.
+  Proof: Write a(i+1)=p*q+m with 0<=m<p. Modulo two this gives
+  q+m congruent to i+1. Centering either leaves m unchanged,
+  or replaces it by magnitude p-m and adds one sign. Since
+  p is odd, 1+p-m has the same parity as m. QED
+  -/
+  let x := (i+1)*a
+  let m := x%p
+  have hn : 0 < p := by have := hp.1; omega
+  have hm : m<p := Nat.mod_lt x hn
+  have hd := congrArg (fun k : Nat => k%2) (Nat.mod_add_div x p)
+  have hrel : (m+x/p)%2=(i+1)%2 := by
+    simpa only [x,m,Nat.add_mod,Nat.mul_mod,ho,hao,Nat.one_mul,Nat.mul_one,Nat.mod_mod] using hd
+  have hc : centered (x : Int) p=
+      if m≤(p-1)/2 then (m : Int) else (m : Int)-p := by
+    simp only [centered,←Int.ofNat_emod,m]
+    split <;> split <;> omega
+  change (x/p+(if centered (x : Int) p<0 then 1 else 0)+magnitude (centered (x : Int) p))%2=_
+  have hv := magnitude_cast (centered (x : Int) p)
+  by_cases h : m≤(p-1)/2
+  · rw [hc,if_pos h] at hv ⊢
+    have hnon : ¬ (m : Int)<0 := by omega
+    rw [if_neg hnon] at hv ⊢
+    have he : magnitude (m : Int)=m := by omega
+    rw [he]
+    omega
+  · rw [hc,if_neg h] at hv ⊢
+    have hneg : (m : Int)-p<0 := by omega
+    rw [if_pos hneg] at hv ⊢
+    have he : magnitude ((m : Int)-p)=p-m := by omega
+    rw [he]
+    omega
+
 end NumberTheory.ResidueSigns
