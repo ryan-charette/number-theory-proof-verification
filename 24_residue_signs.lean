@@ -2709,4 +2709,39 @@ theorem neg_one_power (k : Nat) :
     · have h' : (k+1)%2=0 := by omega
       simp [h,h']
 
+theorem gauss_sign (p : Nat) (a : Int) (r : Nat → Int)
+    (hp : Prime p) (ho : p%2=1) (ha : ¬ (p : Int) ∣ a)
+    (hr : ∀ i<(p-1)/2, Congruent (r i) (((i : Int)+1)*a) p)
+    (hb : ∀ i<(p-1)/2, -((p-1)/2 : Nat) ≤ r i ∧ r i ≤ ((p-1)/2 : Nat)) :
+    squareSign a p=(-1 : Int)^(negativeCount ((List.range ((p-1)/2)).map r)) := by
+  /-
+  Theorem: The sign of a modulo an odd prime equals minus one
+  raised to the number of negative centered representatives
+  among a,2a,...,ha.
+  Proof: Their product is (-1)^g*h! by the preceding theorem.
+  Multiplying the original list gives a^h*h!. Congruence of
+  corresponding factors makes these products congruent.
+  Cancel h!, which is coprime to p, and use Euler's criterion.
+  The resulting congruence between two signs is equality. QED
+  -/
+  have hn : 0 < (p : Int) := by have := hp.1; omega
+  have ht := product_congruent (List.range ((p-1)/2)) r
+    (fun i : Nat => ((i : Int)+1)*a) p hn (by intro i hi; exact hr i (List.mem_range.mp hi))
+  rw [centered_product p a r hp ho ha hr hb] at ht
+  have he : intProduct ((List.range ((p-1)/2)).map (fun i : Nat => ((i : Int)+1)*a))=
+      a^((p-1)/2)*factorial ((p-1)/2) := by
+    have h := scaled_product ((List.range ((p-1)/2)).map (fun i : Nat => i+1)) a
+    rw [List.length_map,List.length_range,←factorial_product] at h
+    simpa only [List.map_map,Function.comp_def,Int.natCast_add,Int.natCast_one] using h
+  rw [he] at ht
+  have hc := cancel_coprime _ _ (factorial ((p-1)/2)) p (half_factorial_coprime p hp ho) ht
+  have heuler := euler_sign a p hp ho ha
+  have hsign := modeq_trans _ _ _ p hc heuler
+  apply Eq.symm
+  apply sign_congruent_equal _ _ p hp ho ?_ ?_ hsign
+  · rw [neg_one_power]
+    split <;> simp
+  · unfold squareSign
+    split <;> simp
+
 end NumberTheory.ResidueSigns
