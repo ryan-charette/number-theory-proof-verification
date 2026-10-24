@@ -3095,4 +3095,28 @@ theorem range_count_below (n t : Nat) :
     · rw [if_pos h]; omega
     · rw [if_neg h]; omega
 
+theorem lattice_row_count (p q i : Nat) (hp : Prime p) (hq : Prime q)
+    (hpo : p%2=1) (hqo : q%2=1) (hne : p≠q) (hi : i<(p-1)/2) :
+    rangeSum ((q-1)/2) (fun j => if p*(j+1)<q*(i+1) then 1 else 0)=q*(i+1)/p := by
+  /-
+  Lemma: The number of lattice points below the diagonal in row
+  i+1 is floor(q(i+1)/p). Proof: The strict-multiple criterion
+  identifies the qualifying indices. The quotient is at most
+  the half-height, so counting these indices gives the quotient. QED
+  -/
+  have hh := odd_prime_data p hp hpo
+  have hdiv := prime_cross_not_divides p q i hp hq hne (by omega)
+  have he := range_sum_congr ((q-1)/2)
+    (fun j => if p*(j+1)<q*(i+1) then 1 else 0)
+    (fun j => if j<q*(i+1)/p then 1 else 0) (by
+      intro j _
+      dsimp only
+      have ht := strict_multiple_quotient p (q*(i+1)) j (by have := hp.1; omega) hdiv
+      by_cases h : j<q*(i+1)/p
+      · simp [h,ht.mpr h]
+      · have hn : ¬p*(j+1)<q*(i+1) := fun hh => h (ht.mp hh)
+        simp [h,hn])
+  rw [he,range_count_below]
+  exact Nat.min_eq_right (half_floor_bound p q i hp hq hpo hqo hi)
+
 end NumberTheory.ResidueSigns
