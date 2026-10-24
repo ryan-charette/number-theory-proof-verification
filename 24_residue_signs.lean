@@ -3034,4 +3034,31 @@ theorem prime_cross_not_divides (p q i : Nat) (hp : Prime p) (hq : Prime q)
   · have hb := Nat.le_of_dvd (by omega : 0<i+1) (Int.ofNat_dvd.mp hi')
     omega
 
+theorem half_floor_bound (p q i : Nat) (hp : Prime p) (hq : Prime q)
+    (hpo : p%2=1) (hqo : q%2=1) (hi : i<(p-1)/2) :
+    (q*(i+1))/p ≤ (q-1)/2 := by
+  /-
+  Lemma: The row quotient stays within the half-height rectangle.
+  Proof: Put m=(p-1)/2 and n=(q-1)/2. Since i+1<=m,
+    q(i+1)<=qm<(n+1)p.
+  The strict inequality follows by expanding p=2m+1 and q=2n+1.
+  Division by positive p therefore gives quotient at most n. QED
+  -/
+  let m := (p-1)/2
+  let n := (q-1)/2
+  have hpm := odd_prime_data p hp hpo
+  have hqn := odd_prime_data q hq hqo
+  have heP : p=2*m+1 := by dsimp [m]; omega
+  have heQ : q=2*n+1 := by dsimp [n]; omega
+  have hle : q*(i+1) ≤ q*m := Nat.mul_le_mul_left q (by dsimp [m]; omega)
+  have hlt : q*m<(n+1)*p := by
+    rw [heP,heQ]
+    simp only [Nat.add_mul,Nat.mul_add,Nat.one_mul,Nat.mul_one]
+    have he : 2*n*m=n*(2*m) := by simp only [Nat.mul_assoc,Nat.mul_comm,Nat.mul_left_comm]
+    rw [he]
+    omega
+  have hd := (Nat.div_lt_iff_lt_mul (by have := hp.1; omega : 0<p)).mpr (Nat.lt_of_le_of_lt hle hlt)
+  dsimp [n] at hd
+  omega
+
 end NumberTheory.ResidueSigns
