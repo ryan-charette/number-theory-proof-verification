@@ -438,4 +438,24 @@ theorem bounded_congruent_equal (r s m : Int) (hr : 0 ≤ r) (hrm : r < m)
   exact (division_unique r m 0 r q s h.1 (by simp) (by omega)
     hr hrm hs hsm).2
 
+theorem half_representative_nonzero (p i : Nat) (a r : Int)
+    (hp : Prime p) (ho : p%2=1) (ha : gcd a p=1) (hi : i<(p-1)/2)
+    (hr : Congruent r (((i : Int)+1)*a) p) : r≠0 := by
+  /-
+  Lemma: A representative of one of a,2a,...,ha is nonzero,
+  where h=(p-1)/2 and a is coprime to p.
+  Proof: A zero representative would allow cancellation of a,
+  making i+1 congruent to zero. Both lie between zero and p-1,
+  so uniqueness of bounded representatives gives i+1=0. QED
+  -/
+  intro hz
+  subst r
+  have hh := odd_prime_data p hp ho
+  have hc : Congruent (((i : Int)+1)*a) (0*a) p := by
+    simpa only [Int.zero_mul] using modeq_symm _ _ p hr
+  have he := cancel_coprime ((i : Int)+1) 0 a p ha hc
+  have heq := bounded_congruent_equal ((i : Int)+1) 0 p
+    (by omega) (by omega) (by omega) (by have := hp.1; omega) he
+  omega
+
 end NumberTheory.ResidueSigns
