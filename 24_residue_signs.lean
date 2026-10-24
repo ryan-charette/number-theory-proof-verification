@@ -2819,4 +2819,21 @@ theorem negative_range_count (r : Nat → Int) (n t : Nat)
       rw [if_neg hn']
       omega
 
+theorem doubled_centered_negative (p i : Nat) (hp : Prime p) (ho : p%2=1)
+    (hi : i<(p-1)/2) : centered (((i : Int)+1)*2) p<0 ↔ p/4<i+1 := by
+  /-
+  Lemma: The centered representative of 2(i+1) is negative
+  precisely when i+1 exceeds p/4.
+  Proof: These doubled entries lie strictly between zero and p,
+  so they already are ordinary remainders. Centering subtracts
+  p exactly when the entry exceeds (p-1)/2, equivalently when
+  its position exceeds p/4. QED
+  -/
+  have hh := odd_prime_data p hp ho
+  have he : (((i : Int)+1)*2) % (p : Int)=((i : Int)+1)*2 :=
+    Int.emod_eq_of_lt (by omega) (by omega)
+  unfold centered
+  rw [he]
+  split <;> omega
+
 end NumberTheory.ResidueSigns
