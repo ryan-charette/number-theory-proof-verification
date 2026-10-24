@@ -1003,4 +1003,28 @@ theorem root_is_coprime (x b : Int) (n k : Nat) (hk : 0 < k)
   rw [hc'] at hs
   exact gcd_one_combination x n ⟨t,s,by omega⟩
 
+theorem integer_division_exists (a : Int) (n : Nat) (hn : 0 < n) :
+    ∃ q r : Int, a=(n : Int)*q+r ∧ 0 ≤ r ∧ r < n := by
+  /-
+  Lemma: Every integer has a quotient and a nonnegative remainder
+  less than a positive natural divisor n.
+  Proof: Let t=|a|. Since n≥1, a+n*t≥a+|a|≥0. Divide this
+  nonnegative integer by n using the well-ordering construction.
+  If a+n*t=n*q+r, then a=n*(q-t)+r, with the same remainder bounds.
+  QED
+  -/
+  let t : Int := a.natAbs
+  have ht : 0 ≤ t := by dsimp [t]; omega
+  have ha : -a ≤ t := by
+    have h : -a ≤ (-a).natAbs := Int.le_natAbs
+    simpa only [Int.natAbs_neg] using h
+  have hmul := Int.mul_le_mul_of_nonneg_right (by omega : (1 : Int) ≤ n) ht
+  rw [Int.one_mul] at hmul
+  have hnonneg : 0 ≤ a+(n : Int)*t := by omega
+  rcases division_exists (a+(n : Int)*t).toNat n hn with ⟨q,r,he,hr,hrn⟩
+  rw [Int.toNat_of_nonneg hnonneg] at he
+  refine ⟨q-t,r,?_,hr,hrn⟩
+  rw [Int.mul_sub]
+  omega
+
 end NumberTheory.ResidueSigns
