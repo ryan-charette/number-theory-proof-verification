@@ -3128,4 +3128,16 @@ theorem range_sum_const (n c : Nat) : rangeSum n (fun _ => c)=n*c := by
   | zero => simp [rangeSum]
   | succ n ih => simp [rangeSum,ih,Nat.succ_mul]
 
+theorem range_sum_swap (m n : Nat) (f : Nat → Nat → Nat) :
+    rangeSum m (fun i => rangeSum n (fun j => f i j))=
+      rangeSum n (fun j => rangeSum m (fun i => f i j)) := by
+  /-
+  Lemma: A finite rectangular sum may be taken by rows or columns.
+  Proof: Induct on the number of rows. Adding a row adds its
+  sum; distribute this addition over the column sums. QED
+  -/
+  induction m with
+  | zero => simp [rangeSum,range_sum_const]
+  | succ m ih => simp only [rangeSum,range_sum_add,ih]
+
 end NumberTheory.ResidueSigns
