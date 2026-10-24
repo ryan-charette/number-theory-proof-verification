@@ -1228,4 +1228,15 @@ theorem power_mul (a : Int) (i j : Nat) : (a^i)^j=a^(i*j) := by
   | zero => simp [Int.pow_zero]
   | succ j ih => rw [Int.pow_succ,ih,Nat.mul_succ,power_add]
 
+theorem modeq_pow_step (a b n : Int) (k : Nat)
+    (h : a ≡ b [MOD n]) (hk : a ^ k ≡ b ^ k [MOD n]) :
+    a ^ (k + 1) ≡ b ^ (k + 1) [MOD n] := by
+  /-
+  Theorem: Advance an exponent by one.
+  Proof: a ^ (k + 1) = a ^ k * a, and likewise for b.
+  Multiply the two assumed congruences. QED
+  -/
+  rw [Int.pow_succ, Int.pow_succ]
+  exact modeq_mult (a ^ k) (b ^ k) a b n hk h
+
 end NumberTheory.ResidueSigns
