@@ -2985,4 +2985,35 @@ theorem floor_parity_term (p a i : Nat) (hp : Prime p) (ho : p%2=1) (hao : a%2=1
     rw [he]
     omega
 
+def floorSum (a p : Nat) : Nat := rangeSum ((p-1)/2) (fun i => ((i+1)*a)/p)
+
+theorem gauss_floor_sign (p a : Nat) (hp : Prime p) (ho : p%2=1)
+    (hao : a%2=1) (ha : ¬ (p : Int) ∣ a) :
+    squareSign a p=(-1 : Int)^(floorSum a p) := by
+  /-
+  Theorem: For an odd positive multiplier, the sign is minus one
+  raised to the sum of the quotients floor(ai/p), for 1<=i<=h.
+  Proof: Sum the termwise parity identity. The centered magnitudes
+  rearrange 1,...,h, so their sum equals the sum of the positions
+  and cancels modulo two. The quotient sum and negative count
+  thus have equal parity. Gauss's lemma gives the result. QED
+  -/
+  let r := fun i : Nat => centered (((i+1)*a : Nat) : Int) p
+  have hr : ∀ i<(p-1)/2, Congruent (r i) (((i : Int)+1)*(a : Int)) p := by
+    intro i _
+    simpa only [r,Int.natCast_mul,Int.natCast_add,Int.natCast_one] using
+      (centered_spec (((i+1)*a : Nat) : Int) p hp ho).1
+  have hb : ∀ i<(p-1)/2, -((p-1)/2 : Nat) ≤ r i ∧ r i ≤ ((p-1)/2 : Nat) :=
+    fun i _ => (centered_spec _ p hp ho).2
+  have hm := list_sum_perm _ _ (centered_magnitudes_perm p a r hp ho (prime_coprime a p hp ha) hr hb)
+  rw [←range_sum_list,←range_sum_list] at hm
+  have ht := range_sum_parity ((p-1)/2)
+    (fun i => ((i+1)*a)/p+(if r i<0 then 1 else 0)+magnitude (r i)) (fun i => i+1)
+    (fun i _ => floor_parity_term p a i hp ho hao)
+  rw [range_sum_add,range_sum_add,hm,←negative_count_sum] at ht
+  have he : negativeCount ((List.range ((p-1)/2)).map r)%2=floorSum a p%2 := by
+    unfold floorSum
+    omega
+  rw [gauss_sign p a r hp ho ha hr hb,neg_one_power,neg_one_power,he]
+
 end NumberTheory.ResidueSigns
