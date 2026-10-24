@@ -3119,4 +3119,13 @@ theorem lattice_row_count (p q i : Nat) (hp : Prime p) (hq : Prime q)
   rw [he,range_count_below]
   exact Nat.min_eq_right (half_floor_bound p q i hp hq hpo hqo hi)
 
+theorem range_sum_const (n c : Nat) : rangeSum n (fun _ => c)=n*c := by
+  /-
+  Lemma: Summing a constant n times gives n times that constant.
+  Proof: Induct and use the multiplication successor identity. QED
+  -/
+  induction n with
+  | zero => simp [rangeSum]
+  | succ n ih => simp [rangeSum,ih,Nat.succ_mul]
+
 end NumberTheory.ResidueSigns
