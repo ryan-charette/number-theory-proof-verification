@@ -665,4 +665,17 @@ theorem product_perm (xs ys : List Int) (h : xs.Perm ys) : intProduct xs=intProd
   | swap a b xs => simp only [intProduct,Int.mul_left_comm]
   | trans _ _ ih₁ ih₂ => exact ih₁.trans ih₂
 
+theorem product_append (xs ys : List Int) : intProduct (xs++ys)=intProduct xs*intProduct ys := by
+  /-
+  Lemma: The product of two joined lists is the product of their
+  products. Proof: Induct on the first list. Its empty product is
+  one; in the next case, use induction on the tail and reassociate
+  the leading factor. QED
+  -/
+  induction xs with
+  | nil => simp [intProduct]
+  | cons a xs ih =>
+    change a*intProduct (xs++ys)=(a*intProduct xs)*intProduct ys
+    rw [ih,Int.mul_assoc]
+
 end NumberTheory.ResidueSigns
