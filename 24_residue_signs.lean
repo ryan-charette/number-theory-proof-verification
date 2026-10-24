@@ -3140,4 +3140,25 @@ theorem range_sum_swap (m n : Nat) (f : Nat → Nat → Nat) :
   | zero => simp [rangeSum,range_sum_const]
   | succ m ih => simp only [rangeSum,range_sum_add,ih]
 
+theorem rectangle_partition (m n : Nat) (f g : Nat → Nat → Nat)
+    (h : ∀ i<m, ∀ j<n, f i j+g i j=1) :
+    rangeSum m (fun i => rangeSum n (fun j => f i j))+
+      rangeSum m (fun i => rangeSum n (fun j => g i j))=m*n := by
+  /-
+  Lemma: If two indicators partition every cell of a rectangle,
+  their total counts add to its area. Proof: Add their sums
+  termwise. Each cell contributes one, so each row contributes
+  n and all m rows contribute mn. QED
+  -/
+  rw [←range_sum_add]
+  have he := range_sum_congr m
+    (fun i => rangeSum n (fun j => f i j)+rangeSum n (fun j => g i j))
+    (fun _ => n) (by
+      intro i hi
+      dsimp only
+      rw [←range_sum_add]
+      have hj := range_sum_congr n (fun j => f i j+g i j) (fun _ => 1) (h i hi)
+      rw [hj,range_sum_const,Nat.mul_one])
+  rw [he,range_sum_const]
+
 end NumberTheory.ResidueSigns
