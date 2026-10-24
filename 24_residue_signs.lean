@@ -678,4 +678,24 @@ theorem product_append (xs ys : List Int) : intProduct (xs++ys)=intProduct xs*in
     change a*intProduct (xs++ys)=(a*intProduct xs)*intProduct ys
     rw [ih,Int.mul_assoc]
 
+def factorial : Nat → Int
+  | 0 => 1
+  | n+1 => ((n+1 : Nat) : Int)*factorial n
+
+theorem factorial_product (n : Nat) :
+    factorial n=intProduct (((List.range n).map (fun i => i+1)).map (fun i : Nat => (i : Int))) := by
+  /-
+  Lemma: The recursively defined factorial is the product of the
+  list 1,...,n. Proof: At zero both products are empty and equal
+  one. Increasing n appends n+1 to the list. Split off that final
+  factor and use induction; commutativity puts it in the order
+  used by the factorial recursion. QED
+  -/
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    simp only [factorial,List.range_succ,List.map_append,List.map_cons,List.map_nil,
+      product_append,intProduct,Int.mul_one]
+    rw [ih,Int.mul_comm]
+
 end NumberTheory.ResidueSigns
