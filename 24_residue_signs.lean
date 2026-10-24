@@ -2797,4 +2797,26 @@ theorem negative_count_append (xs ys : List Int) :
   | nil => simp [negativeCount]
   | cons x xs ih => simp [negativeCount,ih,Nat.add_assoc]
 
+theorem negative_range_count (r : Nat → Int) (n t : Nat)
+    (h : ∀ i<n, r i<0 ↔ t<i+1) :
+    negativeCount ((List.range n).map r)=n-t := by
+  /-
+  Lemma: If the negative entries are exactly the positions after
+  t in a list of n positions, their number is n-t, truncated at
+  zero. Proof: Append one position at a time. Positions up to t
+  contribute nothing; each subsequent position contributes one. QED
+  -/
+  induction n with
+  | zero => simp [negativeCount]
+  | succ n ih =>
+    have ht := ih (fun i hi => h i (by omega))
+    rw [List.range_succ,List.map_append,negative_count_append,ht]
+    simp only [List.map_cons,List.map_nil,negativeCount,Nat.add_zero]
+    by_cases hn : t<n+1
+    · rw [if_pos ((h n (by omega)).mpr hn)]
+      omega
+    · have hn' : ¬ r n<0 := fun hr => hn ((h n (by omega)).mp hr)
+      rw [if_neg hn']
+      omega
+
 end NumberTheory.ResidueSigns
