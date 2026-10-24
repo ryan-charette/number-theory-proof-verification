@@ -1708,4 +1708,28 @@ theorem prime_product_divides (p : Nat) (a b : Int) (hp : Prime p)
     have hb := cancel_coprime b 0 a p hc hm
     exact Or.inr (by simpa using hb.2)
 
+theorem quotient_root (cs : List Int) (r s : Int) (p : Nat) (hp : Prime p)
+    (hr : (p : Int) ∣ evaluate cs r) (hs : (p : Int) ∣ evaluate cs s)
+    (hne : ¬ Congruent r s p) : (p : Int) ∣ evaluate (quotient r cs) s := by
+  /-
+  Lemma: Removing a root r leaves every incongruent root s as a
+  root of the quotient modulo p. Proof: The division identity is
+
+    f(s)-f(r)=(s-r)*g(s).
+
+  The prime divides both values on the left, hence their difference.
+  A prime dividing a product divides a factor. It cannot divide
+  s-r, since the two roots are incongruent. Therefore it divides
+  g(s), as required. QED
+  -/
+  have hd := dvd_linear p (evaluate cs s) (evaluate cs r) 1 (-1) hs hr
+  have he := division_identity cs r s
+  have hid : evaluate cs s*1+evaluate cs r*(-1)=(s-r)*evaluate (quotient r cs) s := by
+    simp only [Int.mul_one,Int.mul_neg]
+    omega
+  rw [hid] at hd
+  rcases prime_product_divides p (s-r) (evaluate (quotient r cs) s) hp hd with h | h
+  · exact False.elim (hne (modeq_symm s r p ⟨by have := hp.1; omega,h⟩))
+  · exact h
+
 end NumberTheory.ResidueSigns
