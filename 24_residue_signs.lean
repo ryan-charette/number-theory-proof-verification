@@ -69,4 +69,12 @@ theorem signed_product (rs : List Int) :
     · simp only [negativeCount,if_neg h,Nat.zero_add]
       simp only [Int.mul_assoc,Int.mul_comm,Int.mul_left_comm]
 
+theorem dvd_refl (a : Int) : a ∣ a := by
+  /-
+  Theorem: Every integer divides itself.
+  Proof: a = a * 1, so choose the integer 1. QED
+  -/
+  exists 1
+  rw [Int.mul_one]
+
 end NumberTheory.ResidueSigns
