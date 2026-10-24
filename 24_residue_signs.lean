@@ -1457,4 +1457,17 @@ theorem equal_sum_forces_equal_terms (ds : List Nat) (f g : Nat → Nat)
     · subst d; exact hfirsteq
     · exact ih htail hresteq d hd
 
+def positiveRange (n : Nat) : List Nat := (List.range n).map (fun i => i+1)
+
+theorem positive_range_nodup (n : Nat) : (positiveRange n).Nodup := by
+  /-
+  Lemma: The positive range has no repetitions.
+  Proof: Adding one to two different natural numbers cannot make
+  them equal; the original range has no repetitions. QED
+  -/
+  apply List.pairwise_map.mpr
+  apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (List.nodup_range n)
+  intro i j h he
+  exact h (by omega)
+
 end NumberTheory.ResidueSigns
