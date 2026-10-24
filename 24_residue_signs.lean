@@ -698,4 +698,25 @@ theorem factorial_product (n : Nat) :
       product_append,intProduct,Int.mul_one]
     rw [ih,Int.mul_comm]
 
+theorem centered_product (p : Nat) (a : Int) (r : Nat → Int)
+    (hp : Prime p) (ho : p%2=1) (ha : ¬ (p : Int) ∣ a)
+    (hr : ∀ i<(p-1)/2, Congruent (r i) (((i : Int)+1)*a) p)
+    (hb : ∀ i<(p-1)/2, -((p-1)/2 : Nat) ≤ r i ∧ r i ≤ ((p-1)/2 : Nat)) :
+    intProduct ((List.range ((p-1)/2)).map r)=
+      (-1 : Int)^(negativeCount ((List.range ((p-1)/2)).map r))*factorial ((p-1)/2) := by
+  /-
+  Theorem: The product of the centered representatives is h!
+  times a sign for each negative entry.
+  Proof: The signed-product identity separates the signs from
+  the magnitudes. The magnitudes rearrange 1,...,h, so their
+  product is h!. QED
+  -/
+  rw [signed_product]
+  have hperm := (centered_magnitudes_perm p a r hp ho (prime_coprime a p hp ha) hr hb).map
+    (fun n : Nat => (n : Int))
+  have he := product_perm _ _ hperm
+  rw [←factorial_product] at he
+  simp only [List.map_map,Function.comp_def] at he ⊢
+  rw [he]
+
 end NumberTheory.ResidueSigns
