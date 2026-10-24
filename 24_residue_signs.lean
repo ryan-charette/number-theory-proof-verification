@@ -2861,4 +2861,18 @@ theorem two_square_sign (p : Nat) (hp : Prime p) (ho : p%2=1) :
     have he : (((p-1)/2)-(p/4))%2≠0 := by rcases hr with h|h <;> omega
     simpa only [if_neg he] using hg
 
+def rangeSum : Nat → (Nat → Nat) → Nat
+  | 0, _ => 0
+  | n+1, f => rangeSum n f+f n
+
+theorem range_sum_add (n : Nat) (f g : Nat → Nat) :
+    rangeSum n (fun i => f i+g i)=rangeSum n f+rangeSum n g := by
+  /-
+  Lemma: Summing pointwise sums adds the two sums. Proof:
+  Induction separates the last terms and rearranges additions. QED
+  -/
+  induction n with
+  | zero => rfl
+  | succ n ih => simp only [rangeSum,ih]; omega
+
 end NumberTheory.ResidueSigns
