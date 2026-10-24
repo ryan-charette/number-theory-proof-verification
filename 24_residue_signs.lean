@@ -3016,4 +3016,22 @@ theorem gauss_floor_sign (p a : Nat) (hp : Prime p) (ho : p%2=1)
     omega
   rw [gauss_sign p a r hp ho ha hr hb,neg_one_power,neg_one_power,he]
 
+theorem prime_cross_not_divides (p q i : Nat) (hp : Prime p) (hq : Prime q)
+    (hne : p≠q) (hi : i+1<p) : ¬ p ∣ q*(i+1) := by
+  /-
+  Lemma: A prime p distinct from q does not divide q(i+1) when
+  1<=i+1<p. Proof: Divisibility of the product forces p to
+  divide q or i+1. Primality excludes the first alternative,
+  and the positive bound excludes the second. QED
+  -/
+  intro h
+  have hd : (p : Int) ∣ (q : Int)*((i+1 : Nat) : Int) := by
+    simpa only [Int.natCast_mul] using Int.ofNat_dvd.mpr h
+  rcases prime_product_divides p q ((i+1 : Nat) : Int) hp hd with hq' | hi'
+  · rcases hq.2 p (Int.ofNat_dvd.mp hq') with h1 | he
+    · have := hp.1; omega
+    · exact hne he
+  · have hb := Nat.le_of_dvd (by omega : 0<i+1) (Int.ofNat_dvd.mp hi')
+    omega
+
 end NumberTheory.ResidueSigns
