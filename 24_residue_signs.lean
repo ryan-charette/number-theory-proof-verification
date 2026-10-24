@@ -2692,4 +2692,21 @@ theorem euler_sign (a : Int) (p : Nat) (hp : Prime p)
   · simpa [squareSign,hs] using (euler_square_criterion a p hp ho ha).mp hs
   · simpa [squareSign,hs] using (euler_nonsquare_criterion a p hp ho ha).mp hs
 
+theorem neg_one_power (k : Nat) :
+    (-1 : Int)^k=if k%2=0 then 1 else -1 := by
+  /-
+  Lemma: Even powers of minus one are one, and odd powers are
+  minus one. Proof: The zeroth power is one. Multiplication by
+  minus one switches the sign as the parity switches. QED
+  -/
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    rw [Int.pow_succ,ih]
+    by_cases h : k%2=0
+    · have h' : (k+1)%2≠0 := by omega
+      simp [h,h']
+    · have h' : (k+1)%2=0 := by omega
+      simp [h,h']
+
 end NumberTheory.ResidueSigns
