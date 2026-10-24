@@ -1217,4 +1217,15 @@ theorem fermat_coprime (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
       exact small_prime_coprime p i hp hib.1 hib.2)
   exact cancel_coprime (a^(p-1)) 1 _ p hprod (by simpa using h)
 
+theorem power_mul (a : Int) (i j : Nat) : (a^i)^j=a^(i*j) := by
+  /-
+  Lemma: Raising a power to another power multiplies exponents.
+  Proof: Induct on j. At zero both sides are one. The successor
+  multiplies the preceding power by a^i, which adds i to its
+  exponent and gives i*(j+1). QED
+  -/
+  induction j with
+  | zero => simp [Int.pow_zero]
+  | succ j ih => rw [Int.pow_succ,ih,Nat.mul_succ,power_add]
+
 end NumberTheory.ResidueSigns
