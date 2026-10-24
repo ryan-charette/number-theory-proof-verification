@@ -69,4 +69,393 @@ theorem signed_product (rs : List Int) :
     · simp only [negativeCount,if_neg h,Nat.zero_add]
       simp only [Int.mul_assoc,Int.mul_comm,Int.mul_left_comm]
 
+theorem dvd_refl (a : Int) : a ∣ a := by
+  /-
+  Theorem: Every integer divides itself.
+  Proof: a = a * 1, so choose the integer 1. QED
+  -/
+  exists 1
+  rw [Int.mul_one]
+
+theorem dvd_zero (a : Int) : a ∣ 0 := by
+  /-
+  Theorem: Every integer divides zero.
+  Proof: 0 = a * 0, so choose the integer 0. QED
+  -/
+  exists 0
+  rw [Int.mul_zero]
+
+theorem least_natural (P : Nat → Prop) (h : ∃ b, P b) :
+    ∃ a, P a ∧ ∀ b, P b → a ≤ b := by
+  /-
+  Theorem: A nonempty collection of natural numbers has a least member.
+  Proof: We prove by strong induction on b that if b is a member, the
+  collection has a least member. Strong induction allows us to assume
+  the assertion for every natural number smaller than b.
+
+  If some member a is smaller than b, the induction hypothesis at a
+  gives a least member. If no member is smaller than b, then b itself
+  is least. Finally, nonemptiness supplies a member to start with. QED
+  -/
+  letI := Classical.propDecidable
+  have least_below : ∀ b, P b → ∃ a, P a ∧ ∀ c, P c → a ≤ c := by
+    intro b
+    induction b using Nat.strongRecOn with
+    | ind b ih =>
+      intro hb
+      by_cases hs : ∃ a, a < b ∧ P a
+      · rcases hs with ⟨a, hab, ha⟩
+        exact ih a hab ha
+      · exists b
+        constructor
+        · exact hb
+        · intro c hc
+          apply Nat.le_of_not_lt
+          intro hcb
+          exact hs ⟨c, hcb, hc⟩
+  rcases h with ⟨b, hb⟩
+  exact least_below b hb
+
+theorem division_exists (m n : Nat) (hn : 0 < n) :
+    ∃ q r : Int, (m : Int) = (n : Int) * q + r ∧ 0 ≤ r ∧ r < (n : Int) := by
+  /-
+  Theorem: For a natural number m and a positive natural number n,
+  there are integers q and r with m = n * q + r and 0 ≤ r < n.
+  Lean includes zero among the natural numbers, so we explicitly require
+  n > 0. The conclusion also holds when m = 0.
+
+  Proof: Consider all nonnegative integers r for which m = n * q + r
+  for some integer q. This collection is nonempty: q = 0 and r = m
+  satisfy the equation. Choose its least member r by well-ordering,
+  and choose an integer q giving the equation.
+
+  If r ≥ n, then r - n is nonnegative and
+
+    m = n * q + r = n * (q + 1) + (r - n).
+
+  Thus r - n is another member of the collection. Since n > 0,
+  it is smaller than r, contradicting the choice of r. Hence r < n.
+  The chosen q and r have all the required properties. QED
+  -/
+  let P : Nat → Prop := fun r => ∃ q : Int, (m : Int) = (n : Int) * q + r
+  have hnonempty : ∃ r, P r := by
+    exists m
+    exists (0 : Int)
+    rw [Int.mul_zero, Int.zero_add]
+  rcases least_natural P hnonempty with ⟨r, hr, hleast⟩
+  rcases hr with ⟨q, hq⟩
+  have hsmall : r < n := by
+    apply Nat.lt_of_not_ge
+    intro hlarge
+    have hnext : P (r - n) := by
+      exists q + 1
+      rw [Int.mul_add, Int.mul_one]
+      -- Since n ≤ r, natural subtraction agrees with integer subtraction.
+      omega
+    have hminimal := hleast (r - n) hnext
+    -- Subtracting positive n gives a strictly smaller natural number.
+    omega
+  exists q, (r : Int)
+  exact ⟨hq, by omega, by omega⟩
+
+theorem dvd_linear (d a b x y : Int) (ha : d ∣ a) (hb : d ∣ b) :
+    d ∣ a * x + b * y := by
+  /-
+  Theorem: A common divisor divides every integer linear combination.
+  Proof: Write a = d * u and b = d * v. Then
+
+    a * x + b * y = d * (u * x + v * y).
+
+  The integer u * x + v * y is the required witness. QED
+  -/
+  rcases ha with ⟨u, hu⟩
+  rcases hb with ⟨v, hv⟩
+  exists u * x + v * y
+  rw [hu, hv, Int.mul_add, Int.mul_assoc, Int.mul_assoc]
+
+theorem common_divisor_remainder (a b n r k : Int)
+    (h : a = n * b + r) (ha : k ∣ a) (hb : k ∣ b) : k ∣ r := by
+  /-
+  Theorem: If a = n * b + r, a common divisor of a and b divides r.
+  Proof: Subtract n * b from a. A common divisor divides this integer
+  linear combination, and a - n * b = r. QED
+  -/
+  have hd := dvd_linear k a b 1 (-n) ha hb
+  rw [Int.mul_one, Int.mul_neg, Int.mul_comm b n] at hd
+  have heq : a + -(n * b) = r := by omega
+  rw [heq] at hd
+  exact hd
+
+theorem common_divisors_step (a b n r k : Int) (h : a = n * b + r) :
+    (k ∣ a ∧ k ∣ b) ↔ (k ∣ b ∧ k ∣ r) := by
+  /-
+  Theorem: Replacing (a, b) by (b, r), where a = n * b + r,
+  leaves the common divisors unchanged.
+  Proof: The forward implication follows from the preceding theorem.
+  Conversely, if k divides b and r, it divides n * b + r = a. QED
+  -/
+  constructor
+  · intro hk
+    exact ⟨hk.2, common_divisor_remainder a b n r k h hk.1 hk.2⟩
+  · intro hk
+    have hd := dvd_linear k b r n 1 hk.1 hk.2
+    rw [Int.mul_one, Int.mul_comm b n, ← h] at hd
+    exact ⟨hd, hk.1⟩
+
+theorem euclid_natural (a b : Nat) :
+    ∃ d : Nat, (d : Int) ∣ (a : Int) ∧ (d : Int) ∣ (b : Int) ∧
+      ∃ x y : Int, (a : Int) * x + (b : Int) * y = (d : Int) := by
+  /-
+  Theorem: The Euclidean procedure produces a nonnegative common divisor
+  that is an integer linear combination of the two natural numbers.
+  Proof: Use strong induction on the second number b.
+
+  If b = 0, take d = a and coefficients 1 and 0.
+  If b > 0, write a = b * q + r with 0 ≤ r < b. Apply the induction
+  hypothesis to b and r. It supplies a common divisor d and integers
+  x and y with b * x + r * y = d. The preceding common-divisor theorem
+  shows that d also divides a. Back-substitution gives
+
+    d = b * x + (a - b * q) * y = a * y + b * (x - q * y).
+
+  These are the required new coefficients. The smaller nonnegative
+  remainder ensures that the procedure terminates. QED
+  -/
+  induction b using Nat.strongRecOn generalizing a with
+  | ind b ih =>
+    by_cases hb : b = 0
+    · subst b
+      exists a
+      refine ⟨dvd_refl a, dvd_zero a, ?_⟩
+      exists 1, 0
+      rw [Int.mul_one, Int.mul_zero, Int.add_zero]
+    · have hbpos : 0 < b := by omega
+      rcases division_exists a b hbpos with ⟨q, r, heq, hr, hrb⟩
+      have hrnat : (r.toNat : Int) = r := Int.toNat_of_nonneg hr
+      rcases ih r.toNat (by omega) b with ⟨d, hdb, hdr, x, y, hxy⟩
+      rw [hrnat] at hdr hxy
+      have hda := ((common_divisors_step a b q r d
+        (by rw [Int.mul_comm]; exact heq)).mpr ⟨hdb, hdr⟩).1
+      exists d
+      refine ⟨hda, hdb, ?_⟩
+      exists y, x - q * y
+      have htimes := congrArg (fun t : Int => t * y) heq
+      change (a : Int) * y = ((b : Int) * q + r) * y at htimes
+      rw [Int.add_mul, Int.mul_assoc] at htimes
+      rw [Int.mul_sub]
+      omega
+
+theorem euclid_integer (a b : Int) :
+    ∃ d : Nat, (d : Int) ∣ a ∧ (d : Int) ∣ b ∧
+      ∃ x y : Int, a * x + b * y = (d : Int) := by
+  /-
+  Theorem: The Euclidean construction also works for arbitrary integers.
+  Proof: Apply the natural-number procedure to the absolute values.
+  Changing a sign does not change divisibility. If the resulting
+  coefficients are x and y, multiply them by the signs of a and b.
+  Since a * sign(a) = |a|, the same linear combination gives d. QED
+  -/
+  rcases euclid_natural a.natAbs b.natAbs with ⟨d, ha, hb, x, y, hxy⟩
+  exists d
+  constructor
+  · rcases ha with ⟨u, hu⟩
+    exists a.sign * u
+    calc
+      a = a.sign * (a.natAbs : Int) := (Int.sign_mul_natAbs a).symm
+      _ = (d : Int) * (a.sign * u) := by rw [hu, Int.mul_left_comm]
+  · constructor
+    · rcases hb with ⟨v, hv⟩
+      exists b.sign * v
+      calc
+        b = b.sign * (b.natAbs : Int) := (Int.sign_mul_natAbs b).symm
+        _ = (d : Int) * (b.sign * v) := by rw [hv, Int.mul_left_comm]
+    · exists a.sign * x, b.sign * y
+      rw [← Int.mul_assoc, Int.mul_sign, ← Int.mul_assoc, Int.mul_sign]
+      exact hxy
+
+
+/-
+The Euclidean construction supplies a nonnegative common divisor together
+with coefficients. We name that number gcd(a,b). The next proofs verify
+that it is the greatest common divisor in the ordinary numerical sense.
+We also set gcd(0,0) = 0 through this construction; statements that require
+a positive greatest divisor explicitly exclude the pair (0,0).
+-/
+
+theorem divisor_le_positive (e d : Int) (hd : 0 < d) (he : e ∣ d) : e ≤ d := by
+  /-
+  Theorem: A divisor of a positive integer is at most that integer.
+  Proof: A nonpositive divisor is already smaller. Otherwise write
+  d = e * k with e > 0. If k ≤ 0 then d ≤ 0, a contradiction.
+  Thus the integer k is at least 1, and d = e * k ≥ e * 1 = e. QED
+  -/
+  by_cases hep : 0 < e
+  · rcases he with ⟨k, hk⟩
+    have hkpos : 0 < k := by
+      by_cases hkn : k ≤ 0
+      · have hm := Int.mul_le_mul_of_nonneg_left hkn (Int.le_of_lt hep)
+        rw [Int.mul_zero, ← hk] at hm
+        omega
+      · omega
+    have hm := Int.mul_le_mul_of_nonneg_left (show 1 ≤ k by omega) (Int.le_of_lt hep)
+    rw [Int.mul_one, ← hk] at hm
+    exact hm
+  · omega
+
+def Prime (p : Nat) : Prop := 1 < p ∧ ∀ d : Nat, d ∣ p → d=1 ∨ d=p
+
+theorem odd_prime_data (p : Nat) (hp : Prime p) (hodd : p % 2=1) :
+    0 < (p-1)/2 ∧ p-1=2*((p-1)/2) ∧ ¬ (p : Int) ∣ 2 := by
+  /-
+  Lemma: For an odd prime, p-1 is twice a positive integer, and
+  p does not divide two. Proof: Oddness and p>1 give p>=3.
+  Division by two yields p-1=2*((p-1)/2). A positive divisor of
+  two is at most two, so p cannot divide two. QED
+  -/
+  have hp1 := hp.1
+  refine ⟨by omega,by omega,?_⟩
+  intro h
+  have := divisor_le_positive (p : Int) 2 (by omega) h
+  omega
+
+def Congruent (a b n : Int) : Prop := 0 < n ∧ n ∣ a-b
+
+local notation:50 a " ≡ " b " [MOD " n "]" => Congruent a b n
+
+theorem modeq_symm (a b n : Int) (h : a ≡ b [MOD n]) : b ≡ a [MOD n] := by
+  /-
+  Theorem: Reversing a congruence preserves it.
+  Proof: By the definition of congruence, n is positive and
+  a - b = n * k for some integer k. Then
+
+    b - a = -(a - b) = -(n * k) = n * (-k).
+
+  Use -k as the witness. QED
+  -/
+  rcases h with ⟨hn, k, hk⟩
+  constructor
+  · exact hn
+  · exists -k
+    rw [← Int.neg_sub a b, hk, Int.mul_neg]
+
+noncomputable def gcd (a b : Int) : Int := (Classical.choose (euclid_integer a b) : Nat)
+
+theorem gcd_data (a b : Int) :
+    0 ≤ gcd a b ∧ gcd a b ∣ a ∧ gcd a b ∣ b ∧
+      ∃ x y : Int, a * x + b * y = gcd a b := by
+  /-
+  Theorem: The constructed gcd is nonnegative, divides both inputs,
+  and is an integer linear combination of them.
+  Proof: These are exactly the properties supplied by the Euclidean
+  construction used in its definition. QED
+  -/
+  constructor
+  · unfold gcd
+    omega
+  · exact Classical.choose_spec (euclid_integer a b)
+
+theorem bezout (a b : Int) : ∃ x y : Int, a * x + b * y = gcd a b := by
+  /-
+  Theorem: The gcd of two integers is an integer linear combination.
+  Proof: These are the coefficients constructed by the Euclidean
+  procedure and back-substitution above. The construction also covers
+  the harmless extra case a = b = 0. QED
+  -/
+  exact (gcd_data a b).2.2.2
+
+theorem cancel_coprime (a b c n : Int) (hcop : gcd c n=1)
+    (h : Congruent (a*c) (b*c) n) : Congruent a b n := by
+  /-
+  Theorem: A factor relatively prime to the modulus can be cancelled
+  from a congruence.
+  Proof: Write (a-b)*c=n*q and c*u+n*v=1. Multiplying the latter
+  identity by a-b and substituting the former gives
+  a-b=n*(q*u+(a-b)*v). This witness proves the desired congruence.
+  QED
+  -/
+  rcases bezout c n with ⟨u,v,he⟩
+  rw [hcop] at he
+  rcases h.2 with ⟨q,hq⟩
+  have hd : (a-b)*c=n*q := by rw [Int.sub_mul]; exact hq
+  refine ⟨h.1,q*u+(a-b)*v,?_⟩
+  calc
+    a-b = (a-b)*1 := by rw [Int.mul_one]
+    _ = (a-b)*(c*u+n*v) := congrArg (fun z => (a-b)*z) he.symm
+    _ = ((a-b)*c)*u+n*((a-b)*v) := by
+      rw [Int.mul_add,←Int.mul_assoc,Int.mul_left_comm (a-b) n v]
+    _ = n*(q*u+(a-b)*v) := by rw [hd,Int.mul_add,Int.mul_assoc]
+
+theorem division_unique (m n q r q' r' : Int) (hn : 0 < n)
+    (h : m = n * q + r) (h' : m = n * q' + r')
+    (hr : 0 ≤ r) (hrn : r < n) (hr' : 0 ≤ r') (hrn' : r' < n) :
+    q = q' ∧ r = r' := by
+  /-
+  Theorem: Two decompositions with the same positive divisor and
+  remainders between zero and n - 1 have equal quotients and remainders.
+  We allow any integer m, which also covers natural-number dividends.
+
+  Proof: Suppose m = n * q + r = n * q' + r'. If q < q', the
+  quotients are integers, so q + 1 ≤ q'. Multiplying by positive n,
+
+    n * q + n ≤ n * q'.
+
+  But r < n and r' ≥ 0 give
+
+    m = n * q + r < n * q + n ≤ n * q' ≤ n * q' + r' = m.
+
+  This is impossible. Interchanging the two decompositions rules out
+  q' < q in exactly the same way. Therefore q = q'. Substituting into
+  the original equations and cancelling n * q gives r = r'. QED
+  -/
+  have hnot : ¬ q < q' := by
+    intro hlt
+    have hstep : q + 1 ≤ q' := by omega
+    have hmul := Int.mul_le_mul_of_nonneg_left hstep (Int.le_of_lt hn)
+    rw [Int.mul_add, Int.mul_one] at hmul
+    -- The remainder bounds would force m < m.
+    omega
+  have hnot' : ¬ q' < q := by
+    intro hlt
+    have hstep : q' + 1 ≤ q := by omega
+    have hmul := Int.mul_le_mul_of_nonneg_left hstep (Int.le_of_lt hn)
+    rw [Int.mul_add, Int.mul_one] at hmul
+    omega
+  have hq : q = q' := by omega
+  constructor
+  · exact hq
+  · rw [hq] at h
+    omega
+
+theorem bounded_congruent_equal (r s m : Int) (hr : 0 ≤ r) (hrm : r < m)
+    (hs : 0 ≤ s) (hsm : s < m) (h : r ≡ s [MOD m]) : r=s := by
+  /-
+  Lemma: Two congruent integers between zero and m-1 are equal.
+  Proof: Write r-s=m*q. Then r=m*q+s and also r=m*0+r.
+  Both remainders satisfy the required bounds, so uniqueness of
+  quotient and remainder makes r=s. QED
+  -/
+  rcases h.2 with ⟨q,hq⟩
+  exact (division_unique r m 0 r q s h.1 (by simp) (by omega)
+    hr hrm hs hsm).2
+
+theorem half_representative_nonzero (p i : Nat) (a r : Int)
+    (hp : Prime p) (ho : p%2=1) (ha : gcd a p=1) (hi : i<(p-1)/2)
+    (hr : Congruent r (((i : Int)+1)*a) p) : r≠0 := by
+  /-
+  Lemma: A representative of one of a,2a,...,ha is nonzero,
+  where h=(p-1)/2 and a is coprime to p.
+  Proof: A zero representative would allow cancellation of a,
+  making i+1 congruent to zero. Both lie between zero and p-1,
+  so uniqueness of bounded representatives gives i+1=0. QED
+  -/
+  intro hz
+  subst r
+  have hh := odd_prime_data p hp ho
+  have hc : Congruent (((i : Int)+1)*a) (0*a) p := by
+    simpa only [Int.zero_mul] using modeq_symm _ _ p hr
+  have he := cancel_coprime ((i : Int)+1) 0 a p ha hc
+  have heq := bounded_congruent_equal ((i : Int)+1) 0 p
+    (by omega) (by omega) (by omega) (by have := hp.1; omega) he
+  omega
+
 end NumberTheory.ResidueSigns
