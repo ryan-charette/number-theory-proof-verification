@@ -2786,4 +2786,15 @@ theorem gauss_centered (p : Nat) (a : Int) (hp : Prime p) (ho : p%2=1)
   · intro i _; exact (centered_spec _ p hp ho).1
   · intro i _; exact (centered_spec _ p hp ho).2
 
+theorem negative_count_append (xs ys : List Int) :
+    negativeCount (xs++ys)=negativeCount xs+negativeCount ys := by
+  /-
+  Lemma: Concatenating lists adds their negative counts.
+  Proof: Induction on the first list separates its first sign
+  contribution and applies the induction hypothesis to the tail. QED
+  -/
+  induction xs with
+  | nil => simp [negativeCount]
+  | cons x xs ih => simp [negativeCount,ih,Nat.add_assoc]
+
 end NumberTheory.ResidueSigns
