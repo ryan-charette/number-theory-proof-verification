@@ -1400,4 +1400,19 @@ theorem reduced_mem (n i : Nat) : i ∈ reducedResidues n ↔ 0 < i ∧ i ≤ n 
   · rintro ⟨hi,hin,hc⟩
     exact ⟨⟨i-1,by omega,by omega⟩,hc⟩
 
+noncomputable def phi (n : Nat) : Nat := (reducedResidues n).length
+
+theorem phi_positive (n : Nat) (hn : 0 < n) : 0 < phi n := by
+  /-
+  Lemma: Phi of a positive integer is positive.
+  Proof: One lies in the interval from one to n and is coprime
+  to n, as the combination 1*1+n*0=1 shows. Thus at least this
+  one representative is counted. QED
+  -/
+  have hc : gcd 1 (n : Int)=1 := gcd_one_right 1 n (by omega) ⟨1,0,by simp⟩
+  have hm : 1 ∈ reducedResidues n := (reduced_mem n 1).mpr ⟨by omega,hn,hc⟩
+  cases h : reducedResidues n with
+  | nil => simp [h] at hm
+  | cons a xs => simp only [phi,h,List.length_cons]; omega
+
 end NumberTheory.ResidueSigns
