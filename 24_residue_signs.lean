@@ -818,4 +818,20 @@ theorem small_prime_coprime (p i : Nat) (hp : Prime p) (hi : 0 < i) (hip : i < p
   have hb := divisor_le_positive p i (by omega) h
   omega
 
+theorem half_factorial_coprime (p : Nat) (hp : Prime p) (ho : p%2=1) :
+    gcd (factorial ((p-1)/2)) p=1 := by
+  /-
+  Lemma: The factorial of h=(p-1)/2 is coprime to p.
+  Proof: Each factor lies between one and h, hence strictly
+  below p, and is coprime to p. Their product is coprime too. QED
+  -/
+  rw [factorial_product]
+  apply coprime_product _ p (by have := hp.1; omega)
+  intro x hx
+  rcases List.mem_map.mp hx with ⟨i,hi,rfl⟩
+  rcases List.mem_map.mp hi with ⟨j,hj,rfl⟩
+  have hj' := List.mem_range.mp hj
+  have hh := odd_prime_data p hp ho
+  exact small_prime_coprime p (j+1) hp (by omega) (by omega)
+
 end NumberTheory.ResidueSigns
