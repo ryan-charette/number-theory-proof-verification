@@ -3161,4 +3161,36 @@ theorem rectangle_partition (m n : Nat) (f g : Nat → Nat → Nat)
       rw [hj,range_sum_const,Nat.mul_one])
   rw [he,range_sum_const]
 
+theorem floor_sum_reciprocity (p q : Nat) (hp : Prime p) (hq : Prime q)
+    (hpo : p%2=1) (hqo : q%2=1) (hne : p≠q) :
+    floorSum q p+floorSum p q=((p-1)/2)*((q-1)/2) := by
+  /-
+  Lemma: The two floor sums add to the area of the half-size
+  rectangle. Proof: In the rectangle 1<=i<=h_p, 1<=j<=h_q,
+  every point satisfies pj<qi or qi<pj. Equality would make p
+  divide qi, impossible for distinct primes and 0<i<p. The
+  first region has row counts floor(qi/p); the second has
+  column counts floor(pj/q). They partition the rectangle. QED
+  -/
+  let f := fun i j : Nat => if p*(j+1)<q*(i+1) then 1 else 0
+  let g := fun i j : Nat => if q*(i+1)<p*(j+1) then 1 else 0
+  have hf : floorSum q p=rangeSum ((p-1)/2) (fun i => rangeSum ((q-1)/2) (fun j => f i j)) := by
+    apply range_sum_congr
+    intro i hi
+    rw [lattice_row_count p q i hp hq hpo hqo hne hi]
+    rw [Nat.mul_comm q (i+1)]
+  have hg : floorSum p q=rangeSum ((q-1)/2) (fun j => rangeSum ((p-1)/2) (fun i => g i j)) := by
+    apply range_sum_congr
+    intro j hj
+    rw [lattice_row_count q p j hq hp hqo hpo (Ne.symm hne) hj]
+    rw [Nat.mul_comm p (j+1)]
+  rw [hf,hg,←range_sum_swap ((p-1)/2) ((q-1)/2) g]
+  apply rectangle_partition
+  intro i hi j _hj
+  have hh := odd_prime_data p hp hpo
+  have hdiv := prime_cross_not_divides p q i hp hq hne (by omega)
+  have hneq : p*(j+1)≠q*(i+1) := fun he => hdiv ⟨j+1,he.symm⟩
+  dsimp [f,g]
+  split <;> split <;> omega
+
 end NumberTheory.ResidueSigns
