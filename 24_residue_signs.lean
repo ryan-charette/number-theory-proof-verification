@@ -587,4 +587,32 @@ theorem distinct_subset_perm (xs ys : List Nat) (hnd : xs.Nodup)
     have hp := ih (ys.erase a) hh.2 ht (by simp only [List.length_cons] at hlen; omega)
     exact (hp.cons a).trans (List.perm_cons_erase ha).symm
 
+theorem centered_magnitudes_perm (p : Nat) (a : Int) (r : Nat → Int)
+    (hp : Prime p) (ho : p%2=1) (ha : gcd a p=1)
+    (hr : ∀ i<(p-1)/2, Congruent (r i) (((i : Int)+1)*a) p)
+    (hb : ∀ i<(p-1)/2, -((p-1)/2 : Nat) ≤ r i ∧ r i ≤ ((p-1)/2 : Nat)) :
+    ((List.range ((p-1)/2)).map (fun i : Nat => magnitude (r i))).Perm
+      ((List.range ((p-1)/2)).map (fun i : Nat => i+1)) := by
+  /-
+  Lemma: The centered magnitudes rearrange 1,...,h.
+  Proof: They lie in that interval and have no repetitions by
+  the preceding lemmas. There are h entries on each side.
+  A distinct list drawn from another list of the same length
+  is a rearrangement of it. QED
+  -/
+  apply distinct_subset_perm
+  · apply List.pairwise_map.mpr
+    apply List.Pairwise.imp_of_mem ?_ (List.nodup_range ((p-1)/2))
+    intro i j hi hj hij he
+    exact hij (half_magnitudes_distinct p i j a (r i) (r j) hp ho ha
+      (List.mem_range.mp hi) (List.mem_range.mp hj)
+      (hr i (List.mem_range.mp hi)) (hr j (List.mem_range.mp hj)) he)
+  · intro m hm
+    rcases List.mem_map.mp hm with ⟨i,hi,he⟩
+    have hi' := List.mem_range.mp hi
+    have hm' := centered_magnitude_range p i a (r i) hp ho ha hi' (hr i hi') (hb i hi')
+    apply List.mem_map.mpr
+    exact ⟨m-1,List.mem_range.mpr (by omega),by omega⟩
+  · simp only [List.length_map]
+
 end NumberTheory.ResidueSigns
