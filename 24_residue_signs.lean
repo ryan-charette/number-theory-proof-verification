@@ -2401,4 +2401,45 @@ theorem expanded_fractions_nodup (n : Nat) (hn : 0 < n) (ds : List Nat)
         ((reduced_mem d i).mp hi).2.2 ((reduced_mem e j).mp hj).2.2 (by omega)
       exact hp.1 e he hde
 
+theorem reduced_fraction_expansion (n k : Nat) (hn : 0 < n)
+    (hk : 0 < k) (hkn : k ≤ n) :
+    ∃ d i : Nat, 0 < d ∧ d ∣ n ∧ i ∈ reducedResidues d ∧ k=(n/d)*i := by
+  /-
+  Lemma: Every fraction k/n with 1≤k≤n is obtained by expanding
+  a reduced fraction i/d, where d divides n and 1≤i≤d.
+  Proof: Let g=gcd(k,n), which is positive, and write k=g*i and
+  n=g*d. Positivity and k≤n give 1≤i≤d. Scaling the gcd shows
+  g*gcd(i,d)=g; cancellation gives gcd(i,d)=1. Finally n/d=g,
+  so expansion recovers exactly k. QED
+  -/
+  let g := (gcd (k : Int) n).toNat
+  have hgdata := gcd_data (k : Int) n
+  have hgcast : (g : Int)=gcd (k : Int) n := Int.toNat_of_nonneg hgdata.1
+  have hgpositive := gcd_positive (k : Int) n (Or.inr (by omega))
+  have hgp : 0 < g := by omega
+  have hgk : g ∣ k := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.1)
+  have hgn : g ∣ n := Int.ofNat_dvd.mp (by rw [hgcast]; exact hgdata.2.2.1)
+  rcases hgk with ⟨i,hki⟩
+  rcases hgn with ⟨d,hnd⟩
+  have hd : 0 < d := by
+    by_cases hz : d=0
+    · rw [hz,Nat.mul_zero] at hnd; omega
+    · omega
+  have hi : 0 < i := by
+    by_cases hz : i=0
+    · rw [hz,Nat.mul_zero] at hki; omega
+    · omega
+  have hid : i ≤ d := by
+    by_cases h : i ≤ d
+    · exact h
+    · have := Nat.mul_lt_mul_of_pos_left (by omega : d<i) hgp
+      omega
+  have hscale := gcd_scale (i : Int) d g hgp (Or.inr (by omega))
+  have hcop : gcd (i : Int) d=1 := by
+    apply Int.eq_of_mul_eq_mul_left (a := (g : Int)) (by omega)
+    rw [← hscale,← Int.natCast_mul,← Int.natCast_mul,← hki,← hnd,← hgcast,Int.mul_one]
+  have hquot : n/d=g := by rw [hnd]; exact Nat.mul_div_cancel g hd
+  refine ⟨d,i,hd,⟨g,by rw [hnd,Nat.mul_comm]⟩,(reduced_mem d i).mpr ⟨hi,hid,hcop⟩,?_⟩
+  rw [hquot]; exact hki
+
 end NumberTheory.ResidueSigns
