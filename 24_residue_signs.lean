@@ -2474,4 +2474,16 @@ theorem reduced_fraction_correspondence (n : Nat) (hn : 0 < n) :
     rcases reduced_fraction_expansion n k hn hk'.1 hk'.2 with ⟨d,i,hd,hdn,hi,hki⟩
     exact (expanded_fractions_mem n k _).mpr ⟨d,(divisors_mem n d hn).mpr ⟨hd,hdn⟩,i,hi,hki⟩
 
+theorem expanded_fractions_length (n : Nat) (ds : List Nat) :
+    (expandedFractions n ds).length=sumOn ds phi := by
+  /-
+  Lemma: The number of expanded fractions is the sum of phi(d)
+  over the listed denominators. Proof: A row has one entry for
+  each of its phi(d) reduced numerators. Appending a row adds
+  its length; induction sums all rows. QED
+  -/
+  induction ds with
+  | nil => rfl
+  | cons d ds ih => simp only [expandedFractions,List.length_append,List.length_map,ih,sumOn,phi]
+
 end NumberTheory.ResidueSigns
