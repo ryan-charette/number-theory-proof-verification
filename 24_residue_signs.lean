@@ -2836,4 +2836,29 @@ theorem doubled_centered_negative (p i : Nat) (hp : Prime p) (ho : p%2=1)
   rw [he]
   split <;> omega
 
+theorem two_square_sign (p : Nat) (hp : Prime p) (ho : p%2=1) :
+    (p%8=1 ∨ p%8=7 → squareSign 2 p=1) ∧
+    (p%8=3 ∨ p%8=5 → squareSign 2 p= -1) := by
+  /-
+  Theorem: Two has sign one for primes with remainder one or
+  seven modulo eight, and sign minus one for remainders three
+  or five.
+  Proof: Gauss's lemma counts h-floor(p/4) negative entries in
+  the doubled half-list. For remainders one and seven this
+  count is even; for three and five it is odd. Substitute
+  these parities in the sign formula. QED
+  -/
+  have hh := odd_prime_data p hp ho
+  have hg := gauss_centered p 2 hp ho hh.2.2
+  have hc := negative_range_count (fun i => centered (((i : Int)+1)*2) p)
+    ((p-1)/2) (p/4) (fun i hi => doubled_centered_negative p i hp ho hi)
+  rw [hc,neg_one_power] at hg
+  constructor
+  · intro hr
+    have he : (((p-1)/2)-(p/4))%2=0 := by rcases hr with h|h <;> omega
+    simpa only [if_pos he] using hg
+  · intro hr
+    have he : (((p-1)/2)-(p/4))%2≠0 := by rcases hr with h|h <;> omega
+    simpa only [if_neg he] using hg
+
 end NumberTheory.ResidueSigns
