@@ -3193,4 +3193,27 @@ theorem floor_sum_reciprocity (p q : Nat) (hp : Prime p) (hq : Prime q)
   dsimp [f,g]
   split <;> split <;> omega
 
+theorem reciprocity_product (p q : Nat) (hp : Prime p) (hq : Prime q)
+    (hpo : p%2=1) (hqo : q%2=1) (hne : p≠q) :
+    squareSign q p * squareSign p q = (-1 : Int)^(((p-1)/2)*((q-1)/2)) := by
+  /-
+  Theorem: For distinct odd primes, the product of the two
+  residue signs is minus one raised to the area of the
+  half-size rectangle. Proof: Apply the floor-sum form of
+  Gauss's lemma to each sign. Multiplying adds the exponents,
+  and the lattice-point partition identifies their sum. QED
+  -/
+  have hqp : ¬ (p : Int) ∣ (q : Int) := by
+    intro h
+    have hn := prime_cross_not_divides p q 0 hp hq hne (by have := hp.1; omega)
+    apply hn
+    simpa using Int.ofNat_dvd.mp h
+  have hpq : ¬ (q : Int) ∣ (p : Int) := by
+    intro h
+    have hn := prime_cross_not_divides q p 0 hq hp (Ne.symm hne) (by have := hq.1; omega)
+    apply hn
+    simpa using Int.ofNat_dvd.mp h
+  rw [gauss_floor_sign p q hp hpo hqo hqp,gauss_floor_sign q p hq hqo hpo hpq,
+    ←power_add,floor_sum_reciprocity p q hp hq hpo hqo hne]
+
 end NumberTheory.ResidueSigns
