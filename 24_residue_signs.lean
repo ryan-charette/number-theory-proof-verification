@@ -2875,4 +2875,14 @@ theorem range_sum_add (n : Nat) (f g : Nat → Nat) :
   | zero => rfl
   | succ n ih => simp only [rangeSum,ih]; omega
 
+theorem range_sum_congr (n : Nat) (f g : Nat → Nat)
+    (h : ∀ i<n, f i=g i) : rangeSum n f=rangeSum n g := by
+  /-
+  Lemma: Equal summands give equal finite sums. Proof: Induct
+  on the number of summands, using equality of the last terms. QED
+  -/
+  induction n with
+  | zero => rfl
+  | succ n ih => rw [rangeSum,rangeSum,ih (fun i hi => h i (by omega)),h n (by omega)]
+
 end NumberTheory.ResidueSigns
