@@ -1172,4 +1172,22 @@ theorem nonzero_labels_perm (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) 
     exact coprime_not_zero i p hp.1 (small_prime_coprime p i hp hib.1 hib.2) hcancel
   omega
 
+theorem residue_product_congruent (a : Int) (p : Nat) (hp : Prime p) (hc : gcd a p=1) :
+    Congruent (intProduct ((nonzeroResidues p).map (fun i : Nat => (i : Int)*a)))
+      (intProduct ((nonzeroResidues p).map (fun i : Nat => (i : Int)))) p := by
+  /-
+  Theorem: The product a*(2*a)*...*((p-1)*a) is congruent to
+  1*2*...*(p-1). Proof: Replace each factor by its canonical label.
+  The products are congruent because corresponding factors are.
+  The labels rearrange the nonzero canonical residues, so their
+  product equals the product of those residues. QED
+  -/
+  have h := product_congruent (nonzeroResidues p) (fun i : Nat => (i : Int)*a)
+    (fun i : Nat => (canonicalLabel ((i : Int)*a) p : Int)) p
+    (by have := hp.1; omega) (fun i _ => (canonicalLabel_spec _ p (by have := hp.1; omega)).2)
+  have he := product_perm _ _ ((nonzero_labels_perm a p hp hc).map (fun i : Nat => (i : Int)))
+  simp only [List.map_map,Function.comp_def] at he
+  rw [he] at h
+  exact h
+
 end NumberTheory.ResidueSigns
