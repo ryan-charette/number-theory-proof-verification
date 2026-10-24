@@ -511,4 +511,40 @@ theorem modeq_add (a b c d n : Int)
     rw [heq]
     exact h
 
+theorem half_magnitudes_distinct (p i j : Nat) (a r s : Int)
+    (hp : Prime p) (ho : p%2=1) (ha : gcd a p=1)
+    (hi : i<(p-1)/2) (hj : j<(p-1)/2)
+    (hr : Congruent r (((i : Int)+1)*a) p)
+    (hs : Congruent s (((j : Int)+1)*a) p)
+    (he : magnitude r=magnitude s) : i=j := by
+  /-
+  Lemma: Distinct positions in the half-list have distinct
+  magnitudes of their centered representatives.
+  Proof: Equal magnitudes imply r=s or r=-s. In the first case,
+  cancel a to get i+1 congruent to j+1, hence equality. In the
+  second case, cancellation makes i+j+2 congruent to zero.
+  This positive sum is at most p-1, an impossibility. QED
+  -/
+  have hh := odd_prime_data p hp ho
+  have hm := congrArg (fun n : Nat => (n : Int)) he
+  change (magnitude r : Int)=(magnitude s : Int) at hm
+  rw [magnitude_cast,magnitude_cast] at hm
+  have hcases : r=s ∨ r= -s := by
+    by_cases h1 : r<0 <;> by_cases h2 : s<0 <;> simp [h1,h2] at hm <;> omega
+  rcases hcases with hsame | hopp
+  · have hc := modeq_trans _ _ _ p (modeq_symm _ _ p hr) (hsame ▸ hs)
+    have hd := cancel_coprime ((i : Int)+1) ((j : Int)+1) a p ha hc
+    have ht := bounded_congruent_equal ((i : Int)+1) ((j : Int)+1) p
+      (by omega) (by omega) (by omega) (by omega) hd
+    omega
+  · have hc := modeq_add _ _ _ _ p hr hs
+    have hz : r+s=0 := by omega
+    rw [hz,←Int.add_mul] at hc
+    have hd : Congruent ((((i : Int)+1)+((j : Int)+1))*a) (0*a) p := by
+      simpa only [Int.zero_mul] using modeq_symm _ _ p hc
+    have ht := cancel_coprime (((i : Int)+1)+((j : Int)+1)) 0 a p ha hd
+    have heq := bounded_congruent_equal (((i : Int)+1)+((j : Int)+1)) 0 p
+      (by omega) (by omega) (by omega) (by have := hp.1; omega) ht
+    omega
+
 end NumberTheory.ResidueSigns
