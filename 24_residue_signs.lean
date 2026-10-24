@@ -2912,4 +2912,15 @@ theorem list_sum_append (xs ys : List Nat) : listSum (xs++ys)=listSum xs+listSum
   | nil => simp [listSum]
   | cons x xs ih => simp [listSum,ih,Nat.add_assoc]
 
+theorem range_sum_list (n : Nat) (f : Nat → Nat) :
+    rangeSum n f=listSum ((List.range n).map f) := by
+  /-
+  Lemma: Recursive summation agrees with summing a mapped range.
+  Proof: Appending the final index appends its summand, exactly
+  the recursive rule for the sum. QED
+  -/
+  induction n with
+  | zero => rfl
+  | succ n ih => simp [rangeSum,List.range_succ,list_sum_append,listSum,ih]
+
 end NumberTheory.ResidueSigns
