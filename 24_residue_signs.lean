@@ -2773,4 +2773,17 @@ theorem centered_spec (x : Int) (p : Nat) (hp : Prime p) (ho : p%2=1) :
     rw [Int.mul_sub,Int.mul_neg,Int.mul_one]
     omega
 
+theorem gauss_centered (p : Nat) (a : Int) (hp : Prime p) (ho : p%2=1)
+    (ha : ¬ (p : Int) ∣ a) :
+    squareSign a p=(-1 : Int)^(negativeCount
+      ((List.range ((p-1)/2)).map (fun i : Nat => centered (((i : Int)+1)*a) p))) := by
+  /-
+  Corollary: Gauss's sign formula applies to the explicit centered
+  remainder choice. Proof: Its bounds and congruence property
+  are supplied by the centered-remainder lemma. QED
+  -/
+  apply gauss_sign p a _ hp ho ha
+  · intro i _; exact (centered_spec _ p hp ho).1
+  · intro i _; exact (centered_spec _ p hp ho).2
+
 end NumberTheory.ResidueSigns
