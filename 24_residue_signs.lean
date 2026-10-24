@@ -2744,4 +2744,33 @@ theorem gauss_sign (p : Nat) (a : Int) (r : Nat → Int)
   · unfold squareSign
     split <;> simp
 
+def centered (x : Int) (p : Nat) : Int :=
+  if x % (p : Int) ≤ ((p-1)/2 : Nat) then x % (p : Int) else x % (p : Int)-p
+
+theorem centered_spec (x : Int) (p : Nat) (hp : Prime p) (ho : p%2=1) :
+    Congruent (centered x p) x p ∧
+    -((p-1)/2 : Nat) ≤ centered x p ∧ centered x p ≤ ((p-1)/2 : Nat) := by
+  /-
+  Lemma: Choosing the ordinary remainder if it is at most h,
+  and subtracting p otherwise, gives a congruent integer in
+  [-h,h]. Proof: The ordinary remainder is between zero and
+  p-1=2h. Subtracting p from an entry above h places it between
+  -h and -1. Either adjustment changes x by a multiple of p. QED
+  -/
+  have hn : 0 < (p : Int) := by have := hp.1; omega
+  have hh := odd_prime_data p hp ho
+  have hlo := Int.emod_nonneg x (by omega : (p : Int)≠0)
+  have hhi := Int.emod_lt_of_pos x hn
+  have hd := Int.emod_add_ediv x p
+  unfold centered
+  split
+  · rename_i h
+    refine ⟨⟨hn,-(x/(p : Int)),?_⟩,by omega,by omega⟩
+    rw [Int.mul_neg]
+    omega
+  · rename_i h
+    refine ⟨⟨hn,-(x/(p : Int))-1,?_⟩,by omega,by omega⟩
+    rw [Int.mul_sub,Int.mul_neg,Int.mul_one]
+    omega
+
 end NumberTheory.ResidueSigns
