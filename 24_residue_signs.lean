@@ -2567,4 +2567,19 @@ theorem primitive_root_exists (p : Nat) (hp : Prime p) :
   | cons a xs =>
     exact ⟨a,(primitive_class_mem p a hp).mp (by rw [he]; simp)⟩
 
+theorem primitive_index (a x : Int) (p : Nat) (hp : Prime p) (ha : PrimitiveRoot a p)
+    (hx : gcd x p=1) : ∃ e : Nat, e<p-1 ∧ Congruent x (a^(e+1)) p := by
+  /-
+  Lemma: Every nonzero residue is represented by a primitive
+  root power with exponent e+1 for 0≤e<p-1.
+  Proof: Fermat makes x^(p-1) congruent to one. A primitive
+  root has order p-1, so its full power cycle exhausts these
+  roots. Write the supplied exponent i as (i-1)+1. QED
+  -/
+  have hret := fermat_coprime x p hp hx
+  rw [← ha.2] at hret
+  rcases power_root_in_cycle a x p hp ha.1 hret with ⟨i,hi,hib,hxi⟩
+  rw [ha.2] at hib
+  exact ⟨i-1,by omega,by simpa only [Nat.sub_add_cancel hi] using hxi⟩
+
 end NumberTheory.ResidueSigns
