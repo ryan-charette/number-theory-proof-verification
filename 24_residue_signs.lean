@@ -2935,4 +2935,16 @@ theorem list_sum_perm (xs ys : List Nat) (h : xs.Perm ys) : listSum xs=listSum y
   | swap a b xs => simp [listSum,Nat.add_left_comm]
   | trans _h1 _h2 ih1 ih2 => exact ih1.trans ih2
 
+theorem negative_count_sum (n : Nat) (r : Nat → Int) :
+    negativeCount ((List.range n).map r)=rangeSum n (fun i => if r i<0 then 1 else 0) := by
+  /-
+  Lemma: The negative count is the sum of the negative-entry
+  indicators. Proof: Appending one entry adds its indicator
+  to either expression. Induction proves equality. QED
+  -/
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    simp [List.range_succ,negative_count_append,negativeCount,rangeSum,ih]
+
 end NumberTheory.ResidueSigns
