@@ -2641,4 +2641,13 @@ theorem square_one_cases (z : Int) (p : Nat) (hp : Prime p)
   · exact Or.inl ⟨hz.1,h⟩
   · exact Or.inr ⟨hz.1,by simpa using h⟩
 
+theorem one_not_neg_one (p : Nat) (hp : Prime p) (hodd : p % 2=1) :
+    ¬ Congruent (1 : Int) (-1) p := by
+  /-
+  Lemma: One and minus one are distinct modulo an odd prime.
+  Proof: Otherwise p would divide their difference two. QED
+  -/
+  intro h
+  exact (odd_prime_data p hp hodd).2.2 (by simpa using h.2)
+
 end NumberTheory.ResidueSigns
