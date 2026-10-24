@@ -458,4 +458,93 @@ theorem half_representative_nonzero (p i : Nat) (a r : Int)
     (by omega) (by omega) (by omega) (by have := hp.1; omega) he
   omega
 
+theorem dvd_add (a b c : Int) (h₀ : a ∣ b) (h₁ : a ∣ c) : a ∣ b + c := by
+  /-
+  Theorem: A common divisor divides the sum.
+  Proof: Write b = a * m and c = a * n. Then
+
+    b + c = a * m + a * n    [Substitution]
+          = a * (m + n)      [Distributivity]
+
+  The integer m + n is the required witness. QED
+  -/
+  rcases h₀ with ⟨m, hm⟩
+  rcases h₁ with ⟨n, hn⟩
+  exists m + n
+  rw [hm, hn, Int.mul_add]
+
+theorem modeq_trans (a b c n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : b ≡ c [MOD n]) : a ≡ c [MOD n] := by
+  /-
+  Theorem: Two consecutive congruences combine.
+  Proof: The hypotheses tell us that n divides a - b and b - c.
+  Therefore n divides their sum. Adding the differences gives:
+
+    (a - b) + (b - c) = a - c.
+
+  Both differences are divisible by n, so their sum is too. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h := dvd_add n (a - b) (b - c) h₀.2 h₁.2
+    rw [← Int.add_sub_assoc, Int.sub_add_cancel] at h
+    exact h
+
+theorem modeq_add (a b c d n : Int)
+    (h₀ : a ≡ b [MOD n]) (h₁ : c ≡ d [MOD n]) : a + c ≡ b + d [MOD n] := by
+  /-
+  Theorem: Congruences can be added.
+  Proof: We must show that n divides (a + c) - (b + d).
+  Rearranging the additions and subtractions gives
+
+    (a + c) - (b + d) = (a - b) + (c - d).
+
+  By hypothesis, n divides each term on the right. Our theorem on
+  divisibility of sums shows that n divides the left side as well. QED
+  -/
+  constructor
+  · exact h₀.1
+  · have h := dvd_add n (a - b) (c - d) h₀.2 h₁.2
+    have heq : (a + c) - (b + d) = (a - b) + (c - d) := by
+      simp only [Int.sub_eq_add_neg, Int.neg_add, Int.add_assoc]
+      rw [Int.add_left_comm c (-b)]
+    rw [heq]
+    exact h
+
+theorem half_magnitudes_distinct (p i j : Nat) (a r s : Int)
+    (hp : Prime p) (ho : p%2=1) (ha : gcd a p=1)
+    (hi : i<(p-1)/2) (hj : j<(p-1)/2)
+    (hr : Congruent r (((i : Int)+1)*a) p)
+    (hs : Congruent s (((j : Int)+1)*a) p)
+    (he : magnitude r=magnitude s) : i=j := by
+  /-
+  Lemma: Distinct positions in the half-list have distinct
+  magnitudes of their centered representatives.
+  Proof: Equal magnitudes imply r=s or r=-s. In the first case,
+  cancel a to get i+1 congruent to j+1, hence equality. In the
+  second case, cancellation makes i+j+2 congruent to zero.
+  This positive sum is at most p-1, an impossibility. QED
+  -/
+  have hh := odd_prime_data p hp ho
+  have hm := congrArg (fun n : Nat => (n : Int)) he
+  change (magnitude r : Int)=(magnitude s : Int) at hm
+  rw [magnitude_cast,magnitude_cast] at hm
+  have hcases : r=s ∨ r= -s := by
+    by_cases h1 : r<0 <;> by_cases h2 : s<0 <;> simp [h1,h2] at hm <;> omega
+  rcases hcases with hsame | hopp
+  · have hc := modeq_trans _ _ _ p (modeq_symm _ _ p hr) (hsame ▸ hs)
+    have hd := cancel_coprime ((i : Int)+1) ((j : Int)+1) a p ha hc
+    have ht := bounded_congruent_equal ((i : Int)+1) ((j : Int)+1) p
+      (by omega) (by omega) (by omega) (by omega) hd
+    omega
+  · have hc := modeq_add _ _ _ _ p hr hs
+    have hz : r+s=0 := by omega
+    rw [hz,←Int.add_mul] at hc
+    have hd : Congruent ((((i : Int)+1)+((j : Int)+1))*a) (0*a) p := by
+      simpa only [Int.zero_mul] using modeq_symm _ _ p hc
+    have ht := cancel_coprime (((i : Int)+1)+((j : Int)+1)) 0 a p ha hd
+    have heq := bounded_congruent_equal (((i : Int)+1)+((j : Int)+1)) 0 p
+      (by omega) (by omega) (by omega) (by have := hp.1; omega) ht
+    omega
+
 end NumberTheory.ResidueSigns
