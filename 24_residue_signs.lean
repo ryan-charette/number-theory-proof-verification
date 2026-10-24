@@ -748,4 +748,90 @@ theorem sign_congruent_equal (u v : Int) (p : Nat) (hp : Prime p) (ho : p%2=1)
     (by rcases hv with h|h <;> omega) (by rcases hv with h|h <;> omega) h'
   omega
 
+theorem bezout_product (a b c : Int)
+    (hb : ∃ u v : Int, a*u+b*v=1) (hc : ∃ u v : Int, a*u+c*v=1) :
+    ∃ u v : Int, a*u+(b*c)*v=1 := by
+  /-
+  Lemma: If a has a linear combination equal to one with each of
+  b and c, it also has one with b*c.
+  Proof: Write a*u+b*v=1 and a*p+c*q=1. Multiply the second
+  equality by b*v and substitute for b*v in the first. We obtain
+  a*(u+b*v*p)+(b*c)*(v*q)=1. These are the required coefficients.
+  QED
+  -/
+  rcases hb with ⟨u,v,hu⟩
+  rcases hc with ⟨p,q,hp⟩
+  refine ⟨u+b*v*p,v*q,?_⟩
+  have he := congrArg (fun t => t*(b*v)) hp
+  simp only [Int.add_mul,Int.mul_add,Int.one_mul,Int.mul_assoc,
+    Int.mul_left_comm,Int.mul_comm,Int.mul_one] at he ⊢
+  omega
+
+theorem gcd_one_right (a n : Int) (hn : 0 < n)
+    (h : ∃ u v : Int, a*u+n*v=1) : gcd a n=1 := by
+  /-
+  Lemma: A positive modulus n and a linear combination a*u+n*v=1
+  imply gcd(a,n)=1, even when a is zero or negative.
+  Proof: The positive gcd divides this linear combination, so it
+  divides one and is at most one. Positivity makes it exactly one.
+  QED
+  -/
+  rcases h with ⟨u,v,he⟩
+  have hd := dvd_linear (gcd a n) a n u v
+    (gcd_data a n).2.1 (gcd_data a n).2.2.1
+  rw [he] at hd
+  have hle := divisor_le_positive (gcd a n) 1 (by decide) hd
+  have hp := gcd_positive a n (Or.inr (by omega))
+  omega
+
+theorem coprime_product (xs : List Int) (n : Int) (hn : 0 < n)
+    (hc : ∀ x ∈ xs, gcd x n=1) : gcd (intProduct xs) n=1 := by
+  /-
+  Lemma: A product of integers coprime to n is coprime to n.
+  Proof: Inductively construct a Bezout identity for n and the
+  product. The empty product is one. For a nonempty list, combine
+  the identity for n and the head with the one for n and the tail
+  product. Reverse the order of terms to identify the gcd as one.
+  QED
+  -/
+  have hb : ∃ u v : Int, n*u+intProduct xs*v=1 := by
+    induction xs with
+    | nil => exact ⟨0,1,by simp [intProduct]⟩
+    | cons x xs ih =>
+      rcases bezout x n with ⟨u,v,he⟩
+      rw [hc x (by simp)] at he
+      exact bezout_product n x (intProduct xs) ⟨v,u,by omega⟩
+        (ih (fun y hy => hc y (by simp [hy])))
+  rcases hb with ⟨u,v,he⟩
+  exact gcd_one_right _ n hn ⟨v,u,by omega⟩
+
+theorem small_prime_coprime (p i : Nat) (hp : Prime p) (hi : 0 < i) (hip : i < p) :
+    gcd (i : Int) p=1 := by
+  /-
+  Lemma: Each positive integer below p is relatively prime to p.
+  Proof: If p divided i, the divisor bound for positive i would
+  force p≤i. This contradicts i<p, so the preceding lemma applies.
+  QED
+  -/
+  apply prime_coprime i p hp
+  intro h
+  have hb := divisor_le_positive p i (by omega) h
+  omega
+
+theorem half_factorial_coprime (p : Nat) (hp : Prime p) (ho : p%2=1) :
+    gcd (factorial ((p-1)/2)) p=1 := by
+  /-
+  Lemma: The factorial of h=(p-1)/2 is coprime to p.
+  Proof: Each factor lies between one and h, hence strictly
+  below p, and is coprime to p. Their product is coprime too. QED
+  -/
+  rw [factorial_product]
+  apply coprime_product _ p (by have := hp.1; omega)
+  intro x hx
+  rcases List.mem_map.mp hx with ⟨i,hi,rfl⟩
+  rcases List.mem_map.mp hi with ⟨j,hj,rfl⟩
+  have hj' := List.mem_range.mp hj
+  have hh := odd_prime_data p hp ho
+  exact small_prime_coprime p (j+1) hp (by omega) (by omega)
+
 end NumberTheory.ResidueSigns
