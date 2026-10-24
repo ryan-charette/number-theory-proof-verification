@@ -2351,4 +2351,24 @@ theorem expanded_fraction_gcd (n d i : Nat) (hn : 0 < n)
   rw [hi,Int.mul_one] at he
   simpa only [← Int.natCast_mul,hq.2] using he
 
+theorem fraction_denominator_unique (n d e i j : Nat) (hn : 0 < n)
+    (hd : 0 < d) (hdn : d ∣ n) (he : 0 < e) (hen : e ∣ n)
+    (hi : gcd (i : Int) d=1) (hj : gcd (j : Int) e=1)
+    (h : (n/d)*i=(n/e)*j) : d=e := by
+  /-
+  Lemma: Two reduced fractions that expand to the same numerator
+  over n have the same denominator. Proof: The expanded numerator
+  has gcd n/d with n and also gcd n/e with n. Thus these positive
+  complementary factors are equal. Cancel that common factor in
+  (n/d)*d=n=(n/e)*e to obtain d=e. QED
+  -/
+  have hg := expanded_fraction_gcd n d i hn hd hdn hi
+  have hg' := expanded_fraction_gcd n e j hn he hen hj
+  rw [h,hg'] at hg
+  have hq : n/d=n/e := by omega
+  have hf := divisor_factor n d hn hdn
+  have hf' := divisor_factor n e hn hen
+  apply Nat.eq_of_mul_eq_mul_left hf.1
+  rw [hf.2,hq,hf'.2]
+
 end NumberTheory.ResidueSigns
