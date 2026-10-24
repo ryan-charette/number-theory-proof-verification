@@ -1529,4 +1529,26 @@ theorem order_spec (a : Int) (n : Nat) (hn : 0 < n) (hcop : gcd a n=1) :
   rw [dif_pos ⟨hn,hcop⟩]
   exact ⟨hs.1.1,hs.1.2,fun k hk hc => hs.2 k ⟨hk,hc⟩⟩
 
+theorem powers_distinct (a : Int) (n : Nat) (hn : 0 < n) (hc : gcd a n=1)
+    (i j : Nat) (hi : 0 < i) (hij : i < j) (hj : j ≤ order a n) :
+    ¬ Congruent (a^i) (a^j) n := by
+  /-
+  Theorem: The powers with exponents one through the order are
+  pairwise incongruent. Proof: Suppose i<j in this range gave equal
+  residues. Factor a^j=a^(j-i)*a^i and cancel the coprime factor
+  a^i. Then a^(j-i) is congruent to one. But 0<j-i<order(a,n),
+  contradicting the order's minimality. QED
+  -/
+  intro h
+  have he : a^j=a^(j-i)*a^i := by
+    rw [←power_add]
+    congr 1
+    omega
+  have hr := modeq_symm _ _ n h
+  rw [he] at hr
+  have hp := cancel_coprime (a^(j-i)) 1 (a^i) n
+    (coprime_power a n (by omega) hc i) (by simpa using hr)
+  have hmin := (order_spec a n hn hc).2.2 (j-i) (by omega) hp
+  omega
+
 end NumberTheory.ResidueSigns
