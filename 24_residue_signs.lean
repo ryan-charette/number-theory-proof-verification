@@ -547,4 +547,18 @@ theorem half_magnitudes_distinct (p i j : Nat) (a r s : Int)
       (by omega) (by omega) (by omega) (by have := hp.1; omega) ht
     omega
 
+theorem centered_magnitude_range (p i : Nat) (a r : Int)
+    (hp : Prime p) (ho : p%2=1) (ha : gcd a p=1) (hi : i<(p-1)/2)
+    (hr : Congruent r (((i : Int)+1)*a) p)
+    (hb : -((p-1)/2 : Nat) ≤ r ∧ r ≤ ((p-1)/2 : Nat)) :
+    0 < magnitude r ∧ magnitude r ≤ (p-1)/2 := by
+  /-
+  Lemma: The magnitudes of the centered representatives lie in
+  1,...,h. Proof: Centering bounds the absolute value by h, and
+  the preceding nonzero lemma excludes magnitude zero. QED
+  -/
+  have hn := half_representative_nonzero p i a r hp ho ha hi hr
+  have hm := magnitude_cast r
+  by_cases h : r<0 <;> simp only [h,if_true,if_false] at hm <;> omega
+
 end NumberTheory.ResidueSigns
