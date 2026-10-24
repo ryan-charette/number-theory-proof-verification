@@ -1484,4 +1484,26 @@ theorem positive_range_mem (n k : Nat) : k ∈ positiveRange n ↔ 0 < k ∧ k �
   · intro h
     exact List.mem_map.mpr ⟨k-1,List.mem_range.mpr (by omega),by omega⟩
 
+noncomputable def order (a : Int) (n : Nat) : Nat :=
+  if h : 0 < n ∧ gcd a n=1 then
+    Classical.choose (least_natural (fun k => 0 < k ∧ Congruent (a^k) 1 n)
+      (positive_power_one a n h.1 h.2))
+  else 0
+
+noncomputable def orderClass (p d : Nat) : List Nat :=
+  (positiveRange (p-1)).filter (fun a => decide (order (a : Int) p=d))
+
+theorem order_class_mem (p d a : Nat) :
+    a ∈ orderClass p d ↔ 0 < a ∧ a ≤ p-1 ∧ order (a : Int) p=d := by
+  /-
+  Lemma: The list for order d contains exactly the positive
+  representatives below p with that order.
+  Proof: Its filter tests the order equality on the positive
+  interval ending at p-1. QED
+  -/
+  simp only [orderClass,List.mem_filter,decide_eq_true_eq,positive_range_mem]
+  constructor
+  · intro h; exact ⟨h.1.1,h.1.2,h.2⟩
+  · intro h; exact ⟨⟨h.1,h.2.1⟩,h.2.2⟩
+
 end NumberTheory.ResidueSigns
