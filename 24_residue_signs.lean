@@ -2923,4 +2923,16 @@ theorem range_sum_list (n : Nat) (f : Nat → Nat) :
   | zero => rfl
   | succ n ih => simp [rangeSum,List.range_succ,list_sum_append,listSum,ih]
 
+theorem list_sum_perm (xs ys : List Nat) (h : xs.Perm ys) : listSum xs=listSum ys := by
+  /-
+  Lemma: Rearranging a list preserves its sum. Proof: Adding a
+  common first term preserves equality, swapping adjacent terms
+  uses commutativity, and successive rearrangements compose. QED
+  -/
+  induction h with
+  | nil => rfl
+  | cons a _h ih => simp [listSum,ih]
+  | swap a b xs => simp [listSum,Nat.add_left_comm]
+  | trans _h1 _h2 ih1 ih2 => exact ih1.trans ih2
+
 end NumberTheory.ResidueSigns
