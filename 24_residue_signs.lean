@@ -3304,4 +3304,23 @@ theorem minus_one_sign (p : Nat) (hp : Prime p) (ho : p%2=1) :
       omega
     simp [squareSign,hn]
 
+theorem residue_sign_rules (p q : Nat) (hp : Prime p) (hq : Prime q)
+    (hpo : p%2=1) (hqo : q%2=1) (hne : p≠q) :
+    ((p%4=1 → squareSign (-1) p=1) ∧
+      (p%4=3 → squareSign (-1) p= -1)) ∧
+    ((p%8=1 ∨ p%8=7 → squareSign 2 p=1) ∧
+      (p%8=3 ∨ p%8=5 → squareSign 2 p= -1)) ∧
+    (((p%4=1 ∨ q%4=1) → squareSign p q=squareSign q p) ∧
+      (p%4=3 → q%4=3 → squareSign p q= -squareSign q p)) := by
+  /-
+  Corollary: The rules for minus one, two, and interchanging
+  distinct odd primes hold together. Proof: The minus-one
+  criterion gives the first pair of cases. Counting negative
+  centered multiples of two gives the second. Quadratic
+  reciprocity gives the final pair. All primes here are odd,
+  and the two primes in the interchange rule are distinct. QED
+  -/
+  exact ⟨minus_one_sign p hp hpo,two_square_sign p hp hpo,
+    quadratic_reciprocity p q hp hq hpo hqo hne⟩
+
 end NumberTheory.ResidueSigns
