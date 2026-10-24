@@ -2371,4 +2371,34 @@ theorem fraction_denominator_unique (n d e i j : Nat) (hn : 0 < n)
   apply Nat.eq_of_mul_eq_mul_left hf.1
   rw [hf.2,hq,hf'.2]
 
+theorem expanded_fractions_nodup (n : Nat) (hn : 0 < n) (ds : List Nat)
+    (hds : ds.Nodup) (hdiv : ∀ d ∈ ds, 0 < d ∧ d ∣ n) :
+    (expandedFractions n ds).Nodup := by
+  /-
+  Lemma: The expanded reduced fractions have no repeated numerators
+  when the denominators are distinct divisors of n.
+  Proof: Within one row, multiplication by the positive factor n/d
+  is injective. Across rows, equality of numerators would imply
+  equality of their reduced denominators, already excluded. Apply
+  this observation successively to the rows. QED
+  -/
+  induction ds with
+  | nil => exact List.Pairwise.nil
+  | cons d ds ih =>
+    have hd := hdiv d (by simp)
+    have hp := List.pairwise_cons.mp hds
+    apply List.pairwise_append.mpr
+    refine ⟨?_,ih hp.2 (fun e he => hdiv e (by simp [he])),?_⟩
+    · apply List.pairwise_map.mpr
+      apply List.Pairwise.imp (R := fun i j : Nat => i ≠ j) ?_ (reduced_nodup d)
+      intro i j hij heq
+      exact hij (Nat.eq_of_mul_eq_mul_left (divisor_factor n d hn hd.2).1 heq)
+    · intro a ha b hb hab
+      rcases List.mem_map.mp ha with ⟨i,hi,hia⟩
+      rcases (expanded_fractions_mem n b ds).mp hb with ⟨e,he,j,hj,hbj⟩
+      have hed := hdiv e (by simp [he])
+      have hde := fraction_denominator_unique n d e i j hn hd.1 hd.2 hed.1 hed.2
+        ((reduced_mem d i).mp hi).2.2 ((reduced_mem e j).mp hj).2.2 (by omega)
+      exact hp.1 e he hde
+
 end NumberTheory.ResidueSigns
