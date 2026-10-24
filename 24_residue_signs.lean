@@ -3216,4 +3216,45 @@ theorem reciprocity_product (p q : Nat) (hp : Prime p) (hq : Prime q)
   rw [gauss_floor_sign p q hp hpo hqo hqp,gauss_floor_sign q p hq hqo hpo hpq,
     ←power_add,floor_sum_reciprocity p q hp hq hpo hqo hne]
 
+theorem quadratic_reciprocity (p q : Nat) (hp : Prime p) (hq : Prime q)
+    (hpo : p%2=1) (hqo : q%2=1) (hne : p≠q) :
+    ((p%4=1 ∨ q%4=1) → squareSign p q=squareSign q p) ∧
+    (p%4=3 → q%4=3 → squareSign p q= -squareSign q p) := by
+  /-
+  Theorem: For distinct odd primes, interchanging numerator
+  and modulus preserves the residue sign if either prime is
+  one modulo four, and reverses it if both are three modulo
+  four. Proof: The half-size rectangle has even area in the
+  first case and odd area in the second. The product formula
+  therefore gives one or minus one. Since each sign is one
+  or minus one, this gives precisely the stated equalities.
+  Distinctness excludes a zero residue class. QED
+  -/
+  have he := reciprocity_product p q hp hq hpo hqo hne
+  have hv : squareSign q p=1 ∨ squareSign q p= -1 := by
+    unfold squareSign
+    split <;> simp
+  rw [neg_one_power] at he
+  constructor
+  · intro h
+    have ht : (((p-1)/2)*((q-1)/2))%2=0 := by
+      rw [Nat.mul_mod]
+      rcases h with h | h
+      · have hz : ((p-1)/2)%2=0 := by omega
+        simp [hz]
+      · have hz : ((q-1)/2)%2=0 := by omega
+        simp [hz]
+    rw [ht] at he
+    simp only [if_pos,if_false,show ¬(1 : Nat)=0 by decide] at he
+    rcases hv with hv | hv <;> rw [hv] at he ⊢ <;> simp_all <;> omega
+  · intro hp4 hq4
+    have ht : (((p-1)/2)*((q-1)/2))%2=1 := by
+      rw [Nat.mul_mod]
+      have h1 : ((p-1)/2)%2=1 := by omega
+      have h2 : ((q-1)/2)%2=1 := by omega
+      rw [h1,h2]
+    rw [ht] at he
+    simp only [if_pos,if_false,show ¬(1 : Nat)=0 by decide] at he
+    rcases hv with hv | hv <;> rw [hv] at he ⊢ <;> simp_all <;> omega
+
 end NumberTheory.ResidueSigns
