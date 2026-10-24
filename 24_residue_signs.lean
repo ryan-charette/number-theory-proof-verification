@@ -2899,4 +2899,17 @@ theorem range_sum_parity (n : Nat) (f g : Nat → Nat)
     have he := h n (by omega)
     omega
 
+def listSum : List Nat → Nat
+  | [] => 0
+  | x::xs => x+listSum xs
+
+theorem list_sum_append (xs ys : List Nat) : listSum (xs++ys)=listSum xs+listSum ys := by
+  /-
+  Lemma: Concatenation adds sums. Proof: Induct on the first list
+  and associate the addition of its first term. QED
+  -/
+  induction xs with
+  | nil => simp [listSum]
+  | cons x xs ih => simp [listSum,ih,Nat.add_assoc]
+
 end NumberTheory.ResidueSigns
