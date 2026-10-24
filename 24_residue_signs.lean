@@ -3080,4 +3080,19 @@ theorem strict_multiple_quotient (p x j : Nat) (hp : 0<p) (hx : ¬ p ∣ x) :
     rw [Nat.mul_comm] at he
     omega
 
+theorem range_count_below (n t : Nat) :
+    rangeSum n (fun j => if j<t then 1 else 0)=min n t := by
+  /-
+  Lemma: Among indices 0,...,n-1 exactly min(n,t) lie below t.
+  Proof: Append index n. It contributes one precisely when n<t.
+  Induction gives the stated count in either case. QED
+  -/
+  induction n with
+  | zero => simp [rangeSum]
+  | succ n ih =>
+    rw [rangeSum,ih]
+    by_cases h : n<t
+    · rw [if_pos h]; omega
+    · rw [if_neg h]; omega
+
 end NumberTheory.ResidueSigns
