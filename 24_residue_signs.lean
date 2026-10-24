@@ -733,4 +733,19 @@ theorem modeq_refl (a n : Int) (hn : 0 < n) : a ≡ a [MOD n] := by
   · exists 0
     rw [Int.sub_self, Int.mul_zero]
 
+theorem sign_congruent_equal (u v : Int) (p : Nat) (hp : Prime p) (ho : p%2=1)
+    (hu : u=1 ∨ u= -1) (hv : v=1 ∨ v= -1) (h : Congruent u v p) : u=v := by
+  /-
+  Lemma: Two signs congruent modulo an odd prime are equal.
+  Proof: Add one to both. The resulting representatives are
+  zero or two, both less than the odd prime. Uniqueness of
+  bounded representatives makes them equal. Subtract one. QED
+  -/
+  have hh := odd_prime_data p hp ho
+  have h' := modeq_add _ _ 1 1 p h (modeq_refl 1 p (by have := hp.1; omega))
+  have he := bounded_congruent_equal (u+1) (v+1) p
+    (by rcases hu with h|h <;> omega) (by rcases hu with h|h <;> omega)
+    (by rcases hv with h|h <;> omega) (by rcases hv with h|h <;> omega) h'
+  omega
+
 end NumberTheory.ResidueSigns
