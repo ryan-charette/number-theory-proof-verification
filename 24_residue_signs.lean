@@ -615,4 +615,108 @@ theorem centered_magnitudes_perm (p : Nat) (a : Int) (r : Nat → Int)
     exact ⟨m-1,List.mem_range.mpr (by omega),by omega⟩
   · simp only [List.length_map]
 
+theorem gcd_positive (a b : Int) (h : a ≠ 0 ∨ b ≠ 0) : 0 < gcd a b := by
+  /-
+  Theorem: The gcd is positive when the inputs are not both zero.
+  Proof: It is nonnegative. If it were zero, divisibility of a and b
+  would express both as zero times an integer, forcing a = b = 0.
+  This contradicts the hypothesis. QED
+  -/
+  rcases gcd_data a b with ⟨hn, ⟨u, hu⟩, ⟨v, hv⟩, hxy⟩
+  by_cases hz : gcd a b = 0
+  · rw [hz, Int.zero_mul] at hu hv
+    rcases h with ha | hb
+    · exact False.elim (ha hu)
+    · exact False.elim (hb hv)
+  · omega
+
+theorem prime_coprime (a : Int) (p : Nat) (hp : Prime p) (ha : ¬ (p : Int) ∣ a) :
+    gcd a p=1 := by
+  /-
+  Lemma: An integer not divisible by a prime is relatively prime
+  to it. Proof: The positive gcd d divides p, so primality makes
+  d either one or p. The latter would imply p divides a, which
+  is excluded. Hence d=1. QED
+  -/
+  have hd := gcd_positive a p (Or.inr (by have := hp.1; omega))
+  have hcast := Int.toNat_of_nonneg (Int.le_of_lt hd)
+  have hdiv : (gcd a p).toNat ∣ p := by
+    apply Int.ofNat_dvd.mp
+    rw [hcast]
+    exact (gcd_data a p).2.2.1
+  rcases hp.2 _ hdiv with h | h
+  · omega
+  · have he : gcd a p=(p : Int) := by omega
+    have had := (gcd_data a p).2.1
+    rw [he] at had
+    exact False.elim (ha had)
+
+theorem product_perm (xs ys : List Int) (h : xs.Perm ys) : intProduct xs=intProduct ys := by
+  /-
+  Lemma: Rearranging a finite list preserves its product.
+  Proof: The elementary rearrangement steps are keeping a common
+  head, swapping adjacent entries, and composing rearrangements.
+  Induction on these steps uses multiplication's associativity and
+  commutativity for a swap, and equality for the other steps. QED
+  -/
+  induction h with
+  | nil => rfl
+  | cons a _ ih => simp only [intProduct,ih]
+  | swap a b xs => simp only [intProduct,Int.mul_left_comm]
+  | trans _ _ ih₁ ih₂ => exact ih₁.trans ih₂
+
+theorem product_append (xs ys : List Int) : intProduct (xs++ys)=intProduct xs*intProduct ys := by
+  /-
+  Lemma: The product of two joined lists is the product of their
+  products. Proof: Induct on the first list. Its empty product is
+  one; in the next case, use induction on the tail and reassociate
+  the leading factor. QED
+  -/
+  induction xs with
+  | nil => simp [intProduct]
+  | cons a xs ih =>
+    change a*intProduct (xs++ys)=(a*intProduct xs)*intProduct ys
+    rw [ih,Int.mul_assoc]
+
+def factorial : Nat → Int
+  | 0 => 1
+  | n+1 => ((n+1 : Nat) : Int)*factorial n
+
+theorem factorial_product (n : Nat) :
+    factorial n=intProduct (((List.range n).map (fun i => i+1)).map (fun i : Nat => (i : Int))) := by
+  /-
+  Lemma: The recursively defined factorial is the product of the
+  list 1,...,n. Proof: At zero both products are empty and equal
+  one. Increasing n appends n+1 to the list. Split off that final
+  factor and use induction; commutativity puts it in the order
+  used by the factorial recursion. QED
+  -/
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    simp only [factorial,List.range_succ,List.map_append,List.map_cons,List.map_nil,
+      product_append,intProduct,Int.mul_one]
+    rw [ih,Int.mul_comm]
+
+theorem centered_product (p : Nat) (a : Int) (r : Nat → Int)
+    (hp : Prime p) (ho : p%2=1) (ha : ¬ (p : Int) ∣ a)
+    (hr : ∀ i<(p-1)/2, Congruent (r i) (((i : Int)+1)*a) p)
+    (hb : ∀ i<(p-1)/2, -((p-1)/2 : Nat) ≤ r i ∧ r i ≤ ((p-1)/2 : Nat)) :
+    intProduct ((List.range ((p-1)/2)).map r)=
+      (-1 : Int)^(negativeCount ((List.range ((p-1)/2)).map r))*factorial ((p-1)/2) := by
+  /-
+  Theorem: The product of the centered representatives is h!
+  times a sign for each negative entry.
+  Proof: The signed-product identity separates the signs from
+  the magnitudes. The magnitudes rearrange 1,...,h, so their
+  product is h!. QED
+  -/
+  rw [signed_product]
+  have hperm := (centered_magnitudes_perm p a r hp ho (prime_coprime a p hp ha) hr hb).map
+    (fun n : Nat => (n : Int))
+  have he := product_perm _ _ hperm
+  rw [←factorial_product] at he
+  simp only [List.map_map,Function.comp_def] at he ⊢
+  rw [he]
+
 end NumberTheory.ResidueSigns
