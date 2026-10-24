@@ -784,4 +784,25 @@ theorem gcd_one_right (a n : Int) (hn : 0 < n)
   have hp := gcd_positive a n (Or.inr (by omega))
   omega
 
+theorem coprime_product (xs : List Int) (n : Int) (hn : 0 < n)
+    (hc : ∀ x ∈ xs, gcd x n=1) : gcd (intProduct xs) n=1 := by
+  /-
+  Lemma: A product of integers coprime to n is coprime to n.
+  Proof: Inductively construct a Bezout identity for n and the
+  product. The empty product is one. For a nonempty list, combine
+  the identity for n and the head with the one for n and the tail
+  product. Reverse the order of terms to identify the gcd as one.
+  QED
+  -/
+  have hb : ∃ u v : Int, n*u+intProduct xs*v=1 := by
+    induction xs with
+    | nil => exact ⟨0,1,by simp [intProduct]⟩
+    | cons x xs ih =>
+      rcases bezout x n with ⟨u,v,he⟩
+      rw [hc x (by simp)] at he
+      exact bezout_product n x (intProduct xs) ⟨v,u,by omega⟩
+        (ih (fun y hy => hc y (by simp [hy])))
+  rcases hb with ⟨u,v,he⟩
+  exact gcd_one_right _ n hn ⟨v,u,by omega⟩
+
 end NumberTheory.ResidueSigns
