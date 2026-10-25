@@ -2728,4 +2728,27 @@ theorem reflected_square_switch (a p : Nat) (hp : Prime p)
   rw [←square_class_congruent _ _ p he]
   exact negation_square_switch a p hp hm hn
 
+theorem reflected_square_primitive (a p q : Nat) (hp : Prime p) (hq : Prime q)
+    (he : p=2*q+1) (ho : q%2=1) (ha : 1<a) (hb : a<p-1) :
+    SquareClass a p ↔ PrimitiveRoot (p-a : Nat) p := by
+  /-
+  Theorem: For p=2q+1 with q an odd prime, an interior
+  representative is a square exactly when its reflection
+  is primitive. Proof: Negation exchanges squares and
+  nonsquares. The reflected representative is still interior,
+  so the square-or-primitive dichotomy applies. Its square
+  and primitive alternatives cannot overlap. QED
+  -/
+  have hm := double_odd_prime_remainder p q he ho
+  have hs := reflected_square_switch a p hp hm ha hb
+  constructor
+  · intro h
+    rcases double_prime_dichotomy p q (p-a) hp hq he (by omega) (by omega) with h' | h'
+    · exact False.elim ((hs.mp h) h')
+    · exact h'
+  · intro h
+    apply hs.mpr
+    intro hsquare
+    exact square_class_not_primitive _ p hp (by omega) hsquare h
+
 end NumberTheory.DoublePrimes
