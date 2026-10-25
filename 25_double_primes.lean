@@ -2433,4 +2433,65 @@ theorem double_prime_divisors (q d : Nat) (hq : Prime q) (hd : 0<d)
     have hle := Nat.le_of_dvd (by decide : 0<2) hdd
     omega
 
+theorem square_one_cases (z : Int) (p : Nat) (hp : Prime p)
+    (hz : Congruent (z^2) 1 p) : Congruent z 1 p ∨ Congruent z (-1) p := by
+  /-
+  Lemma: A square equal to one modulo a prime has base one or minus
+  one. Proof: Factor z^2-1=(z-1)*(z+1). A prime dividing this product
+  divides one of the factors, giving the two congruences. QED
+  -/
+  have he : z^2-1=(z-1)*(z+1) := by
+    simp only [Int.pow_succ,Int.pow_zero,Int.one_mul,Int.mul_one,
+      Int.sub_mul,Int.mul_add,Int.mul_sub,Int.one_mul]
+    omega
+  have hd := hz.2
+  rw [he] at hd
+  rcases prime_product_divides p (z-1) (z+1) hp hd with h | h
+  · exact Or.inl ⟨hz.1,h⟩
+  · exact Or.inr ⟨hz.1,by simpa using h⟩
+
+theorem double_prime_dichotomy (p q a : Nat) (hp : Prime p) (hq : Prime q)
+    (he : p=2*q+1) (ha : 0<a) (hb : a<p-1) :
+    SquareClass a p ∨ PrimitiveRoot a p := by
+  /-
+  Theorem: Below p-1, every positive class for a prime p=2q+1
+  with q prime is a square or a primitive root.
+  Proof: Its order divides 2q, hence is 1, 2, q, or 2q.
+  Orders one and q give a square by Euler's criterion.
+  Order two forces the class to be one or minus one; the
+  latter is excluded by the bound, and the former is a square.
+  Order 2q is precisely the primitive-root case. QED
+  -/
+  have ho : p%2=1 := by omega
+  have hn : 0<p := by omega
+  have hc := small_prime_coprime p a hp ha (by omega)
+  have hnon : ¬ (p : Int) ∣ (a : Int) := by
+    intro h
+    exact coprime_not_zero a p hp.1 hc ⟨by omega,by simpa using h⟩
+  have hs := order_spec a p hn hc
+  have hd := (order_dvd_iff a p hn hc (p-1)).mp (fermat_coprime a p hp hc)
+  have hd' : order a p ∣ 2*q := by simpa [he] using hd
+  have hh : (p-1)/2=q := by omega
+  rcases double_prime_divisors q (order a p) hq hs.1 hd' with h | h | h | h
+  · left
+    apply (euler_square_criterion a p hp ho hnon).mpr
+    apply (order_dvd_iff a p hn hc _).mpr
+    rw [h]; exact Nat.one_dvd _
+  · have hpow : Congruent ((a : Int)^2) 1 p := by simpa [h] using hs.2.1
+    rcases square_one_cases a p hp hpow with h1 | hm
+    · left
+      exact ⟨1,by simpa using modeq_symm _ _ p h1⟩
+    · have hpm : Congruent (a : Int) ((p : Int)-1) p := by
+        apply modeq_trans _ (-1) _ p hm
+        exact ⟨by omega,⟨-1,by omega⟩⟩
+      have hx := bounded_congruent_equal (a : Int) ((p : Int)-1) p
+        (by omega) (by omega) (by omega) (by omega) hpm
+      omega
+  · left
+    apply (euler_square_criterion a p hp ho hnon).mpr
+    rw [hh,←h]
+    exact hs.2.1
+  · right
+    exact ⟨hc,by omega⟩
+
 end NumberTheory.DoublePrimes
