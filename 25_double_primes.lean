@@ -2400,4 +2400,37 @@ theorem square_not_primitive (a : Int) (p : Nat) (hp : Prime p)
   have := Nat.le_of_dvd hh.1 hd
   omega
 
+theorem double_prime_divisors (q d : Nat) (hq : Prime q) (hd : 0<d)
+    (hdiv : d ∣ 2*q) : d=1 ∨ d=2 ∨ d=q ∨ d=2*q := by
+  /-
+  Lemma: The positive divisors of twice a prime q are among
+  1, 2, q, and 2q. Proof: Write dt=2q. The prime q divides
+  d or t. Cancel q in that factorization; the remaining
+  positive factor divides two, so is one or two. QED
+  -/
+  rcases hdiv with ⟨t,ht⟩
+  have hqt : (q : Int) ∣ (d : Int)*(t : Int) := by
+    have h : q ∣ d*t := ⟨2,by omega⟩
+    simpa only [Int.natCast_mul] using Int.ofNat_dvd.mpr h
+  rcases prime_product_divides q d t hq hqt with hqd | hqt
+  · rcases Int.ofNat_dvd.mp hqd with ⟨k,hk⟩
+    have hkd : k ∣ 2 := by
+      apply Nat.dvd_of_mul_dvd_mul_left (by have := hq.1; omega : 0<q)
+      exact ⟨t,by simpa [hk,Nat.mul_assoc,Nat.mul_comm,Nat.mul_left_comm] using ht⟩
+    have hkpos : 0<k := by
+      by_cases hz : k=0
+      · simp [hz] at hk; omega
+      · omega
+    have hkle := Nat.le_of_dvd (by decide : 0<2) hkd
+    have hcases : k=1 ∨ k=2 := by omega
+    rcases hcases with h | h
+    · right; right; left; simpa [h] using hk
+    · right; right; right; simpa [h,Nat.mul_comm] using hk
+  · rcases Int.ofNat_dvd.mp hqt with ⟨k,hk⟩
+    have hdd : d ∣ 2 := by
+      apply Nat.dvd_of_mul_dvd_mul_left (by have := hq.1; omega : 0<q)
+      exact ⟨k,by simpa [hk,Nat.mul_assoc,Nat.mul_comm,Nat.mul_left_comm] using ht⟩
+    have hle := Nat.le_of_dvd (by decide : 0<2) hdd
+    omega
+
 end NumberTheory.DoublePrimes
