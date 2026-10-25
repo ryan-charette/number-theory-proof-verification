@@ -2532,4 +2532,170 @@ theorem square_class_not_primitive (a : Int) (p : Nat) (hp : Prime p)
   intro h
   exact square_not_primitive x p hp ho ((primitive_congruent _ _ p hp hx).mpr h)
 
+theorem neg_one_power (k : Nat) :
+    (-1 : Int)^k=if k%2=0 then 1 else -1 := by
+  /-
+  Lemma: Even powers of minus one are one, and odd powers are
+  minus one. Proof: The zeroth power is one. Multiplication by
+  minus one switches the sign as the parity switches. QED
+  -/
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    rw [Int.pow_succ,ih]
+    by_cases h : k%2=0
+    · have h' : (k+1)%2≠0 := by omega
+      simp [h,h']
+    · have h' : (k+1)%2=0 := by omega
+      simp [h,h']
+
+theorem one_not_neg_one (p : Nat) (hp : Prime p) (hodd : p % 2=1) :
+    ¬ Congruent (1 : Int) (-1) p := by
+  /-
+  Lemma: One and minus one are distinct modulo an odd prime.
+  Proof: Otherwise p would divide their difference two. QED
+  -/
+  intro h
+  exact (odd_prime_data p hp hodd).2.2 (by simpa using h.2)
+
+theorem minus_one_square (p : Nat) (hp : Prime p) (ho : p%2=1) :
+    SquareClass (-1) p ↔ p%4=1 := by
+  /-
+  Theorem: Minus one is a square modulo an odd prime exactly
+  when the prime has remainder one upon division by four.
+  Proof: Euler's criterion tests (-1)^((p-1)/2). This power is
+  one precisely when (p-1)/2 is even, equivalently p has
+  remainder one modulo four. An odd exponent gives minus one,
+  which is distinct from one modulo an odd prime. QED
+  -/
+  have ha : ¬ (p : Int) ∣ (-1) := by
+    intro h
+    have hd := Int.dvd_neg.mp h
+    have hb := divisor_le_positive (p : Int) 1 (by decide) hd
+    have := hp.1
+    omega
+  rw [euler_square_criterion (-1) p hp ho ha,neg_one_power]
+  by_cases he : ((p-1)/2)%2=0
+  · have hr : p%4=1 := by have := hp.1; omega
+    simp only [if_pos he]
+    exact ⟨fun _ => hr,fun _ => modeq_refl 1 p (by have := hp.1; omega)⟩
+  · have hr : p%4≠1 := by have := hp.1; omega
+    simp only [if_neg he]
+    constructor
+    · intro h
+      exact False.elim (one_not_neg_one p hp ho (modeq_symm _ _ p h))
+    · intro h
+      exact False.elim (hr h)
+
+theorem euler_nonsquare_criterion (a : Int) (p : Nat) (hp : Prime p)
+    (hodd : p % 2=1) (ha : ¬ (p : Int) ∣ a) :
+    ¬ SquareClass a p ↔ Congruent (a^((p-1)/2)) (-1) p := by
+  /-
+  Theorem: A nonzero class is a nonsquare exactly when its
+  half-exponent power is minus one.
+  Proof: The square of that power is a^(p-1), which is one.
+  Hence the power is one or minus one. The preceding criterion
+  associates one precisely with squares, and these two values
+  are distinct for an odd prime. QED
+  -/
+  have hh := odd_prime_data p hp hodd
+  have hret : Congruent ((a^((p-1)/2))^2) 1 p := by
+    rw [power_mul,Nat.mul_comm _ 2,←hh.2.1]
+    exact fermat_coprime a p hp (prime_coprime a p hp ha)
+  have hc := euler_square_criterion a p hp hodd ha
+  constructor
+  · intro hn
+    rcases square_one_cases _ p hp hret with h | h
+    · exact False.elim (hn (hc.mpr h))
+    · exact h
+  · intro h hs
+    exact one_not_neg_one p hp hodd
+      (modeq_trans _ _ _ p (modeq_symm _ _ p (hc.mp hs)) h)
+
+theorem nonzero_product (a b : Int) (p : Nat) (hp : Prime p)
+    (ha : ¬ (p : Int) ∣ a) (hb : ¬ (p : Int) ∣ b) : ¬ (p : Int) ∣ a*b := by
+  /-
+  Lemma: The product of two nonzero classes modulo a prime is
+  nonzero. Proof: Divisibility of the product would force
+  divisibility of one of its factors. QED
+  -/
+  intro h
+  exact (prime_product_divides p a b hp h).elim ha hb
+
+theorem product_power (a b : Int) (k : Nat) : (a*b)^k=a^k*b^k := by
+  /-
+  Lemma: A power of a product is the product of the powers.
+  Proof: At zero both sides are one. In the successor step,
+  use the preceding identity and rearrange the factors. QED
+  -/
+  induction k with
+  | zero => simp [Int.pow_zero]
+  | succ k ih =>
+    rw [Int.pow_succ,ih,Int.pow_succ,Int.pow_succ]
+    simp only [Int.mul_assoc,Int.mul_left_comm,Int.mul_comm]
+
+theorem square_times_nonsquare (a b : Int) (p : Nat) (hp : Prime p)
+    (ho : p % 2=1) (ha : ¬ (p : Int) ∣ a) (hb : ¬ (p : Int) ∣ b)
+    (hsa : SquareClass a p) (hsb : ¬ SquareClass b p) : ¬ SquareClass (a*b) p := by
+  /-
+  Theorem: A nonzero square times a nonsquare is a nonsquare.
+  Proof: Their half-exponent powers are one and minus one.
+  The half-exponent power of their product is therefore minus
+  one. Euler's nonsquare criterion proves the assertion. QED
+  -/
+  apply (euler_nonsquare_criterion (a*b) p hp ho (nonzero_product a b p hp ha hb)).mpr
+  rw [product_power]
+  have h := modeq_mult _ 1 _ (-1) p
+    ((euler_square_criterion a p hp ho ha).mp hsa)
+    ((euler_nonsquare_criterion b p hp ho hb).mp hsb)
+  simpa only [Int.one_mul] using h
+
+theorem nonsquare_times_nonsquare (a b : Int) (p : Nat) (hp : Prime p)
+    (ho : p % 2=1) (ha : ¬ (p : Int) ∣ a) (hb : ¬ (p : Int) ∣ b)
+    (hsa : ¬ SquareClass a p) (hsb : ¬ SquareClass b p) : SquareClass (a*b) p := by
+  /-
+  Theorem: Two nonsquares have a square product modulo an odd prime.
+  Proof: Both half-exponent powers are minus one, so their product
+  has half-exponent power one. Apply Euler's square criterion. QED
+  -/
+  apply (euler_square_criterion (a*b) p hp ho (nonzero_product a b p hp ha hb)).mpr
+  rw [product_power]
+  have h := modeq_mult _ (-1) _ (-1) p
+    ((euler_nonsquare_criterion a p hp ho ha).mp hsa)
+    ((euler_nonsquare_criterion b p hp ho hb).mp hsb)
+  simpa using h
+
+theorem negation_square_switch (a : Int) (p : Nat) (hp : Prime p)
+    (hm : p%4=3) (ha : ¬ (p : Int) ∣ a) :
+    SquareClass a p ↔ ¬ SquareClass (-a) p := by
+  /-
+  Theorem: Modulo a prime three modulo four, negation exchanges
+  nonzero square and nonsquare classes. Proof: Minus one is a
+  nonsquare. Its product with a square is a nonsquare; its
+  product with a nonsquare is a square. If both a and -a
+  were nonsquares, the latter rule applied to -1 and -a
+  would make a a square, a contradiction. QED
+  -/
+  have ho : p%2=1 := by omega
+  have hn : ¬ (p : Int) ∣ (-1 : Int) := by
+    intro h
+    have hd : (p : Int) ∣ 1 := by simpa using Int.dvd_neg.mpr h
+    have := divisor_le_positive p 1 (by decide) hd
+    have := hp.1
+    omega
+  have hs : ¬ SquareClass (-1) p := by
+    intro h
+    have := (minus_one_square p hp ho).mp h
+    omega
+  constructor
+  · intro h
+    have ht := square_times_nonsquare a (-1) p hp ho ha hn h hs
+    simpa using ht
+  · intro h
+    apply Classical.byContradiction
+    intro hna
+    have ht := nonsquare_times_nonsquare a (-1) p hp ho ha hn hna hs
+    apply h
+    simpa using ht
+
 end NumberTheory.DoublePrimes
