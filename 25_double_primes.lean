@@ -2520,4 +2520,16 @@ theorem primitive_congruent (a b : Int) (p : Nat) (hp : Prime p)
     have ha := congruent_coprime b a p hb.1 hs
     exact ⟨ha,by rw [congruent_orders a b p hn ha hb.1 h]; exact hb.2⟩
 
+theorem square_class_not_primitive (a : Int) (p : Nat) (hp : Prime p)
+    (ho : p%2=1) (ha : SquareClass a p) : ¬ PrimitiveRoot a p := by
+  /-
+  Corollary: Every square class fails to be a primitive root
+  modulo an odd prime. Proof: Choose its square representative.
+  Congruence preserves primitive roots, and a square cannot be
+  primitive by the half-exponent argument. QED
+  -/
+  rcases ha with ⟨x,hx⟩
+  intro h
+  exact square_not_primitive x p hp ho ((primitive_congruent _ _ p hp hx).mpr h)
+
 end NumberTheory.DoublePrimes
