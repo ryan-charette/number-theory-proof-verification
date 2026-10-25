@@ -2494,4 +2494,12 @@ theorem double_prime_dichotomy (p q a : Nat) (hp : Prime p) (hq : Prime q)
   · right
     exact ⟨hc,by omega⟩
 
+theorem double_odd_prime_remainder (p q : Nat) (he : p=2*q+1)
+    (hq : q%2=1) : p%4=3 := by
+  /-
+  Lemma: Twice an odd number plus one is three modulo four.
+  Proof: Writing q=2k+1 gives p=4k+3. QED
+  -/
+  omega
+
 end NumberTheory.DoublePrimes
