@@ -1,3 +1,5 @@
+import «01_divisibility»
+import «02_remainders»
 import Init.Data.Int.Lemmas
 import Init.Data.Int.Order
 import Init.Data.Int.DivModLemmas
@@ -5,11 +7,15 @@ import Lean.Elab.Tactic.Omega
 
 /-
 We study common divisors and integer linear equations using integer
-witnesses, ordinary arithmetic, and the Euclidean reduction. Supporting
-results are proved here so that this file can be used independently.
+witnesses, ordinary arithmetic, and the Euclidean reduction. Earlier divisibility and remainder results are imported; new supporting
+results are proved alongside the arguments that need them.
 -/
 
 namespace NumberTheory.CommonDivisors
+
+open NumberTheory.Remainders (division_exists)
+open NumberTheory (Congruent)
+
 
 theorem dvd_linear (d a b x y : Int) (ha : d ∣ a) (hb : d ∣ b) :
     d ∣ a * x + b * y := by
@@ -42,17 +48,6 @@ theorem dvd_zero (a : Int) : a ∣ 0 := by
   exists 0
   rw [Int.mul_zero]
 
-theorem dvd_trans (a b c : Int) (hab : a ∣ b) (hbc : b ∣ c) : a ∣ c := by
-  /-
-  Theorem: Divisibility is transitive.
-  Proof: If b = a * u and c = b * v, then c = a * (u * v).
-  The integer u * v supplies the required witness. QED
-  -/
-  rcases hab with ⟨u, hu⟩
-  rcases hbc with ⟨v, hv⟩
-  exists u * v
-  rw [hv, hu, Int.mul_assoc]
-
 theorem common_divisor_remainder (a b n r k : Int)
     (h : a = n * b + r) (ha : k ∣ a) (hb : k ∣ b) : k ∣ r := by
   /-
@@ -81,81 +76,6 @@ theorem common_divisors_step (a b n r k : Int) (h : a = n * b + r) :
     have hd := dvd_linear k b r n 1 hk.1 hk.2
     rw [Int.mul_one, Int.mul_comm b n, ← h] at hd
     exact ⟨hd, hk.1⟩
-
-theorem least_natural (P : Nat → Prop) (h : ∃ b, P b) :
-    ∃ a, P a ∧ ∀ b, P b → a ≤ b := by
-  /-
-  Theorem: A nonempty collection of natural numbers has a least member.
-  Proof: We prove by strong induction on b that if b is a member, the
-  collection has a least member. Strong induction allows us to assume
-  the assertion for every natural number smaller than b.
-
-  If some member a is smaller than b, the induction hypothesis at a
-  gives a least member. If no member is smaller than b, then b itself
-  is least. Finally, nonemptiness supplies a member to start with. QED
-  -/
-  letI := Classical.propDecidable
-  have least_below : ∀ b, P b → ∃ a, P a ∧ ∀ c, P c → a ≤ c := by
-    intro b
-    induction b using Nat.strongRecOn with
-    | ind b ih =>
-      intro hb
-      by_cases hs : ∃ a, a < b ∧ P a
-      · rcases hs with ⟨a, hab, ha⟩
-        exact ih a hab ha
-      · exists b
-        constructor
-        · exact hb
-        · intro c hc
-          apply Nat.le_of_not_lt
-          intro hcb
-          exact hs ⟨c, hcb, hc⟩
-  rcases h with ⟨b, hb⟩
-  exact least_below b hb
-
-
-theorem division_exists (m n : Nat) (hn : 0 < n) :
-    ∃ q r : Int, (m : Int) = (n : Int) * q + r ∧ 0 ≤ r ∧ r < (n : Int) := by
-  /-
-  Theorem: For a natural number m and a positive natural number n,
-  there are integers q and r with m = n * q + r and 0 ≤ r < n.
-  Lean includes zero among the natural numbers, so we explicitly require
-  n > 0. The conclusion also holds when m = 0.
-
-  Proof: Consider all nonnegative integers r for which m = n * q + r
-  for some integer q. This collection is nonempty: q = 0 and r = m
-  satisfy the equation. Choose its least member r by well-ordering,
-  and choose an integer q giving the equation.
-
-  If r ≥ n, then r - n is nonnegative and
-
-    m = n * q + r = n * (q + 1) + (r - n).
-
-  Thus r - n is another member of the collection. Since n > 0,
-  it is smaller than r, contradicting the choice of r. Hence r < n.
-  The chosen q and r have all the required properties. QED
-  -/
-  let P : Nat → Prop := fun r => ∃ q : Int, (m : Int) = (n : Int) * q + r
-  have hnonempty : ∃ r, P r := by
-    exists m
-    exists (0 : Int)
-    rw [Int.mul_zero, Int.zero_add]
-  rcases least_natural P hnonempty with ⟨r, hr, hleast⟩
-  rcases hr with ⟨q, hq⟩
-  have hsmall : r < n := by
-    apply Nat.lt_of_not_ge
-    intro hlarge
-    have hnext : P (r - n) := by
-      exists q + 1
-      rw [Int.mul_add, Int.mul_one]
-      -- Since n ≤ r, natural subtraction agrees with integer subtraction.
-      omega
-    have hminimal := hleast (r - n) hnext
-    -- Subtracting positive n gives a strictly smaller natural number.
-    omega
-  exists q, (r : Int)
-  exact ⟨hq, by omega, by omega⟩
-
 
 theorem euclid_natural (a b : Nat) :
     ∃ d : Nat, (d : Int) ∣ (a : Int) ∧ (d : Int) ∣ (b : Int) ∧
@@ -235,6 +155,7 @@ that it is the greatest common divisor in the ordinary numerical sense.
 We also set gcd(0,0) = 0 through this construction; statements that require
 a positive greatest divisor explicitly exclude the pair (0,0).
 -/
+
 noncomputable def gcd (a b : Int) : Int := (Classical.choose (euclid_integer a b) : Nat)
 
 theorem gcd_data (a b : Int) :
@@ -440,8 +361,6 @@ theorem coprime_product (a b n : Int) (ha : gcd a n = 1)
       omega
     _ = 1 := by rw [hxy, huv]; rfl
 
-def Congruent (a b n : Int) : Prop := 0 < n ∧ n ∣ a - b
-
 theorem congruence_cancel (a b c n : Int) (h : Congruent (a * c) (b * c) n)
     (hc : gcd c n = 1) : Congruent a b n := by
   /-
@@ -646,6 +565,7 @@ that both inputs divide and that is no larger than any other positive
 common multiple. The expression below will be proved to have exactly
 these properties; it does not use a library least-common-multiple theorem.
 -/
+
 noncomputable def lcm (a b : Int) : Int := a * (b / gcd a b)
 
 theorem lcm_common (a b : Int) : a ∣ lcm a b ∧ b ∣ lcm a b := by

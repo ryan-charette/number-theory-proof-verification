@@ -1,13 +1,17 @@
+import «04_factorization»
 import Init.Data.Nat.Dvd
 import Init.Data.List.Lemmas
 import Lean.Elab.Tactic.Omega
 
 /-
-Elementary constructions of primes beyond a bound. All supporting
-results are proved here, independently of the other source files.
+Elementary constructions of primes beyond a bound. Earlier supporting
+results are imported from the preceding subsections.
 -/
 
 namespace NumberTheory.PrimeBounds
+
+
+open NumberTheory.Factorization (Prime factorization_exists prime_divisor product)
 
 
 def Coprime (a b : Nat) : Prop := ∀ d : Nat, d ∣ a → d ∣ b → d = 1
@@ -33,8 +37,6 @@ theorem consecutive_coprime (n : Nat) : Coprime n (n+1) := by
   have hne : d ≠ 0 := by intro hz; simp [hz] at ht
   omega
 
-
-
 def initialProduct : Nat → Nat
   | 0 => 1
   | n+1 => (n+1) * initialProduct n
@@ -49,7 +51,6 @@ theorem initialProduct_positive (n : Nat) : 0 < initialProduct n := by
   induction n with
   | zero => decide
   | succ n ih => exact Nat.mul_pos (by omega) ih
-
 
 theorem divides_initialProduct (d n : Nat) (hd : 0 < d) (hle : d ≤ n) :
     d ∣ initialProduct n := by
@@ -72,7 +73,6 @@ theorem divides_initialProduct (d n : Nat) (hd : 0 < d) (hle : d ≤ n) :
       rw [initialProduct, ht]
       simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
 
-
 theorem avoids_small_divisors (k : Nat) :
     ∃ n : Nat, 1 < n ∧ ∀ d : Nat, 1 < d → d ≤ k → ¬ d ∣ n := by
   /-
@@ -94,67 +94,6 @@ theorem avoids_small_divisors (k : Nat) :
       (divides_initialProduct d k (by omega) hle) hdiv
     omega
 
-def Prime (p : Nat) : Prop := 1 < p ∧ ∀ d : Nat, d ∣ p → d = 1 ∨ d = p
-
-theorem nonprime_factors (n : Nat) (hn : 1 < n) (hp : ¬ Prime n) :
-    ∃ a b : Nat, 1 < a ∧ a < n ∧ 1 < b ∧ b < n ∧ n = a * b := by
-  /-
-  Theorem: A nonprime number greater than one is a product of two
-  numbers strictly between one and itself.
-  Proof: Since n is not prime, it has a divisor a other than one and n.
-  Write n=a*b. Neither factor is zero. The factor b cannot be one,
-  since that would give a=n. Both factors are therefore at least two.
-  Each divides n and is at most n; equality would force the other
-  factor to be one. Thus both factors are strictly smaller than n. QED
-  -/
-  have hex : ∃ a : Nat, a ∣ n ∧ a ≠ 1 ∧ a ≠ n := by
-    apply Classical.byContradiction
-    intro he
-    apply hp
-    constructor
-    · exact hn
-    · intro a ha
-      by_cases h₁ : a = 1
-      · exact Or.inl h₁
-      · by_cases h₂ : a = n
-        · exact Or.inr h₂
-        · exact False.elim (he ⟨a, ha, h₁, h₂⟩)
-  rcases hex with ⟨a, ha, ha₁, han⟩
-  rcases ha with ⟨b, heq⟩
-  have ha₀ : a ≠ 0 := by intro hz; rw [hz, Nat.zero_mul] at heq; omega
-  have hb₀ : b ≠ 0 := by intro hz; rw [hz, Nat.mul_zero] at heq; omega
-  have hb₁ : b ≠ 1 := by intro ho; rw [ho, Nat.mul_one] at heq; omega
-  have hal := Nat.le_of_dvd (by omega : 0 < n) (show a ∣ n from ⟨b, heq⟩)
-  have hbl := Nat.le_of_dvd (by omega : 0 < n) (show b ∣ n from ⟨a, by rw [Nat.mul_comm]; exact heq⟩)
-  have hbn : b ≠ n := by
-    intro hbn
-    have ht : b * a = b * 1 := by rw [Nat.mul_one, Nat.mul_comm]; omega
-    have haeq := Nat.eq_of_mul_eq_mul_left (by omega : 0 < b) ht
-    exact ha₁ haeq
-  exists a, b
-  exact ⟨by omega, by omega, by omega, by omega, heq⟩
-
-theorem prime_divisor (n : Nat) (hn : 1 < n) :
-    ∃ p : Nat, Prime p ∧ p ∣ n := by
-  /-
-  Theorem: Every natural number greater than one has a prime divisor.
-  Proof: Use strong induction on n. If n is prime, take n itself.
-  Otherwise n=a*b with 1<a<n. By induction a has a prime divisor p.
-  If a=p*t, then n=p*(t*b), so p also divides n. QED
-  -/
-  induction n using Nat.strongRecOn with
-  | ind n ih =>
-    by_cases hp : Prime n
-    · exact ⟨n, hp, ⟨1, by rw [Nat.mul_one]⟩⟩
-    · rcases nonprime_factors n hn hp with ⟨a, b, ha, han, _, _, heq⟩
-      rcases ih a han ha with ⟨p, hpp, t, ht⟩
-      exists p
-      constructor
-      · exact hpp
-      · exists t * b
-        rw [heq, ht, Nat.mul_assoc]
-
-
 theorem prime_above (k : Nat) : ∃ p : Nat, Prime p ∧ k < p := by
   /-
   Theorem: There is a prime greater than every prescribed bound k.
@@ -168,7 +107,6 @@ theorem prime_above (k : Nat) : ∃ p : Nat, Prime p ∧ k < p := by
   by_cases hle : p ≤ k
   · exact False.elim (havoid p hp.1 hle hd)
   · omega
-
 
 def listBound : List Nat → Nat
   | [] => 0
@@ -192,7 +130,6 @@ theorem member_le_listBound (a : Nat) (xs : List Nat) (ha : a ∈ xs) :
       exact Nat.le_max_left _ _
     · exact Nat.le_trans (ih ht) (Nat.le_max_right _ _)
 
-
 theorem primes_not_finitely_listed (xs : List Nat) :
     ∃ p : Nat, Prime p ∧ p ∉ xs := by
   /-
@@ -209,54 +146,6 @@ theorem primes_not_finitely_listed (xs : List Nat) :
   intro hm
   have hle := member_le_listBound p xs hm
   omega
-
-def product : List Nat → Nat
-  | [] => 1
-  | p :: ps => p * product ps
-
-theorem product_append (xs ys : List Nat) : product (xs ++ ys) = product xs * product ys := by
-  /-
-  Lemma: Joining two lists multiplies their products.
-  Proof: Induct on the first list. An empty list contributes one.
-  For a first entry p, use the induction hypothesis for the remaining
-  list and reassociate p*(product(xs)*product(ys)). QED
-  -/
-  induction xs with
-  | nil => rw [List.nil_append, product, Nat.one_mul]
-  | cons p ps ih => rw [List.cons_append, product, product, ih, Nat.mul_assoc]
-
-def PrimeFactors (ps : List Nat) : Prop := ∀ p ∈ ps, Prime p
-
-theorem factorization_exists (n : Nat) (hn : 1 < n) :
-    ∃ ps : List Nat, PrimeFactors ps ∧ product ps = n := by
-  /-
-  Theorem: Every natural number greater than one is a finite product
-  of primes. Proof: Use strong induction. A prime n has the one-entry
-  factorization [n]. Otherwise write n=a*b with 1<a,b<n. Induction
-  gives prime lists for a and b. Concatenate them: all entries remain
-  prime and their product is a*b=n. QED
-  -/
-  induction n using Nat.strongRecOn with
-  | ind n ih =>
-    by_cases hp : Prime n
-    · exists [n]
-      constructor
-      · intro p hmem
-        have heq : p = n := by simpa using hmem
-        rw [heq]
-        exact hp
-      · rw [product, product, Nat.mul_one]
-    · rcases nonprime_factors n hn hp with ⟨a, b, ha, han, hb, hbn, heq⟩
-      rcases ih a han ha with ⟨xs, hxs, hx⟩
-      rcases ih b hbn hb with ⟨ys, hys, hy⟩
-      exists xs ++ ys
-      constructor
-      · intro p hm
-        rcases List.mem_append.mp hm with hleft | hright
-        · exact hxs p hleft
-        · exact hys p hright
-      · rw [product_append, hx, hy, ← heq]
-
 
 theorem product_one_mod_four (xs : List Nat) (h : ∀ a ∈ xs, a % 4 = 1) :
     product xs % 4 = 1 := by
@@ -276,7 +165,6 @@ theorem product_one_mod_four (xs : List Nat) (h : ∀ a ∈ xs, a % 4 = 1) :
     have ha := h a (by simp)
     have ht := ih (fun b hb => h b (by simp [hb]))
     rw [product, Nat.mul_mod, ha, ht]
-
 
 theorem member_divides_product (p : Nat) (xs : List Nat) (hp : p ∈ xs) :
     p ∣ product xs := by
@@ -298,7 +186,6 @@ theorem member_divides_product (p : Nat) (xs : List Nat) (hp : p ∈ xs) :
       rw [product, ht]
       simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
 
-
 theorem prime_residue_mod_four (p : Nat) (hp : Prime p) (hne : p ≠ 2) :
     p % 4 = 1 ∨ p % 4 = 3 := by
   /-
@@ -314,7 +201,6 @@ theorem prime_residue_mod_four (p : Nat) (hp : Prime p) (hne : p ≠ 2) :
     rcases hp.2 2 hd with ho | he
     · omega
     · exact False.elim (hne he.symm)
-
 
 theorem prime_three_mod_four_divisor (n : Nat) (hn : n % 4 = 3) :
     ∃ p : Nat, Prime p ∧ p ∣ n ∧ p % 4 = 3 := by
@@ -353,7 +239,6 @@ theorem prime_three_mod_four_divisor (n : Nat) (hn : n % 4 = 3) :
   rw [he] at hd
   exact hd
 
-
 theorem prime_three_mod_four_above (k : Nat) :
     ∃ p : Nat, Prime p ∧ k < p ∧ p % 4 = 3 := by
   /-
@@ -382,7 +267,6 @@ theorem prime_three_mod_four_above (k : Nat) :
     have hle := Nat.le_of_dvd (by decide : 0 < 1) hone
     exact False.elim (Nat.not_le_of_lt hp.1 hle)
   · omega
-
 
 theorem primes_three_mod_four_not_finitely_listed (xs : List Nat) :
     ∃ p : Nat, Prime p ∧ p % 4 = 3 ∧ p ∉ xs := by

@@ -1,3 +1,4 @@
+import «01_divisibility»
 import Init.Data.Int.Lemmas
 import Init.Data.Int.Order
 import Lean.Elab.Tactic.Omega
@@ -14,6 +15,9 @@ linear inequalities and arithmetic equalities after the main steps.
 -/
 
 namespace NumberTheory.Remainders
+
+open NumberTheory (Congruent)
+
 
 theorem least_natural (P : Nat → Prop) (h : ∃ b, P b) :
     ∃ a, P a ∧ ∀ b, P b → a ≤ b := by
@@ -150,7 +154,6 @@ theorem division_exists_unique (m n : Nat) (hn : 0 < n) :
 For a positive modulus n, congruence means divisibility of a - b by n.
 We give the definition here so this file can be used on its own.
 -/
-def Congruent (a b n : Int) : Prop := 0 < n ∧ n ∣ a - b
 
 theorem congruent_iff_equal_remainders (a b n qa ra qb rb : Int)
     (hn : 0 < n) (ha : a = n * qa + ra) (hb : b = n * qb + rb)

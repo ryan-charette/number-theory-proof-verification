@@ -1,3 +1,5 @@
+import «04_factorization»
+import «05_divisibility_tests»
 import Init.Data.Int.Lemmas
 import Init.Data.Int.Order
 import Init.Data.Int.DivModLemmas
@@ -5,6 +7,10 @@ import Init.Data.Int.Pow
 import Lean.Elab.Tactic.Omega
 
 namespace NumberTheory.PowerFactors
+
+
+open NumberTheory.Factorization (Prime nonprime_factors)
+open NumberTheory.DivisibilityTests (odd_part_exists)
 
 
 def geometricSum (x : Int) : Nat → Int
@@ -37,8 +43,6 @@ theorem geometric_identity (x : Int) (m : Nat) :
         simp only [Int.mul_sub, Int.mul_one, Int.mul_comm]
         omega
 
-
-
 theorem power_sub_one_dvd (x m : Nat) (hx : 0 < x) :
     x-1 ∣ x^m-1 := by
   /-
@@ -53,48 +57,6 @@ theorem power_sub_one_dvd (x m : Nat) (hx : 0 < x) :
   rw [Int.ofNat_sub (by omega : 1 ≤ x),
     Int.ofNat_sub (by have := Nat.pow_pos (n := m) hx; omega), Int.natCast_pow]
   exact ⟨geometricSum (x : Int) m, (geometric_identity (x : Int) m).symm⟩
-
-def Prime (p : Nat) : Prop := 1 < p ∧ ∀ d : Nat, d ∣ p → d = 1 ∨ d = p
-
-theorem nonprime_factors (n : Nat) (hn : 1 < n) (hp : ¬ Prime n) :
-    ∃ a b : Nat, 1 < a ∧ a < n ∧ 1 < b ∧ b < n ∧ n = a * b := by
-  /-
-  Theorem: A nonprime number greater than one is a product of two
-  numbers strictly between one and itself.
-  Proof: Since n is not prime, it has a divisor a other than one and n.
-  Write n=a*b. Neither factor is zero. The factor b cannot be one,
-  since that would give a=n. Both factors are therefore at least two.
-  Each divides n and is at most n; equality would force the other
-  factor to be one. Thus both factors are strictly smaller than n. QED
-  -/
-  have hex : ∃ a : Nat, a ∣ n ∧ a ≠ 1 ∧ a ≠ n := by
-    apply Classical.byContradiction
-    intro he
-    apply hp
-    constructor
-    · exact hn
-    · intro a ha
-      by_cases h₁ : a = 1
-      · exact Or.inl h₁
-      · by_cases h₂ : a = n
-        · exact Or.inr h₂
-        · exact False.elim (he ⟨a, ha, h₁, h₂⟩)
-  rcases hex with ⟨a, ha, ha₁, han⟩
-  rcases ha with ⟨b, heq⟩
-  have ha₀ : a ≠ 0 := by intro hz; rw [hz, Nat.zero_mul] at heq; omega
-  have hb₀ : b ≠ 0 := by intro hz; rw [hz, Nat.mul_zero] at heq; omega
-  have hb₁ : b ≠ 1 := by intro ho; rw [ho, Nat.mul_one] at heq; omega
-  have hal := Nat.le_of_dvd (by omega : 0 < n) (show a ∣ n from ⟨b, heq⟩)
-  have hbl := Nat.le_of_dvd (by omega : 0 < n) (show b ∣ n from ⟨a, by rw [Nat.mul_comm]; exact heq⟩)
-  have hbn : b ≠ n := by
-    intro hbn
-    have ht : b * a = b * 1 := by rw [Nat.mul_one, Nat.mul_comm]; omega
-    have haeq := Nat.eq_of_mul_eq_mul_left (by omega : 0 < b) ht
-    exact ha₁ haeq
-  exists a, b
-  exact ⟨by omega, by omega, by omega, by omega, heq⟩
-
-
 
 theorem prime_exponent_of_two_pow_sub_one (n : Nat) (hp : Prime (2^n-1)) :
     Prime n := by
@@ -125,7 +87,6 @@ theorem prime_exponent_of_two_pow_sub_one (n : Nat) (hp : Prime (2^n-1)) :
       omega
     · omega
 
-
 theorem int_odd_power_plus_dvd (x : Int) (t : Nat) :
     x+1 ∣ x^(2*t+1)+1 := by
   /-
@@ -150,9 +111,6 @@ theorem int_odd_power_plus_dvd (x : Int) (t : Nat) :
       Int.mul_one, Int.one_mul, Int.mul_assoc, Int.mul_left_comm, Int.mul_comm]
     omega
 
-
-
-
 theorem odd_power_plus_dvd (x m : Nat) (hm : m % 2 = 1) :
     x+1 ∣ x^m+1 := by
   /-
@@ -166,36 +124,6 @@ theorem odd_power_plus_dvd (x m : Nat) (hm : m % 2 = 1) :
   simp only [Int.natCast_add, Int.natCast_pow, Int.natCast_one]
   rw [he]
   exact int_odd_power_plus_dvd (x : Int) (m/2)
-
-theorem odd_part_exists (a : Nat) (ha : 0 < a) :
-    ∃ r : Nat, 0 < r ∧ r % 2 = 1 ∧ r ≤ a ∧ ∃ k : Nat, a = 2^k*r := by
-  /-
-  Lemma: Every positive integer is a power of two times a positive
-  odd integer no larger than itself.
-  Proof: Use strong induction. If a is odd, take r=a and exponent
-  zero. Otherwise a=2*q, where 0<q<a. By induction q=2^k*r with
-  r odd. Then a=2^(k+1)*r. The bound r≤q<a gives r≤a. This is
-  exactly the process of removing factors of two until none remain.
-  QED
-  -/
-  induction a using Nat.strongRecOn with
-  | ind a ih =>
-    by_cases ho : a % 2 = 1
-    · exact ⟨a, ha, ho, Nat.le_refl a, 0, by simp⟩
-    · have hqpos : 0 < a/2 := by omega
-      have hqsmall : a/2 < a := by omega
-      have he : a = 2*(a/2) := by omega
-      rcases ih (a/2) hqsmall hqpos with ⟨r, hr, hodd, hle, k, hk⟩
-      refine ⟨r, hr, hodd, by omega, k+1, ?_⟩
-      calc
-        a = 2*(a/2) := he
-        _ = 2*(2^k*r) := congrArg (fun t => 2*t) hk
-        _ = 2^(k+1)*r := by
-          rw [Nat.pow_succ]
-          simp only [Nat.mul_assoc, Nat.mul_left_comm, Nat.mul_comm]
-
-
-
 
 theorem power_of_two_exponent_of_two_pow_add_one (n : Nat) (hn : 0 < n)
     (hp : Prime (2^n+1)) : ∃ k : Nat, n = 2^k := by
