@@ -2832,4 +2832,46 @@ theorem minus_one_not_primitive (p q : Nat) (hp : Prime p) (hq : Prime q)
   have := hq.1
   omega
 
+theorem double_prime_primitive_criterion (a : Int) (p q : Nat)
+    (hp : Prime p) (hq : Prime q) (he : p=2*q+1)
+    (ha : ¬ (p : Int) ∣ a) :
+    PrimitiveRoot a p ↔ ¬ SquareClass a p ∧ ¬ Congruent a (-1) p := by
+  /-
+  Theorem: A nonzero class modulo p=2q+1 is primitive exactly
+  when it is neither a square nor minus one.
+  Proof: Squares and minus one are not primitive. Conversely,
+  reduce to a positive representative r<p. If r=p-1 it is
+  minus one, excluded here. Otherwise the square-or-primitive
+  dichotomy applies and the square alternative is excluded.
+  Congruence transfers the resulting primitive root back. QED
+  -/
+  have hn : 0<p := by omega
+  constructor
+  · intro h
+    constructor
+    · intro hs
+      exact square_class_not_primitive a p hp (by omega) hs h
+    · intro hm
+      exact minus_one_not_primitive p q hp hq he ((primitive_congruent a (-1) p hp hm).mp h)
+  · rintro ⟨hs,hm⟩
+    rcases canonical_residue a p hn with ⟨r,hr,hrp,har,_⟩
+    have hrn : (r.toNat : Int)=r := Int.toNat_of_nonneg hr
+    have hpos : 0<r := by
+      by_cases hz : r=0
+      · apply False.elim
+        apply ha
+        simpa [hz] using har.2
+      · omega
+    have hlt : r<(p : Int)-1 := by
+      by_cases hz : r=(p : Int)-1
+      · apply False.elim
+        apply hm
+        apply modeq_trans _ r _ p har
+        exact ⟨by omega,⟨1,by omega⟩⟩
+      · omega
+    have hc : Congruent a (r.toNat : Int) p := by simpa [hrn] using har
+    rcases double_prime_dichotomy p q r.toNat hp hq he (by omega) (by omega) with h | h
+    · exact False.elim (hs ((square_class_congruent _ _ p hc).mpr h))
+    · exact (primitive_congruent _ _ p hp hc).mpr h
+
 end NumberTheory.DoublePrimes
