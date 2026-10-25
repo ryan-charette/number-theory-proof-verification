@@ -2874,4 +2874,34 @@ theorem double_prime_primitive_criterion (a : Int) (p q : Nat)
     · exact False.elim (hs ((square_class_congruent _ _ p hc).mpr h))
     · exact (primitive_congruent _ _ p hp hc).mpr h
 
+theorem double_prime_nonprimitive_classes (a : Int) (p q : Nat)
+    (hp : Prime p) (hq : Prime q) (he : p=2*q+1)
+    (ha : ¬ (p : Int) ∣ a) :
+    ¬ PrimitiveRoot a p ↔ Congruent a (-1) p ∨
+      ∃ i : Nat, 1≤i ∧ i≤q ∧ Congruent a ((i : Int)^2) p := by
+  /-
+  Theorem: Among nonzero classes modulo p=2q+1, the classes
+  that are not primitive are minus one and the squares
+  1^2,2^2,...,q^2. Proof: The primitive criterion leaves
+  exactly minus one and square classes. Every nonzero square
+  has a root in the lower half, giving the displayed list.
+  Conversely each listed square and minus one is nonprimitive.
+  The statement concerns residue classes: integer representatives
+  differing by a multiple of p describe the same class. QED
+  -/
+  constructor
+  · intro h
+    by_cases hm : Congruent a (-1) p
+    · exact Or.inl hm
+    · right
+      have hs : SquareClass a p := by
+        apply Classical.byContradiction
+        intro hs
+        exact h ((double_prime_primitive_criterion a p q hp hq he ha).mpr ⟨hs,hm⟩)
+      exact half_square_representative a p q hp he ha hs
+  · intro h hr
+    rcases h with hm | ⟨i,_hi,_hq,hi⟩
+    · exact minus_one_not_primitive p q hp hq he ((primitive_congruent _ _ p hp hm).mp hr)
+    · exact square_not_primitive i p hp (by omega) ((primitive_congruent _ _ p hp hi).mp hr)
+
 end NumberTheory.DoublePrimes
