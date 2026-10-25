@@ -2815,4 +2815,21 @@ theorem half_square_representative (a : Int) (p q : Nat) (hp : Prime p)
     apply modeq_trans _ (r^2) _ p has
     simpa [Int.pow_succ] using hsq
 
+theorem minus_one_not_primitive (p q : Nat) (hp : Prime p) (hq : Prime q)
+    (he : p=2*q+1) : ¬ PrimitiveRoot (-1) p := by
+  /-
+  Lemma: Minus one is not primitive when p=2q+1 and q is prime.
+  Proof: Its square is one, so its order divides two. A
+  primitive root would have order 2q, larger than two. QED
+  -/
+  intro h
+  have hn : 0<p := Nat.lt_trans (by decide : 0<1) hp.1
+  have hs : Congruent ((-1 : Int)^2) 1 p := by
+    exact ⟨by omega,⟨0,by simp⟩⟩
+  have hd := (order_dvd_iff (-1) p hn h.1 2).mp hs
+  rw [h.2] at hd
+  have := Nat.le_of_dvd (by decide : 0<2) hd
+  have := hq.1
+  omega
+
 end NumberTheory.DoublePrimes
