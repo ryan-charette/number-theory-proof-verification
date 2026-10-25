@@ -2751,4 +2751,32 @@ theorem reflected_square_primitive (a p q : Nat) (hp : Prime p) (hq : Prime q)
     intro hsquare
     exact square_class_not_primitive _ p hp (by omega) hsquare h
 
+theorem half_squares_distinct (p i j : Nat) (hp : Prime p)
+    (hi : 0<i) (hj : 0<j) (hib : 2*i<p) (hjb : 2*j<p) (hne : i≠j) :
+    ¬ Congruent ((i : Int)^2) ((j : Int)^2) p := by
+  /-
+  Theorem: Distinct positive integers below half a prime have
+  distinct squares modulo that prime. Proof: Equality of
+  squares makes p divide (i-j)(i+j), so p divides a factor.
+  The difference has absolute value below p and the sum is
+  strictly between zero and p. The first alternative forces
+  i=j, and the second is impossible. QED
+  -/
+  intro h
+  have hf : (p : Int) ∣ ((i : Int)-j)*((i : Int)+j) := by
+    have he : ((i : Int)-j)*((i : Int)+j)=(i : Int)^2-(j : Int)^2 := by
+      simp only [Int.pow_succ,Int.pow_zero,Int.one_mul,Int.mul_one,Int.sub_mul,Int.mul_add,
+        Int.mul_sub,Int.mul_comm]
+      omega
+    rw [he]
+    exact h.2
+  rcases prime_product_divides p ((i : Int)-j) ((i : Int)+j) hp hf with hd | hs
+  · have he := bounded_congruent_equal (i : Int) (j : Int) p
+      (by omega) (by omega) (by omega) (by omega) ⟨by have := hp.1; omega,hd⟩
+    omega
+  · have he := bounded_congruent_equal ((i : Int)+j) 0 p
+      (by omega) (by omega) (by decide) (by have := hp.1; omega)
+      ⟨by have := hp.1; omega,by simpa using hs⟩
+    omega
+
 end NumberTheory.DoublePrimes
