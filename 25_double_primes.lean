@@ -2779,4 +2779,40 @@ theorem half_squares_distinct (p i j : Nat) (hp : Prime p)
       ⟨by have := hp.1; omega,by simpa using hs⟩
     omega
 
+theorem half_square_representative (a : Int) (p q : Nat) (hp : Prime p)
+    (he : p=2*q+1) (ha : ¬ (p : Int) ∣ a) (hs : SquareClass a p) :
+    ∃ i : Nat, 1≤i ∧ i≤q ∧ Congruent a ((i : Int)^2) p := by
+  /-
+  Lemma: Every nonzero square class modulo p=2q+1 has a
+  square representative i^2 with 1<=i<=q. Proof: Reduce a
+  square root to 0<=r<p. It is nonzero because its square
+  is nonzero. If r<=q use r; otherwise use p-r. These have
+  the same square modulo p, and one lies in the lower half. QED
+  -/
+  rcases hs with ⟨x,hx⟩
+  have hn : 0<p := Nat.lt_trans (by decide : 0<1) hp.1
+  rcases canonical_residue x p hn with ⟨r,hr,hrp,hxr,_⟩
+  have has : Congruent a (r^2) p :=
+    modeq_trans _ _ _ p (modeq_symm _ _ p hx) (modeq_pow _ _ p 2 hxr)
+  have hrpos : 0<r := by
+    by_cases hz : r=0
+    · apply False.elim
+      apply ha
+      simpa [hz] using has.2
+    · omega
+  have hrn : (r.toNat : Int)=r := Int.toNat_of_nonneg hr
+  have hcn : (((p : Int)-r).toNat : Int)=(p : Int)-r := Int.toNat_of_nonneg (by omega)
+  by_cases hl : r≤q
+  · refine ⟨r.toNat,by omega,by omega,?_⟩
+    simpa [Int.toNat_of_nonneg hr] using has
+  · refine ⟨((p : Int)-r).toNat,by omega,by omega,?_⟩
+    have hneg : Congruent r (-((p : Int)-r)) p :=
+      ⟨by omega,⟨1,by omega⟩⟩
+    have hsq := modeq_pow _ _ p 2 hneg
+    have hc : (((p : Int)-r).toNat : Int)=(p : Int)-r :=
+      Int.toNat_of_nonneg (by omega)
+    rw [hc]
+    apply modeq_trans _ (r^2) _ p has
+    simpa [Int.pow_succ] using hsq
+
 end NumberTheory.DoublePrimes
