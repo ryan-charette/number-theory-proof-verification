@@ -2904,4 +2904,71 @@ theorem double_prime_nonprimitive_classes (a : Int) (p q : Nat)
     · exact minus_one_not_primitive p q hp hq he ((primitive_congruent _ _ p hp hm).mp hr)
     · exact square_not_primitive i p hp (by omega) ((primitive_congruent _ _ p hp hi).mp hr)
 
+theorem double_prime_primitive_classes (a : Int) (p q : Nat)
+    (hp : Prime p) (hq : Prime q) (he : p=2*q+1) (ho : q%2=1)
+    (ha : ¬ (p : Int) ∣ a) :
+    PrimitiveRoot a p ↔ ∃ i : Nat, 2≤i ∧ i≤q ∧ Congruent a (-((i : Int)^2)) p := by
+  /-
+  Theorem: For p=2q+1 with q an odd prime, the primitive classes
+  are exactly -2^2,-3^2,...,-q^2.
+  Proof: A primitive class a is a nonsquare and is not minus
+  one. Negation therefore makes -a a square. Choose its lower
+  half root i. The value i=1 would give a=-1, so i>=2.
+  Conversely i^2 is a nonzero square, so -i^2 is a nonsquare.
+  It cannot be minus one: i^2=1 would force i=1 or i=p-1,
+  both outside 2<=i<=q. The primitive criterion now applies. QED
+  -/
+  have hm := double_odd_prime_remainder p q he ho
+  have hneg : ¬ (p : Int) ∣ -a := by
+    intro h
+    exact ha (by simpa using Int.dvd_neg.mpr h)
+  constructor
+  · intro hr
+    have hc := (double_prime_primitive_criterion a p q hp hq he ha).mp hr
+    have hs : SquareClass (-a) p :=
+      (negation_square_switch (-a) p hp hm hneg).mpr (by simpa using hc.1)
+    rcases half_square_representative (-a) p q hp he hneg hs with ⟨i,hi,hib,his⟩
+    have hia : Congruent a (-((i : Int)^2)) p := by
+      refine ⟨his.1,?_⟩
+      have hd := Int.dvd_neg.mpr his.2
+      have heq : -(-a-(i : Int)^2)=a-(-((i : Int)^2)) := by omega
+      rw [heq] at hd
+      exact hd
+    have hi2 : 2≤i := by
+      by_cases hone : i=1
+      · apply False.elim
+        apply hc.2
+        simpa [hone] using hia
+      · omega
+    exact ⟨i,hi2,hib,hia⟩
+  · rintro ⟨i,hi,hib,hia⟩
+    have hc := small_prime_coprime p i hp (by omega) (by omega)
+    have hcp := coprime_power i p (by omega) hc 2
+    have hnon : ¬ (p : Int) ∣ (i : Int)^2 := by
+      intro h
+      exact coprime_not_zero _ p hp.1 hcp ⟨by omega,by simpa using h⟩
+    have hs : SquareClass ((i : Int)^2) p := ⟨i,modeq_refl _ p (by omega)⟩
+    have hns := (negation_square_switch ((i : Int)^2) p hp hm hnon).mp hs
+    apply (double_prime_primitive_criterion a p q hp hq he ha).mpr
+    constructor
+    · intro h
+      exact hns ((square_class_congruent _ _ p hia).mp h)
+    · intro hminus
+      have hsq : Congruent ((i : Int)^2) 1 p := by
+        have ht := modeq_trans _ a _ p (modeq_symm _ _ p hia) hminus
+        refine ⟨ht.1,?_⟩
+        have hd := Int.dvd_neg.mpr ht.2
+        have heq : -(-((i : Int)^2)-(-1))=(i : Int)^2-1 := by omega
+        rw [heq] at hd
+        exact hd
+      rcases square_one_cases i p hp hsq with h1 | hm1
+      · have hx := bounded_congruent_equal (i : Int) 1 p (by omega)
+          (by omega) (by decide) (by omega) h1
+        omega
+      · have ht : Congruent (i : Int) ((p : Int)-1) p :=
+          modeq_trans _ (-1) _ p hm1 ⟨by omega,⟨-1,by omega⟩⟩
+        have hx := bounded_congruent_equal (i : Int) ((p : Int)-1) p
+          (by omega) (by omega) (by omega) (by omega) ht
+        omega
+
 end NumberTheory.DoublePrimes
