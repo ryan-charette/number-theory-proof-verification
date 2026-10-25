@@ -2698,4 +2698,34 @@ theorem negation_square_switch (a : Int) (p : Nat) (hp : Prime p)
     apply h
     simpa using ht
 
+theorem square_class_congruent (a b : Int) (p : Nat) (h : Congruent a b p) :
+    SquareClass a p ↔ SquareClass b p := by
+  /-
+  Lemma: Congruent integers are either both squares or both nonsquares.
+  Proof: A square congruent to one is congruent to the other by
+  transitivity. Use the reverse congruence for the converse. QED
+  -/
+  constructor
+  · rintro ⟨x,hx⟩; exact ⟨x,modeq_trans _ _ _ p hx h⟩
+  · rintro ⟨x,hx⟩; exact ⟨x,modeq_trans _ _ _ p hx (modeq_symm _ _ p h)⟩
+
+theorem reflected_square_switch (a p : Nat) (hp : Prime p)
+    (hm : p%4=3) (ha : 1<a) (hb : a<p-1) :
+    SquareClass a p ↔ ¬ SquareClass (p-a : Nat) p := by
+  /-
+  Corollary: Reflecting an interior representative a to p-a
+  exchanges squares and nonsquares when p is three modulo four.
+  Proof: The reflected representative is congruent to -a.
+  Use the negation rule and the positive bounds. QED
+  -/
+  have hc := small_prime_coprime p a hp (by omega) (by omega)
+  have hn : ¬ (p : Int) ∣ (a : Int) := by
+    intro h
+    exact coprime_not_zero a p hp.1 hc ⟨by have := hp.1; omega,by simpa using h⟩
+  have he : Congruent (- (a : Int)) ((p-a : Nat) : Int) p := by
+    refine ⟨by have := hp.1; omega,⟨-1,?_⟩⟩
+    omega
+  rw [←square_class_congruent _ _ p he]
+  exact negation_square_switch a p hp hm hn
+
 end NumberTheory.DoublePrimes
