@@ -2502,4 +2502,22 @@ theorem double_odd_prime_remainder (p q : Nat) (he : p=2*q+1)
   -/
   omega
 
+theorem primitive_congruent (a b : Int) (p : Nat) (hp : Prime p)
+    (h : Congruent a b p) : PrimitiveRoot a p ↔ PrimitiveRoot b p := by
+  /-
+  Lemma: Congruent integers have the same primitive-root status.
+  Proof: Coprimality is preserved by congruence, and their
+  returning powers, hence their least returning exponents,
+  coincide. Apply this in both directions. QED
+  -/
+  have hn : 0<p := by have := hp.1; omega
+  constructor
+  · intro ha
+    have hb := congruent_coprime a b p ha.1 h
+    exact ⟨hb,by rw [←congruent_orders a b p hn ha.1 hb h]; exact ha.2⟩
+  · intro hb
+    have hs := modeq_symm a b p h
+    have ha := congruent_coprime b a p hb.1 hs
+    exact ⟨ha,by rw [congruent_orders a b p hn ha hb.1 h]; exact hb.2⟩
+
 end NumberTheory.DoublePrimes
