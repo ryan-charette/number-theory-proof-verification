@@ -406,4 +406,22 @@ theorem odd_leg_exists (n : Int) (hn : 1<n) (hodd : n%2=1) :
   rw [he] at h
   exact ⟨2*(t+1)*t,(t+1)*(t+1)+t*t,h⟩
 
+theorem multiple_four_leg_exists (n : Int) (hn : 0<n) (hfour : 4 ∣ n) :
+    ∃ b c : Int, Primitive n b c := by
+  /-
+  Theorem: Every positive multiple of four occurs as a leg in a
+  primitive triple. Proof: Write n=4*k, where k≥1. Take s=2*k and
+  t=1. These positive parameters are coprime and of opposite parity,
+  and s>t. Their first leg is 2*(2*k)*1=4*k=n. QED
+  -/
+  rcases hfour with ⟨k,hk⟩
+  have hcop : gcd (2*k) 1=1 := by
+    apply coprime_of_bezout (2*k) 1 0 1
+    omega
+  have hp : (2*k)%2≠(1:Int)%2 := by omega
+  have h := parameters_primitive (2*k) 1 (by decide) (by omega) hcop hp
+  have he : 2*(2*k)*1=n := by omega
+  rw [he] at h
+  exact ⟨(2*k)*(2*k)-1*1,(2*k)*(2*k)+1*1,h⟩
+
 end NumberTheory.RightTriangles
