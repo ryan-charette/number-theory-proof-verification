@@ -97,4 +97,33 @@ theorem primitive_parity (a b c : Int) (h : Primitive a b c) :
   rcases ha with ha | ha <;> rcases hb with hb | hb <;>
     rcases hc with hc | hc <;> simp only [ha, hb, hc] at hm <;> omega
 
+theorem primitive_leg_hypotenuse_coprime (a b c : Int) (h : Primitive a b c) :
+    gcd b c = 1 := by
+  /-
+  Lemma: The second leg and hypotenuse of a primitive triple are coprime.
+  Proof: Let d be their positive gcd. Since d divides b and c, its square
+  divides c*c-b*b=a*a. The earlier square-divisibility result implies d
+  divides a as well. Primitivity now gives d=1. QED
+  -/
+  let d := gcd b c
+  have hd : 0 < d := gcd_positive b c (Or.inl (by have := h.1.2.1; omega))
+  have hb : d ∣ b := (gcd_data b c).2.1
+  have hc : d ∣ c := (gcd_data b c).2.2.1
+  have hs : d*d ∣ a*a := by
+    rcases hb with ⟨u, hu⟩
+    rcases hc with ⟨v, hv⟩
+    refine ⟨v*v-u*u, ?_⟩
+    have he := h.1.2.2.2
+    rw [hu, hv] at he
+    simp only [Int.mul_sub, Int.sub_mul, Int.mul_assoc, Int.mul_comm, Int.mul_left_comm] at he ⊢
+    omega
+  have hn : d.natAbs^2 ∣ a.natAbs^2 := by
+    have hn := Int.natAbs_dvd_natAbs.mpr hs
+    simpa only [Int.natAbs_mul, Nat.pow_succ, Nat.pow_zero, Nat.mul_one, Nat.one_mul] using hn
+  have ha : d ∣ a := Int.natAbs_dvd_natAbs.mp
+    (NumberTheory.DivisibilityTests.dvd_of_square_dvd _ _
+      (Int.natAbs_pos.mpr (by omega))
+      (Int.natAbs_pos.mpr (by have := h.1.1; omega)) hn)
+  exact h.2 d hd ha hb hc
+
 end NumberTheory.RightTriangles
