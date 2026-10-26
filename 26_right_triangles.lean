@@ -363,4 +363,25 @@ theorem primitive_leg_restrictions (a b c : Int) (h : Primitive a b c) (ha : a%2
   rw [haa, Int.mul_assoc]
   omega
 
+theorem primitive_legs (a b c : Int) (h : Primitive a b c) :
+    (1<a ∧ a%2=1 ∧ 0<b ∧ 4 ∣ b) ∨ (1<b ∧ b%2=1 ∧ 0<a ∧ 4 ∣ a) := by
+  /-
+  Theorem: Every primitive triple has an odd leg greater than one and
+  a positive leg divisible by four, in either order.
+  Proof: If the first leg is even, use the restrictions already proved.
+  Otherwise the second leg is even; interchange the legs and apply
+  those restrictions. Interchanging them preserves both the square
+  equation and their common divisors. QED
+  -/
+  rcases (primitive_parity a b c h).1 with hp | hp
+  · have hr := primitive_leg_restrictions a b c h hp.1
+    exact Or.inr ⟨hr.1,hp.2,h.1.1,hr.2⟩
+  · have hs : Primitive b a c := by
+      refine ⟨⟨h.1.2.1,h.1.1,h.1.2.2.1,?_⟩,?_⟩
+      · have := h.1.2.2.2; omega
+      · intro d hd hdb hda hdc
+        exact h.2 d hd hda hdb hdc
+    have hr := primitive_leg_restrictions b a c hs hp.2
+    exact Or.inl ⟨hr.1,hp.1,h.1.2.1,hr.2⟩
+
 end NumberTheory.RightTriangles
