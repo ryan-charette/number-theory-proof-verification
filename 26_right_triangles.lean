@@ -185,4 +185,63 @@ theorem coprime_square_factors (x y z : Int) (hx : 0 < x) (_hy : 0 < y)
     omega
   exact ⟨X,Z,hX,hZ,by simpa [hkone] using hxx,by simpa [hkone] using hyy⟩
 
+theorem primitive_half_squares (a b c : Int) (h : Primitive a b c) (ha : a%2=0) :
+    ∃ s t : Int, 0 < t ∧ t < s ∧ gcd s t=1 ∧ c+b=2*(s*s) ∧ c-b=2*(t*t) := by
+  /-
+  Lemma: For a primitive triple with even first leg, the half-sum and
+  half-difference of the hypotenuse and odd leg are coprime squares.
+  Proof: Put u=(c+b)/2, v=(c-b)/2, w=a/2. The hypotenuse exceeds b
+  because a is positive, so u>v>0. Parity makes these integer halves
+  exact. Their product is w*w. A common divisor of u,v divides
+  u-v=b and u+v=c, so they are coprime. Apply the coprime-square-factor
+  lemma to obtain u=s*s and v=t*t with positive roots. These roots
+  are coprime as divisors of u,v, and u>v gives s>t. QED
+  -/
+  have hp := primitive_parity a b c h
+  have hb : b%2=1 := by omega
+  have hcb : b<c := by
+    by_cases hh : b<c
+    · exact hh
+    · have hs := Int.mul_self_le_mul_self (show 0 ≤ c by have := h.1.2.2.1; omega)
+        (show c ≤ b by omega)
+      have := Int.mul_pos h.1.1 h.1.1
+      have := h.1.2.2.2
+      omega
+  let u := (c+b)/2
+  let v := (c-b)/2
+  let w := a/2
+  have hu : 2*u=c+b := by dsimp [u]; omega
+  have hv : 2*v=c-b := by dsimp [v]; omega
+  have hw : 2*w=a := by dsimp [w]; omega
+  have hup : 0 < u := by have := h.1.2.1; omega
+  have hvp : 0 < v := by omega
+  have hwp : 0 < w := by have := h.1.1; omega
+  have huv : v<u := by have := h.1.2.1; omega
+  have hsum : u+v=c := by omega
+  have hdiff : u-v=b := by omega
+  have hcop : gcd u v=1 := by
+    rcases coprime_bezout b c (primitive_leg_hypotenuse_coprime a b c h) with ⟨i,j,hij⟩
+    apply coprime_of_bezout u v (i+j) (j-i)
+    rw [← hsum, ← hdiff] at hij
+    simp only [Int.mul_add, Int.add_mul, Int.mul_sub, Int.sub_mul,
+      Int.mul_comm, Int.mul_left_comm, Int.mul_assoc] at hij ⊢
+    omega
+  have he : u*v=w*w := by
+    have he := h.1.2.2.2
+    rw [← hw, ← hdiff, ← hsum] at he
+    simp only [Int.mul_add, Int.add_mul, Int.mul_sub, Int.sub_mul,
+      Int.mul_comm, Int.mul_left_comm, Int.mul_assoc] at he
+    simp only [← Int.mul_assoc] at he
+    rw [show (2:Int)*2=4 from rfl] at he
+    rw [Int.mul_assoc 4 w w] at he
+    omega
+  rcases coprime_square_factors u v w hup hvp hwp hcop he with ⟨s,t,hs,ht,hus,hvt⟩
+  have hst : t<s := by
+    by_cases hh : t<s
+    · exact hh
+    · have := Int.mul_self_le_mul_self (show 0 ≤ s by omega) (show s ≤ t by omega)
+      omega
+  have hroots : gcd s t=1 := coprime_divisors u v s t hcop ⟨s,hus⟩ ⟨t,hvt⟩
+  exact ⟨s,t,ht,hst,hroots,by omega,by omega⟩
+
 end NumberTheory.RightTriangles
