@@ -49,4 +49,25 @@ theorem scale_triple (a b c d : Int) (h : Triple a b c) (hd : 0 < d) :
   have he := congrArg (fun x => d*d*x) h.2.2.2
   simpa only [Int.mul_add, Int.mul_assoc, Int.mul_comm, Int.mul_left_comm] using he
 
+theorem parameter_triple (s t : Int) (ht : 0 < t) (hst : t < s) :
+    Triple (2*s*t) (s*s-t*t) (s*s+t*t) := by
+  /-
+  Theorem: Positive integers s>t give the triple
+  (2*s*t, s*s-t*t, s*s+t*t).
+  Proof: Both products are positive, and s*s>t*t follows by multiplying
+  the strict inequality between the positive parameters. Expanding gives
+  (s*s-t*t)^2+4*s*s*t*t=(s*s+t*t)^2. QED
+  -/
+  have hs : 0 < s := by omega
+  have hsq : t*t < s*s := by
+    have := Int.mul_lt_mul_of_pos_left hst ht
+    have := Int.mul_lt_mul_of_pos_right hst hs
+    omega
+  refine ⟨Int.mul_pos (Int.mul_pos (by decide) hs) ht, by omega,
+    by have := Int.mul_pos hs hs; have := Int.mul_pos ht ht; omega, ?_⟩
+  simp only [Int.mul_sub, Int.sub_mul, Int.mul_add, Int.add_mul,
+    Int.mul_assoc, Int.mul_comm, Int.mul_left_comm]
+  simp only [← Int.mul_assoc]
+  omega
+
 end NumberTheory.RightTriangles
