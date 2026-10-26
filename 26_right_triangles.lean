@@ -424,4 +424,21 @@ theorem multiple_four_leg_exists (n : Int) (hn : 0<n) (hfour : 4 ∣ n) :
   rw [he] at h
   exact ⟨(2*k)*(2*k)-1*1,(2*k)*(2*k)+1*1,h⟩
 
+theorem primitive_triples_unbounded (N : Int) :
+    ∃ a b c : Int, N<b ∧ Primitive a b c := by
+  /-
+  Corollary: Primitive triples, and hence integer right triangles,
+  occur with arbitrarily large legs. In particular there are infinitely
+  many of each. Proof: Choose a positive odd integer n>N, for example
+  n=2*(|N|+1)+1. The odd-leg construction supplies a primitive triple
+  with that leg. A finite list of triples has a bound on its legs,
+  so this also rules out finiteness. QED
+  -/
+  let n : Int := 2*((N.natAbs:Int)+1)+1
+  have hN : N ≤ (N.natAbs:Int) := Int.le_natAbs
+  have hn : 1<n := by dsimp [n]; omega
+  have ho : n%2=1 := by dsimp [n]; omega
+  rcases odd_leg_exists n hn ho with ⟨a,c,h⟩
+  exact ⟨a,n,c,by dsimp [n]; omega,h⟩
+
 end NumberTheory.RightTriangles
