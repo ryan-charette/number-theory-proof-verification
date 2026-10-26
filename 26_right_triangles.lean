@@ -70,4 +70,31 @@ theorem parameter_triple (s t : Int) (ht : 0 < t) (hst : t < s) :
   simp only [← Int.mul_assoc]
   omega
 
+def Primitive (a b c : Int) : Prop :=
+  Triple a b c ∧ ∀ d : Int, 0 < d → d ∣ a → d ∣ b → d ∣ c → d = 1
+
+theorem primitive_parity (a b c : Int) (h : Primitive a b c) :
+    ((a % 2 = 0 ∧ b % 2 = 1) ∨ (a % 2 = 1 ∧ b % 2 = 0)) ∧ c % 2 = 1 := by
+  /-
+  Theorem: In a primitive triple exactly one leg is even, and the hypotenuse
+  is odd. Proof: There is an even leg. Modulo two a square has the same
+  remainder as its base. Thus if both legs were even, so would be the
+  hypotenuse, contradicting primitivity with common divisor two.
+  The remaining two parity possibilities both give an odd hypotenuse. QED
+  -/
+  have he := h.1.2.2.2
+  have hm : (a*a+b*b)%2=(c*c)%2 := congrArg (fun x : Int => x%2) he
+  rw [Int.add_emod, Int.mul_emod a, Int.mul_emod b, Int.mul_emod c] at hm
+  have ha : a%2=0 ∨ a%2=1 := by omega
+  have hb : b%2=0 ∨ b%2=1 := by omega
+  have hc : c%2=0 ∨ c%2=1 := by omega
+  have hn : ¬ (a%2=0 ∧ b%2=0 ∧ c%2=0) := by
+    intro ht
+    have := h.2 2 (by decide) (Int.dvd_of_emod_eq_zero ht.1)
+      (Int.dvd_of_emod_eq_zero ht.2.1) (Int.dvd_of_emod_eq_zero ht.2.2)
+    omega
+  have hl := even_leg a b c h.1
+  rcases ha with ha | ha <;> rcases hb with hb | hb <;>
+    rcases hc with hc | hc <;> simp only [ha, hb, hc] at hm <;> omega
+
 end NumberTheory.RightTriangles
