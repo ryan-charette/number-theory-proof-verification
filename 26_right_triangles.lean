@@ -244,4 +244,42 @@ theorem primitive_half_squares (a b c : Int) (h : Primitive a b c) (ha : a%2=0) 
   have hroots : gcd s t=1 := coprime_divisors u v s t hcop ⟨s,hus⟩ ⟨t,hvt⟩
   exact ⟨s,t,ht,hst,hroots,by omega,by omega⟩
 
+theorem primitive_parameters (a b c : Int) (h : Primitive a b c) (ha : a%2=0) :
+    ∃ s t : Int, 0 < t ∧ t < s ∧ gcd s t=1 ∧ s%2≠t%2 ∧
+      a=2*s*t ∧ b=s*s-t*t ∧ c=s*s+t*t := by
+  /-
+  Theorem: Every primitive triple with even first leg comes from positive
+  coprime parameters s>t of opposite parity.
+  Proof: The half-squares lemma gives c+b=2*s*s and c-b=2*t*t.
+  Addition and subtraction give c=s*s+t*t and b=s*s-t*t. Substitution
+  into the triple equation shows a*a=(2*s*t)^2. Both bases are positive,
+  so they are equal. Since b is odd, its expression as a difference
+  of squares forces s,t to have opposite parity. QED
+  -/
+  rcases primitive_half_squares a b c h ha with ⟨s,t,ht,hst,hcop,hsq,htq⟩
+  have hb : b=s*s-t*t := by omega
+  have hc : c=s*s+t*t := by omega
+  have hg := parameter_triple s t ht hst
+  have hae : a*a=(2*s*t)*(2*s*t) := by
+    have he := h.1.2.2.2
+    rw [hb,hc] at he
+    have hf := hg.2.2.2
+    omega
+  have haa : a=2*s*t := by
+    by_cases hh : a<2*s*t
+    · have := Int.mul_self_lt_mul_self (show 0 ≤ a by have := h.1.1; omega) hh
+      omega
+    · by_cases hh' : 2*s*t<a
+      · have := Int.mul_self_lt_mul_self (show 0 ≤ 2*s*t by have := hg.1; omega) hh'
+        omega
+      · omega
+  have hodd : b%2=1 := by have := primitive_parity a b c h; omega
+  have hpar : s%2≠t%2 := by
+    intro he
+    have hm : b%2=(s*s-t*t)%2 := congrArg (fun x : Int => x%2) hb
+    rw [Int.sub_emod, Int.mul_emod s, Int.mul_emod t, he] at hm
+    have hh : t%2=0 ∨ t%2=1 := by omega
+    rcases hh with hh | hh <;> rw [hh] at hm <;> omega
+  exact ⟨s,t,ht,hst,hcop,hpar,haa,hb,hc⟩
+
 end NumberTheory.RightTriangles
