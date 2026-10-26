@@ -324,4 +324,19 @@ theorem parameters_primitive (s t : Int) (ht : 0 < t) (hst : t<s)
   have := divisor_le_positive d 1 (by decide) hone
   omega
 
+theorem primitive_iff_parameters (a b c : Int) (ha : a%2=0) :
+    Primitive a b c ↔ ∃ s t : Int, 0 < t ∧ t < s ∧ gcd s t=1 ∧ s%2≠t%2 ∧
+      a=2*s*t ∧ b=s*s-t*t ∧ c=s*s+t*t := by
+  /-
+  Theorem: The parameter conditions characterize primitive triples whose
+  first leg is even. Proof: Necessity is the parameter extraction just
+  proved. Conversely, substitute the three specified expressions and
+  apply the primitive construction. QED
+  -/
+  constructor
+  · intro h
+    exact primitive_parameters a b c h ha
+  · rintro ⟨s,t,ht,hst,hcop,hpar,rfl,rfl,rfl⟩
+    exact parameters_primitive s t ht hst hcop hpar
+
 end NumberTheory.RightTriangles
