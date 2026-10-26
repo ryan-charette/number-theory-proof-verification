@@ -384,4 +384,26 @@ theorem primitive_legs (a b c : Int) (h : Primitive a b c) :
     have hr := primitive_leg_restrictions b a c hs hp.2
     exact Or.inl ⟨hr.1,hp.1,h.1.2.1,hr.2⟩
 
+theorem odd_leg_exists (n : Int) (hn : 1<n) (hodd : n%2=1) :
+    ∃ a c : Int, Primitive a n c := by
+  /-
+  Theorem: Every odd integer greater than one occurs as a leg in a
+  primitive triple. Proof: Write n=2*t+1 with t≥1 and take s=t+1.
+  Consecutive integers are coprime, since their difference is one,
+  and have opposite parity. The second leg of their primitive
+  triple is (t+1)^2-t^2=2*t+1=n. QED
+  -/
+  let t := (n-1)/2
+  have ht : 0<t := by dsimp [t]; omega
+  have hcop : gcd (t+1) t=1 := by
+    apply coprime_of_bezout (t+1) t 1 (-1)
+    omega
+  have hp : (t+1)%2≠t%2 := by omega
+  have h := parameters_primitive (t+1) t ht (by omega) hcop hp
+  have he : (t+1)*(t+1)-t*t=n := by
+    simp only [Int.mul_add, Int.add_mul, Int.mul_one, Int.one_mul]
+    omega
+  rw [he] at h
+  exact ⟨2*(t+1)*t,(t+1)*(t+1)+t*t,h⟩
+
 end NumberTheory.RightTriangles
