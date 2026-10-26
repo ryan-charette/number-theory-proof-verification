@@ -339,4 +339,28 @@ theorem primitive_iff_parameters (a b c : Int) (ha : a%2=0) :
   · rintro ⟨s,t,ht,hst,hcop,hpar,rfl,rfl,rfl⟩
     exact parameters_primitive s t ht hst hcop hpar
 
+theorem primitive_leg_restrictions (a b c : Int) (h : Primitive a b c) (ha : a%2=0) :
+    1 < b ∧ 4 ∣ a := by
+  /-
+  Theorem: In a primitive triple the odd leg exceeds one and the even
+  leg is a positive multiple of four.
+  Proof: Write b=s*s-t*t and a=2*s*t with positive s>t of opposite
+  parity. Since s≥t+1, b≥(t+1)^2-t^2=2*t+1≥3. One parameter is
+  even, so s*t is even and a is divisible by four. Its positivity
+  is already part of the definition of a triple. QED
+  -/
+  rcases primitive_parameters a b c h ha with ⟨s,t,ht,hst,_hcop,hpar,haa,hb,_hc⟩
+  have hsq := Int.mul_self_le_mul_self (show 0 ≤ t+1 by omega) (show t+1 ≤ s by omega)
+  simp only [Int.mul_add, Int.add_mul, Int.mul_one, Int.one_mul] at hsq
+  refine ⟨by omega, ?_⟩
+  have he : (s*t)%2=0 := by
+    rw [Int.mul_emod]
+    have hs : s%2=0 ∨ s%2=1 := by omega
+    have ht : t%2=0 ∨ t%2=1 := by omega
+    rcases hs with hs | hs <;> rcases ht with ht | ht <;>
+      simp only [hs,ht] <;> omega
+  apply Int.dvd_of_emod_eq_zero
+  rw [haa, Int.mul_assoc]
+  omega
+
 end NumberTheory.RightTriangles
