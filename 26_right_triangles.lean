@@ -38,4 +38,15 @@ theorem even_leg (a b c : Int) (h : Triple a b c) : a % 2 = 0 ∨ b % 2 = 0 := b
   rcases ha with ha | ha | ha | ha <;>
     rcases hb with hb | hb | hb | hb <;> simp only [ha, hb] at he <;> omega
 
+theorem scale_triple (a b c d : Int) (h : Triple a b c) (hd : 0 < d) :
+    Triple (d*a) (d*b) (d*c) := by
+  /-
+  Theorem: Multiplying every side by a positive integer gives another triple.
+  Proof: The new sides are positive. Multiply the original equation by
+  d*d and distribute; its terms are precisely the three new squares. QED
+  -/
+  refine ⟨Int.mul_pos hd h.1, Int.mul_pos hd h.2.1, Int.mul_pos hd h.2.2.1, ?_⟩
+  have he := congrArg (fun x => d*d*x) h.2.2.2
+  simpa only [Int.mul_add, Int.mul_assoc, Int.mul_comm, Int.mul_left_comm] using he
+
 end NumberTheory.RightTriangles
