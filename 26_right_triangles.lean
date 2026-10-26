@@ -126,4 +126,63 @@ theorem primitive_leg_hypotenuse_coprime (a b c : Int) (h : Primitive a b c) :
       (Int.natAbs_pos.mpr (by have := h.1.1; omega)) hn)
   exact h.2 d hd ha hb hc
 
+theorem coprime_square_factors (x y z : Int) (hx : 0 < x) (_hy : 0 < y)
+    (hz : 0 < z) (hc : gcd x y = 1) (he : x*y=z*z) :
+    ∃ s t : Int, 0 < s ∧ 0 < t ∧ x=s*s ∧ y=t*t := by
+  /-
+  Lemma: Positive coprime factors of a square are themselves squares.
+  Proof: Remove d=gcd(x,z), writing x=d*X and z=d*Z with X,Z coprime.
+  Cancellation gives X*y=d*Z*Z. Since X is coprime to Z*Z, X divides d;
+  write d=X*k. Cancelling X gives y=k*Z*Z, and x=k*X*X. All the
+  quotients are positive. Thus k is a positive common divisor of x,y,
+  so k=1. The positive square roots are X and Z. QED
+  -/
+  let d := gcd x z
+  let X := x/d
+  let Z := z/d
+  have hd : 0 < d := gcd_positive x z (Or.inl (by omega))
+  have hq := gcd_quotients x z
+  change x=d*X ∧ z=d*Z at hq
+  have hX : 0 < X := by
+    by_cases hh : 0 < X
+    · exact hh
+    · have := Int.mul_le_mul_of_nonneg_left (show X ≤ 0 by omega) (show 0 ≤ d by omega)
+      simp only [Int.mul_zero] at this
+      omega
+  have hZ : 0 < Z := by
+    by_cases hh : 0 < Z
+    · exact hh
+    · have := Int.mul_le_mul_of_nonneg_left (show Z ≤ 0 by omega) (show 0 ≤ d by omega)
+      simp only [Int.mul_zero] at this
+      omega
+  have hcop : gcd X Z = 1 := reduced_coprime x z (Or.inl (by omega))
+  have hr : X*y=d*(Z*Z) := by
+    apply Int.eq_of_mul_eq_mul_left (a := d) (by omega)
+    calc
+      d*(X*y) = x*y := by rw [← Int.mul_assoc, ← hq.1]
+      _ = z*z := he
+      _ = d*(d*(Z*Z)) := by rw [hq.2]; simp only [Int.mul_assoc, Int.mul_comm, Int.mul_left_comm]
+  have hdiv : X ∣ (Z*Z)*d := ⟨y, by rw [Int.mul_comm (Z*Z) d]; exact hr.symm⟩
+  rcases coprime_dvd_cancel X (Z*Z) d hdiv (coprime_right_product X Z Z hcop hcop) with ⟨k, hk⟩
+  have hkpos : 0 < k := by
+    by_cases hh : 0 < k
+    · exact hh
+    · have := Int.mul_le_mul_of_nonneg_left (show k ≤ 0 by omega) (show 0 ≤ X by omega)
+      simp only [Int.mul_zero] at this
+      omega
+  have hyy : y=k*(Z*Z) := by
+    apply Int.eq_of_mul_eq_mul_left (a := X) (by omega)
+    rw [hr, hk, Int.mul_assoc]
+  have hxx : x=k*(X*X) := by
+    rw [hq.1, hk]
+    simp only [Int.mul_assoc, Int.mul_comm, Int.mul_left_comm]
+  have hkone : k=1 := by
+    rcases coprime_bezout x y hc with ⟨u,v,huv⟩
+    have hdvd : k ∣ 1 := by
+      rw [← huv]
+      exact dvd_linear k x y u v ⟨X*X,hxx⟩ ⟨Z*Z,hyy⟩
+    have := divisor_le_positive k 1 (by decide) hdvd
+    omega
+  exact ⟨X,Z,hX,hZ,by simpa [hkone] using hxx,by simpa [hkone] using hyy⟩
+
 end NumberTheory.RightTriangles
