@@ -282,4 +282,46 @@ theorem primitive_parameters (a b c : Int) (h : Primitive a b c) (ha : a%2=0) :
     rcases hh with hh | hh <;> rw [hh] at hm <;> omega
   exact ⟨s,t,ht,hst,hcop,hpar,haa,hb,hc⟩
 
+theorem parameters_primitive (s t : Int) (ht : 0 < t) (hst : t<s)
+    (hcop : gcd s t=1) (hpar : s%2≠t%2) :
+    Primitive (2*s*t) (s*s-t*t) (s*s+t*t) := by
+  /-
+  Theorem: Coprime positive parameters of opposite parity produce a
+  primitive triple. Proof: The construction already gives a triple.
+  Its second leg B=s*s-t*t is odd. A positive common divisor d of
+  the sides therefore is coprime to two. Adding and subtracting B
+  and the hypotenuse shows d divides 2*s*s and 2*t*t; cancel two.
+  The squares s*s,t*t are coprime, by the earlier product rule.
+  Consequently d divides one, and positivity gives d=1. QED
+  -/
+  refine ⟨parameter_triple s t ht hst, ?_⟩
+  intro d hd _hda hdb hdc
+  have hbodd : (s*s-t*t)%2=1 := by
+    rw [Int.sub_emod, Int.mul_emod s, Int.mul_emod t]
+    have hs : s%2=0 ∨ s%2=1 := by omega
+    have ht : t%2=0 ∨ t%2=1 := by omega
+    rcases hs with hs | hs <;> rcases ht with ht | ht <;>
+      simp only [hs,ht] <;> omega
+  have hb2 : gcd (s*s-t*t) 2=1 := by
+    apply coprime_of_bezout (s*s-t*t) 2 1 (-((s*s-t*t)/2))
+    omega
+  have hd2 := coprime_divisors (s*s-t*t) 2 d 2 hb2 hdb (dvd_refl 2)
+  have hds : d ∣ s*s := by
+    apply coprime_dvd_cancel d 2 (s*s) _ hd2
+    have hh := dvd_linear d (s*s-t*t) (s*s+t*t) 1 1 hdb hdc
+    have he : (s*s-t*t)*1+(s*s+t*t)*1=2*(s*s) := by omega
+    rwa [he] at hh
+  have hdt : d ∣ t*t := by
+    apply coprime_dvd_cancel d 2 (t*t) _ hd2
+    have hh := dvd_linear d (s*s-t*t) (s*s+t*t) (-1) 1 hdb hdc
+    have he : (s*s-t*t)*(-1)+(s*s+t*t)*1=2*(t*t) := by omega
+    rwa [he] at hh
+  have hsq : gcd (s*s) (t*t)=1 := by
+    have hh := coprime_right_product s t t hcop hcop
+    exact coprime_product s s (t*t) hh hh
+  rcases coprime_bezout (s*s) (t*t) hsq with ⟨u,v,huv⟩
+  have hone : d ∣ 1 := by rw [← huv]; exact dvd_linear d (s*s) (t*t) u v hds hdt
+  have := divisor_le_positive d 1 (by decide) hone
+  omega
+
 end NumberTheory.RightTriangles
