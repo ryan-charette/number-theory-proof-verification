@@ -67,4 +67,18 @@ theorem square_pair_integer_iff (n : Nat) :
       simpa only [Int.natCast_add, Int.natCast_mul, Int.natAbs_mul_self'] using he
     exact Int.ofNat_inj.mp hc
 
+theorem square_pair_mul (m n : Nat) (hm : SquarePair m) (hn : SquarePair n) :
+    SquarePair (m*n) := by
+  /-
+  Theorem: A product of two numbers represented by square pairs has
+  a square-pair representation. Proof: Use integer roots a,b and c,d.
+  The multiplication identity supplies roots a*c+b*d and b*c-a*d.
+  Taking absolute values gives nonnegative roots if necessary. QED
+  -/
+  rcases (square_pair_integer_iff m).mp hm with ⟨a,b,he⟩
+  rcases (square_pair_integer_iff n).mp hn with ⟨c,d,hf⟩
+  apply (square_pair_integer_iff (m*n)).mpr
+  refine ⟨a*c+b*d,b*c-a*d,?_⟩
+  rw [← square_pair_product_identity,he,hf,Int.natCast_mul]
+
 end NumberTheory.SquarePairs
