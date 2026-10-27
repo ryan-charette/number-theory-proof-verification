@@ -29,4 +29,17 @@ theorem prime_square_remainder (p : Nat) (hp : Prime p) (a b : Int)
     rcases ha with ha | ha <;> rcases hb with hb | hb <;>
       rw [ha,hb] at hm <;> omega
 
+theorem square_pair_product_identity (a b c d : Int) :
+    (a*a+b*b)*(c*c+d*d)=(a*c+b*d)*(a*c+b*d)+(b*c-a*d)*(b*c-a*d) := by
+  /-
+  Theorem: The product of two sums of squares is a sum of squares:
+  (a*a+b*b)*(c*c+d*d)=(a*c+b*d)^2+(b*c-a*d)^2.
+  Proof: Expand the right side. The two mixed terms 2*a*b*c*d and
+  -2*a*b*c*d cancel. The remaining terms are a*a*c*c, a*a*d*d,
+  b*b*c*c, and b*b*d*d, exactly the expansion of the left side. QED
+  -/
+  simp only [Int.mul_add, Int.add_mul, Int.mul_sub, Int.sub_mul,
+    Int.mul_assoc, Int.mul_comm, Int.mul_left_comm]
+  omega
+
 end NumberTheory.SquarePairs
