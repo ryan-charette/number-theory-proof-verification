@@ -116,4 +116,106 @@ theorem prime_square_window (p : Nat) (hp : Prime p) :
   have hsq : m*m<p := by omega
   exact ⟨m,hm,by have hh := Nat.mul_le_mul_left m (show 1≤m by omega); simp only [Nat.mul_one] at hh; omega,hsq,by simpa [hkm] using hk⟩
 
+theorem small_congruent_pair (p : Nat) (hp : Prime p) (a : Int)
+    (ha : ¬ (p:Int) ∣ a) :
+    ∃ x y : Int, x≠0 ∧ y≠0 ∧ x*x<(p:Int) ∧ y*y<(p:Int) ∧
+      NumberTheory.Congruent (a*x) y p := by
+  /-
+  Lemma: For a prime p not dividing a, there are nonzero integers x,y
+  with a*x congruent to y and both squares smaller than p.
+  Proof: Choose m with m*m<p<(m+1)^2. Label the (m+1)^2 pairs
+  (q,r), 0≤q,r≤m, by the residue of a*q-r. Two labels coincide.
+  Subtract their coordinates to obtain x,y, each between -m and m.
+  If x=0, the equal labels force the two r coordinates equal. If y=0,
+  cancel a modulo p to force the two q coordinates equal. Either case
+  contradicts distinctness of the selected pairs. These bounds prove
+  0<|x|,|y|<sqrt(p) without needing real square roots. QED
+  -/
+  rcases prime_square_window p hp with ⟨m,hm,hmp,hmsq,hlarge⟩
+  let k := m+1
+  let f := fun i : Nat => NumberTheory.PolynomialResidues.canonicalLabel
+    (a*((i/k:Nat):Int)-((i%k:Nat):Int)) p
+  have hpp : 0<p := by have := hp.1; omega
+  have hf : ∀ i, i<k*k → f i<p := by
+    intro i _
+    exact (NumberTheory.PolynomialResidues.canonicalLabel_spec _ p hpp).1
+  let labels := (List.range (k*k)).map f
+  have hlabels : ∀ a ∈ labels, a<p := by
+    intro v hv
+    rcases List.mem_map.mp hv with ⟨i,hi,rfl⟩
+    exact hf i (List.mem_range.mp hi)
+  have hlen : labels.length=k*k := by simp [labels]
+  rcases NumberTheory.DivisibilityTests.repeated_bounded_label labels p hlabels (by rw [hlen]; exact hlarge) with
+    ⟨i,j,hi',hj',hij,he'⟩
+  have hi : i<k*k := by omega
+  have hj : j<k*k := by omega
+  have he : f i=f j := by simpa [labels] using he'
+  have hiq : i/k<k := (Nat.div_lt_iff_lt_mul (by dsimp [k]; omega)).mpr hi
+  have hjq : j/k<k := (Nat.div_lt_iff_lt_mul (by dsimp [k]; omega)).mpr hj
+  have hir : i%k<k := Nat.mod_lt i (by dsimp [k]; omega)
+  have hjr : j%k<k := Nat.mod_lt j (by dsimp [k]; omega)
+  let q : Int := (i/k:Nat)
+  let Q : Int := (j/k:Nat)
+  let r : Int := (i%k:Nat)
+  let R : Int := (j%k:Nat)
+  have qb : 0≤q ∧ q≤m := by
+    constructor
+    · exact Int.ofNat_zero_le _
+    · dsimp only [q]
+      exact_mod_cast (show i/k≤m by dsimp [k] at hiq ⊢; omega)
+  have Qb : 0≤Q ∧ Q≤m := by
+    constructor
+    · exact Int.ofNat_zero_le _
+    · dsimp only [Q]
+      exact_mod_cast (show j/k≤m by dsimp [k] at hjq ⊢; omega)
+  have rb : 0≤r ∧ r≤m := by dsimp [r]; omega
+  have Rb : 0≤R ∧ R≤m := by dsimp [R]; omega
+  have hdiff : q≠Q ∨ r≠R := by
+    apply Classical.byContradiction
+    intro hh
+    have hq : i/k=j/k := by
+      have hh' : q=Q := by omega
+      exact Int.ofNat_inj.mp hh'
+    have hr : i%k=j%k := by
+      have hh' : r=R := by omega
+      exact Int.ofNat_inj.mp hh'
+    have hi' := Nat.mod_add_div i k
+    have hj' := Nat.mod_add_div j k
+    rw [hq,hr] at hi'
+    omega
+  have hc : NumberTheory.Congruent (a*q-r) (a*Q-R) p :=
+    (NumberTheory.PolynomialResidues.canonicalLabel_eq_iff _ _ p hpp).mp he
+  have hxy : NumberTheory.Congruent (a*(q-Q)) (r-R) p := by
+    refine ⟨hc.1,?_⟩
+    have heq : a*(q-Q)-(r-R)=(a*q-r)-(a*Q-R) := by rw [Int.mul_sub]; omega
+    rw [heq]
+    exact hc.2
+  have hx : q-Q≠0 := by
+    intro hz
+    have hd : (p:Int) ∣ r-R := by
+      have hd := hxy.2
+      rw [hz,Int.mul_zero,Int.zero_sub] at hd
+      exact Int.dvd_neg.mp hd
+    have hr := NumberTheory.PolynomialResidues.bounded_congruent_equal r R p
+      rb.1 (by omega) Rb.1 (by omega) ⟨by omega,hd⟩
+    omega
+  have hy : r-R≠0 := by
+    intro hz
+    have hd := hxy.2
+    rw [hz,Int.sub_zero] at hd
+    have hcop := NumberTheory.DivisibilityTests.prime_not_dvd_iff_coprime p hp a |>.mp ha
+    have hd' := NumberTheory.CommonDivisors.coprime_dvd_cancel p a (q-Q) hd
+      (NumberTheory.CommonDivisors.coprime_swap a p hcop)
+    have hq := NumberTheory.PolynomialResidues.bounded_congruent_equal q Q p
+      qb.1 (by omega) Qb.1 (by omega) ⟨by omega,hd'⟩
+    omega
+  have square_bound (z : Int) (hz : -(m:Int)≤z ∧ z≤m) : z*z<(p:Int) := by
+    by_cases hpos : 0≤z
+    · have := Int.mul_self_le_mul_self hpos hz.2
+      omega
+    · have hh := Int.mul_self_le_mul_self (show 0≤-z by omega) (show -z≤m by omega)
+      simp only [Int.neg_mul_neg] at hh
+      omega
+  exact ⟨q-Q,r-R,hx,hy,square_bound _ (by omega),square_bound _ (by omega),hxy⟩
+
 end NumberTheory.SquarePairs
