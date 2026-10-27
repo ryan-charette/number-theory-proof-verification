@@ -366,4 +366,50 @@ theorem absent_prime_exponent (p n : Nat) (hn : 0<n) (hd : ¬p ∣ n) :
     exact ⟨_,he⟩
   exact List.count_eq_zero.mpr hnot
 
+theorem square_pair_even_exponent (p n : Nat) (hp : Prime p) (hthree : p%4=3)
+    (hn : 0<n) (hs : SquarePair n) : NumberTheory.DivisibilityTests.exponent p n%2=0 := by
+  /-
+  Lemma: A prime congruent to three modulo four occurs to an even
+  exponent in a positive sum of two squares.
+  Proof: Use strong induction on the sum n. If p does not divide n,
+  its exponent is zero. Otherwise it divides both roots. Write the
+  roots p*u and p*v, so n=p*p*(u*u+v*v). The smaller positive sum
+  u*u+v*v has an even exponent by induction. Multiplication by p*p
+  adds exactly two, preserving evenness. QED
+  -/
+  induction n using Nat.strongRecOn with
+  | ind n ih =>
+    by_cases hd : p ∣ n
+    · rcases hs with ⟨a,b,he⟩
+      have he' : (a:Int)*a+(b:Int)*b=(n:Int) := by exact_mod_cast he
+      have hd' : (p:Int) ∣ (a:Int)*a+(b:Int)*b := by rw [he']; exact Int.ofNat_dvd.mpr hd
+      have hroots := prime_three_divides_roots p hp hthree a b hd'
+      rcases Int.ofNat_dvd.mp hroots.1 with ⟨u,hu⟩
+      rcases Int.ofNat_dvd.mp hroots.2 with ⟨v,hv⟩
+      let m := u*u+v*v
+      have hf : n=p*p*m := by
+        rw [← he,hu,hv]
+        dsimp [m]
+        simp only [Nat.mul_add,Nat.add_mul,Nat.mul_assoc,Nat.mul_comm,Nat.mul_left_comm]
+      have hm : 0<m := by
+        by_cases hz : m=0
+        · rw [hz,Nat.mul_zero] at hf; omega
+        · omega
+      have hpp : 0<p := by have := hp.1; omega
+      have hp2 : 1<p*p := by
+        have hh := Nat.mul_le_mul_left p (show 1≤p by omega)
+        simp only [Nat.mul_one] at hh
+        have := hp.1
+        omega
+      have hmn : m<n := by
+        have hh := Nat.mul_lt_mul_of_pos_right hp2 hm
+        simp only [Nat.one_mul] at hh
+        omega
+      have hmrep : SquarePair m := ⟨u,v,rfl⟩
+      have hind := ih m hmn hm hmrep
+      rw [hf,NumberTheory.DivisibilityTests.exponent_mul p (p*p) m (Nat.mul_pos hpp hpp) hm,
+        NumberTheory.DivisibilityTests.exponent_mul p p p hpp hpp,prime_exponent_self p hp]
+      omega
+    · rw [absent_prime_exponent p n hn hd]
+
 end NumberTheory.SquarePairs
