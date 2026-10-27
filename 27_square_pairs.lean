@@ -297,4 +297,44 @@ theorem prime_square_pair_iff (p : Nat) (hp : Prime p) :
     · rcases prime_one_square_pair p hp h with ⟨a,b,_ha,_hb,he⟩
       exact ⟨a,b,he⟩
 
+theorem prime_three_divides_roots (p : Nat) (hp : Prime p) (hthree : p%4=3)
+    (a b : Int) (hd : (p:Int) ∣ a*a+b*b) : (p:Int) ∣ a ∧ (p:Int) ∣ b := by
+  /-
+  Lemma: If a prime congruent to three modulo four divides a sum of
+  squares, it divides both roots.
+  Proof: Suppose it does not divide b. Invert b modulo p, writing
+  b*u congruent to one. Multiplying the square sum by u*u shows that
+  (a*u)^2 is congruent to minus one. But minus one is not a square
+  for this prime. Therefore p divides b. Subtract b*b from the sum;
+  p divides a*a, and prime divisibility of a product gives p divides a. QED
+  -/
+  have hb : (p:Int) ∣ b := by
+    apply Classical.byContradiction
+    intro hn
+    rcases NumberTheory.SquareClasses.inverse_integer b p hp hn with ⟨u,hu⟩
+    have hs := NumberTheory.modeq_square (b*u) 1 p hu
+    have hm : (p:Int) ∣ (a*a+b*b)*(u*u) := by
+      rcases hd with ⟨k,hk⟩
+      exact ⟨k*(u*u),by rw [hk,Int.mul_assoc]⟩
+    have hroot : NumberTheory.SquareClasses.SquareClass (-1) p := by
+      refine ⟨a*u,hu.1,?_⟩
+      have hh := NumberTheory.CommonDivisors.dvd_linear p ((a*a+b*b)*(u*u))
+        ((b*u)^2-1^2) 1 (-1) hm hs.2
+      have he : ((a*a+b*b)*(u*u))*1+((b*u)^2-1^2)*(-1)=(a*u)^2-(-1) := by
+        simp only [Int.pow_succ,Int.pow_zero,Int.mul_one,Int.one_mul,
+          Int.mul_add,Int.add_mul,Int.mul_sub,Int.sub_mul,Int.mul_neg,
+          Int.neg_mul,Int.mul_assoc,Int.mul_comm,Int.mul_left_comm]
+        omega
+      rwa [he] at hh
+    have := (NumberTheory.SquareClasses.minus_one_square p hp (by omega)).mp hroot
+    omega
+  have hbb : (p:Int) ∣ b*b := by
+    rcases hb with ⟨k,hk⟩
+    exact ⟨k*b,by rw [hk,Int.mul_assoc]⟩
+  have haa : (p:Int) ∣ a*a := by
+    have hh := Int.dvd_sub hd hbb
+    simpa only [Int.add_sub_cancel] using hh
+  have ha := NumberTheory.DivisibilityTests.prime_dvd_integer_product p hp a a haa
+  exact ⟨ha.elim id id,hb⟩
+
 end NumberTheory.SquarePairs
