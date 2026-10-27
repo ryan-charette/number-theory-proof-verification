@@ -81,4 +81,39 @@ theorem square_pair_mul (m n : Nat) (hm : SquarePair m) (hn : SquarePair n) :
   refine ⟨a*c+b*d,b*c-a*d,?_⟩
   rw [← square_pair_product_identity,he,hf,Int.natCast_mul]
 
+theorem prime_square_window (p : Nat) (hp : Prime p) :
+    ∃ m : Nat, 0<m ∧ m<p ∧ m*m<p ∧ p<(m+1)*(m+1) := by
+  /-
+  Lemma: A prime lies strictly between two consecutive squares.
+  Proof: Choose the least k whose square exceeds p, and put m=k-1.
+  Minimality gives m*m≤p. Equality would make m a divisor of the
+  prime p. The alternatives m=1 and m=p both contradict p=m*m
+  and p>1. Thus m*m<p<(m+1)^2, with 0<m<p. QED
+  -/
+  have hex : ∃ k : Nat, p<k*k := ⟨p+1,by simp only [Nat.add_mul, Nat.mul_add, Nat.one_mul, Nat.mul_one]; omega⟩
+  rcases NumberTheory.Remainders.least_natural (fun k => p<k*k) hex with ⟨k,hk,hmin⟩
+  have hk2 : 1<k := by
+    by_cases h0 : k=0
+    · simp [h0] at hk
+    · by_cases h1 : k=1
+      · have := hp.1; simp [h1] at hk; omega
+      · omega
+  let m := k-1
+  have hm : 0<m := by dsimp [m]; omega
+  have hkm : k=m+1 := by dsimp [m]; omega
+  have hle : m*m≤p := by
+    by_cases hh : p<m*m
+    · have := hmin m hh; dsimp [m] at this; omega
+    · omega
+  have hne : m*m≠p := by
+    intro he
+    rcases hp.2 m ⟨m,he.symm⟩ with h | h
+    · rw [h] at he; have := hp.1; omega
+    · rw [h] at he
+      have hh := Nat.mul_lt_mul_of_pos_left hp.1 (show 0<p by have := hp.1; omega)
+      simp only [Nat.mul_one] at hh
+      omega
+  have hsq : m*m<p := by omega
+  exact ⟨m,hm,by have hh := Nat.mul_le_mul_left m (show 1≤m by omega); simp only [Nat.mul_one] at hh; omega,hsq,by simpa [hkm] using hk⟩
+
 end NumberTheory.SquarePairs
