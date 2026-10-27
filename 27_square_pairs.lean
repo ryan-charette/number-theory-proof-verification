@@ -218,4 +218,64 @@ theorem small_congruent_pair (p : Nat) (hp : Prime p) (a : Int)
       omega
   exact ⟨q-Q,r-R,hx,hy,square_bound _ (by omega),square_bound _ (by omega),hxy⟩
 
+theorem prime_one_square_pair (p : Nat) (hp : Prime p) (hfour : p%4=1) :
+    ∃ u v : Nat, 0<u ∧ 0<v ∧ u*u+v*v=p := by
+  /-
+  Theorem: A prime with remainder one modulo four is the sum of two
+  positive squares. Proof: Earlier work supplies a square root a of
+  minus one modulo p. It is not divisible by p. Choose the small
+  nonzero pair x,y with a*x congruent to y. Squaring gives
+  y*y congruent to -x*x, so p divides x*x+y*y. This positive sum is
+  smaller than 2*p because each square is smaller than p. It must
+  therefore equal p. Absolute values give positive natural roots. QED
+  -/
+  have ho : p%2=1 := by omega
+  rcases (NumberTheory.SquareClasses.minus_one_square p hp ho).mpr hfour with ⟨a,hr⟩
+  have hpp : 0<(p:Int) := by have := hp.1; omega
+  have ha : ¬ (p:Int) ∣ a := by
+    intro hd
+    have hs : (p:Int) ∣ a^2 := by
+      rcases hd with ⟨k,hk⟩
+      refine ⟨k*a,?_⟩
+      simp only [Int.pow_succ,Int.pow_zero,Int.mul_one,Int.one_mul]
+      rw [hk,Int.mul_assoc]
+    have hone := NumberTheory.CommonDivisors.dvd_linear p (a^2-(-1)) (a^2) 1 (-1) hr.2 hs
+    have he : (a^2-(-1))*1+a^2*(-1)=1 := by omega
+    rw [he] at hone
+    have := NumberTheory.CommonDivisors.divisor_le_positive p 1 (by decide) hone
+    have := hp.1
+    omega
+  rcases small_congruent_pair p hp a ha with ⟨x,y,hx,hy,hxx,hyy,hxy⟩
+  have h1 := NumberTheory.modeq_square (a*x) y p hxy
+  have h2 := NumberTheory.modeq_mult (a^2) (-1) (x^2) (x^2) p hr
+    (NumberTheory.modeq_refl (x^2) p hpp)
+  have hd : (p:Int) ∣ x*x+y*y := by
+    have hh := NumberTheory.CommonDivisors.dvd_linear p ((a*x)^2-y^2)
+      (a^2*x^2-(-1)*x^2) (-1) 1 h1.2 h2.2
+    have he : ((a*x)^2-y^2)*(-1)+(a^2*x^2-(-1)*x^2)*1=x*x+y*y := by
+      simp only [Int.pow_succ,Int.pow_zero,Int.mul_one,Int.one_mul,
+        Int.mul_add,Int.add_mul,Int.mul_sub,Int.sub_mul,Int.mul_neg,
+        Int.neg_mul,Int.mul_assoc,Int.mul_comm,Int.mul_left_comm]
+      omega
+    rwa [he] at hh
+  have positive_square (z : Int) (hz : z≠0) : 0<z*z := by
+    by_cases hh : 0<z
+    · exact Int.mul_pos hh hh
+    · have hh' : 0 < -z := by omega
+      simpa only [Int.neg_mul_neg] using Int.mul_pos hh' hh'
+  have hxpos := positive_square x hx
+  have hypos := positive_square y hy
+  have hle := NumberTheory.CommonDivisors.divisor_le_positive p (x*x+y*y) (by omega) hd
+  have hsmall : NumberTheory.Congruent (x*x+y*y-(p:Int)) 0 p := by
+    refine ⟨hpp,?_⟩
+    simp only [Int.sub_zero]
+    exact Int.dvd_sub hd (NumberTheory.CommonDivisors.dvd_refl p)
+  have he := NumberTheory.PolynomialResidues.bounded_congruent_equal
+    (x*x+y*y-(p:Int)) 0 p (by omega) (by omega) (by omega) hpp hsmall
+  refine ⟨x.natAbs,y.natAbs,Int.natAbs_pos.mpr hx,Int.natAbs_pos.mpr hy,?_⟩
+  have heq : x*x+y*y=(p:Int) := by omega
+  have hc : ((x.natAbs*x.natAbs+y.natAbs*y.natAbs:Nat):Int)=(p:Int) := by
+    simpa only [Int.natCast_add,Int.natCast_mul,Int.natAbs_mul_self'] using heq
+  exact Int.ofNat_inj.mp hc
+
 end NumberTheory.SquarePairs
