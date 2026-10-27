@@ -42,4 +42,29 @@ theorem square_pair_product_identity (a b c d : Int) :
     Int.mul_assoc, Int.mul_comm, Int.mul_left_comm]
   omega
 
+/-
+A square pair uses nonnegative integer roots, including zero. Thus a
+perfect square is represented by its root and zero. This convention
+makes multiplication and the prime-factor criterion valid.
+-/
+def SquarePair (n : Nat) : Prop := ∃ a b : Nat, a*a+b*b=n
+
+theorem square_pair_integer_iff (n : Nat) :
+    SquarePair n ↔ ∃ a b : Int, a*a+b*b=(n:Int) := by
+  /-
+  Lemma: Allowing integer roots gives exactly the same representations
+  as allowing nonnegative roots. Proof: Natural roots are integers.
+  Conversely replace each integer root by its absolute value; its
+  square is unchanged. QED
+  -/
+  constructor
+  · rintro ⟨a,b,he⟩
+    refine ⟨a,b,?_⟩
+    exact_mod_cast he
+  · rintro ⟨a,b,he⟩
+    refine ⟨a.natAbs,b.natAbs,?_⟩
+    have hc : ((a.natAbs*a.natAbs+b.natAbs*b.natAbs : Nat) : Int)=(n:Int) := by
+      simpa only [Int.natCast_add, Int.natCast_mul, Int.natAbs_mul_self'] using he
+    exact Int.ofNat_inj.mp hc
+
 end NumberTheory.SquarePairs
