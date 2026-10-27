@@ -412,4 +412,82 @@ theorem square_pair_even_exponent (p n : Nat) (hp : Prime p) (hthree : p%4=3)
       omega
     · rw [absent_prime_exponent p n hn hd]
 
+theorem square_pair_of_prime_counts (ps : List Nat)
+    (hpr : NumberTheory.Factorization.PrimeFactors ps)
+    (heven : ∀ p : Nat, p%4=3 → ps.count p%2=0) :
+    SquarePair (NumberTheory.Factorization.product ps) := by
+  /-
+  Lemma: A product of primes is a sum of two squares if every prime
+  congruent to three modulo four appears an even number of times.
+  Proof: Induct on the length of the factor list. The empty product
+  is 1=1*1+0*0. A prime equal to two or congruent to one modulo four
+  already has a representation; remove it, apply induction, and use
+  multiplication closure. If the first prime has remainder three,
+  its even count supplies a second occurrence. Remove both and apply
+  induction. Their product is p*p+0*0, so closure again finishes. QED
+  -/
+  have aux : ∀ k : Nat, ∀ qs : List Nat, qs.length=k →
+      NumberTheory.Factorization.PrimeFactors qs →
+      (∀ p : Nat, p%4=3 → qs.count p%2=0) →
+      SquarePair (NumberTheory.Factorization.product qs) := by
+    intro k
+    induction k using Nat.strongRecOn with
+    | ind k ih =>
+      intro qs hlen hpr heven
+      cases qs with
+      | nil => exact ⟨1,0,rfl⟩
+      | cons p ps =>
+        have hp : Prime p := hpr p (by simp)
+        have htail : NumberTheory.Factorization.PrimeFactors ps := by
+          intro q hq
+          exact hpr q (by simp [hq])
+        by_cases hthree : p%4=3
+        · have hc := heven p hthree
+          simp only [List.count_cons_self] at hc
+          have hm : p ∈ ps := List.count_pos_iff_mem.mp (by omega)
+          let rs := @List.erase Nat instBEqOfDecidableEq ps p
+          have hperm : List.Perm ps (p::rs) := List.perm_cons_erase hm
+          have hlength := hperm.length_eq
+          have hrpr : NumberTheory.Factorization.PrimeFactors rs := by
+            intro q hq
+            exact htail q (hperm.mem_iff.mpr (by simp [hq]))
+          have hre : ∀ q : Nat, q%4=3 → rs.count q%2=0 := by
+            intro q hq
+            have hc0 := heven q hq
+            have hc1 := hperm.countP_eq (fun t => t==q)
+            change ps.count q=(p::rs).count q at hc1
+            by_cases heq : q=p
+            · subst q
+              simp only [List.count_cons_self] at hc0 hc1
+              omega
+            · simp only [List.count_cons_of_ne heq] at hc0 hc1
+              omega
+          have hr := ih rs.length (by simp only [List.length_cons] at hlen hlength; omega)
+            rs rfl hrpr hre
+          have he := NumberTheory.Factorization.product_perm ps (p::rs) hperm
+          have hprod : NumberTheory.Factorization.product (p::ps)=
+              (p*p)*NumberTheory.Factorization.product rs := by
+            change p*NumberTheory.Factorization.product ps=_
+            rw [he]
+            change p*(p*NumberTheory.Factorization.product rs)=_
+            rw [Nat.mul_assoc]
+          rw [hprod]
+          exact square_pair_mul (p*p) _ ⟨p,0,by simp⟩ hr
+        · have hpe : SquarePair p := by
+            apply (prime_square_pair_iff p hp).mpr
+            by_cases htwo : p=2
+            · exact Or.inl htwo
+            · rcases NumberTheory.PrimeBounds.prime_residue_mod_four p hp htwo with hh | hh
+              · exact Or.inr hh
+              · exact False.elim (hthree hh)
+          have hte : ∀ q : Nat, q%4=3 → ps.count q%2=0 := by
+            intro q hq
+            have hne : q≠p := by intro he; subst q; exact hthree hq
+            have hh := heven q hq
+            simpa only [List.count_cons_of_ne hne] using hh
+          have hr := ih ps.length (by simp only [List.length_cons] at hlen; omega)
+            ps rfl htail hte
+          exact square_pair_mul p _ hpe hr
+  exact aux ps.length ps rfl hpr heven
+
 end NumberTheory.SquarePairs
