@@ -337,4 +337,16 @@ theorem prime_three_divides_roots (p : Nat) (hp : Prime p) (hthree : p%4=3)
   have ha := NumberTheory.DivisibilityTests.prime_dvd_integer_product p hp a a haa
   exact ⟨ha.elim id id,hb⟩
 
+theorem prime_exponent_self (p : Nat) (hp : Prime p) :
+    NumberTheory.DivisibilityTests.exponent p p=1 := by
+  /-
+  Lemma: A prime occurs exactly once in its own prime factorization.
+  Proof: The one-entry list containing p is a prime factorization of p.
+  Independence of the chosen factor list makes its count equal to one. QED
+  -/
+  rw [NumberTheory.DivisibilityTests.exponent_of_factors p p (by have := hp.1; omega)
+    [p] (by intro q hq; simp only [List.mem_singleton] at hq; subst q; exact hp)
+    (by simp [NumberTheory.Factorization.product])]
+  simp
+
 end NumberTheory.SquarePairs
