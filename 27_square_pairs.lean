@@ -278,4 +278,23 @@ theorem prime_one_square_pair (p : Nat) (hp : Prime p) (hfour : p%4=1) :
     simpa only [Int.natCast_add,Int.natCast_mul,Int.natAbs_mul_self'] using heq
   exact Int.ofNat_inj.mp hc
 
+theorem prime_square_pair_iff (p : Nat) (hp : Prime p) :
+    SquarePair p ↔ p=2 ∨ p%4=1 := by
+  /-
+  Theorem: A prime is a sum of two nonnegative squares precisely when
+  it is two or has remainder one modulo four.
+  Proof: The residue restriction gives necessity. For two use 1,1.
+  For remainder one use the positive roots constructed above. QED
+  -/
+  constructor
+  · intro h
+    rcases (square_pair_integer_iff p).mp h with ⟨a,b,he⟩
+    exact prime_square_remainder p hp a b he
+  · intro h
+    rcases h with h | h
+    · subst p
+      exact ⟨1,1,rfl⟩
+    · rcases prime_one_square_pair p hp h with ⟨a,b,_ha,_hb,he⟩
+      exact ⟨a,b,he⟩
+
 end NumberTheory.SquarePairs
