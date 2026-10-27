@@ -490,4 +490,31 @@ theorem square_pair_of_prime_counts (ps : List Nat)
           exact square_pair_mul p _ hpe hr
   exact aux ps.length ps rfl hpr heven
 
+theorem square_pair_factorization_iff (n : Nat) (hn : 0<n) :
+    SquarePair n ↔ ∀ p : Nat, Prime p → p%4=3 →
+      NumberTheory.DivisibilityTests.exponent p n%2=0 := by
+  /-
+  Theorem: A positive integer is a sum of two nonnegative squares
+  exactly when every prime congruent to three modulo four has an
+  even exponent in its prime factorization.
+  Proof: Necessity is the repeated removal of two copies of such a
+  prime. For sufficiency choose the earlier prime factor list for n.
+  Its counts are the exponents in the hypothesis. Nonprime indices
+  have count zero. The preceding list induction constructs the desired
+  representation of its product, which is n. QED
+  -/
+  constructor
+  · intro hs p hp hthree
+    exact square_pair_even_exponent p n hp hthree hn hs
+  · intro he
+    have hf := NumberTheory.DivisibilityTests.factors_spec n hn
+    have hcounts : ∀ p : Nat, p%4=3 →
+        (NumberTheory.DivisibilityTests.factors n).count p%2=0 := by
+      intro p hthree
+      by_cases hm : p ∈ NumberTheory.DivisibilityTests.factors n
+      · exact he p (hf.1 p hm) hthree
+      · rw [List.count_eq_zero.mpr hm]
+    have hs := square_pair_of_prime_counts _ hf.1 hcounts
+    rwa [hf.2] at hs
+
 end NumberTheory.SquarePairs
