@@ -349,4 +349,21 @@ theorem prime_exponent_self (p : Nat) (hp : Prime p) :
     (by simp [NumberTheory.Factorization.product])]
   simp
 
+theorem absent_prime_exponent (p n : Nat) (hn : 0<n) (hd : ¬p ∣ n) :
+    NumberTheory.DivisibilityTests.exponent p n=0 := by
+  /-
+  Lemma: A number that does not divide n cannot appear in its prime
+  factor list. Proof: If it appeared, separate that occurrence from
+  the product to see that it divides n. Thus its occurrence count is zero. QED
+  -/
+  have hf := NumberTheory.DivisibilityTests.factors_spec n hn
+  have hnot : p ∉ NumberTheory.DivisibilityTests.factors n := by
+    intro hm
+    have hperm := List.perm_cons_erase hm
+    have he := NumberTheory.Factorization.product_perm _ _ hperm
+    rw [hf.2] at he
+    apply hd
+    exact ⟨_,he⟩
+  exact List.count_eq_zero.mpr hnot
+
 end NumberTheory.SquarePairs
