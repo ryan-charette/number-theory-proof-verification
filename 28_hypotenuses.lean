@@ -192,4 +192,59 @@ theorem coprime_square_product (ps : List Nat) (hps : PrimeFactors ps)
     rw [he] at hn
     simpa [product,Int.mul_comm] using hn
 
+theorem coprime_square_hypotenuse (c a b : Int) (hc : 1<c)
+    (ho : c%2=1) (hab : gcd a b=1) (he : a*a+b*b=c) :
+    ∃ x y : Int, Primitive x y c := by
+  /-
+  Theorem: An odd integer greater than one that is a sum of coprime
+  squares is a primitive hypotenuse. Proof: Replace the roots by their
+  absolute values. Neither can be zero: coprimality would force the
+  other to be one. Their parities are opposite since their squares
+  have odd sum, so they are distinct. Put the larger root first in
+  the primitive-triangle parameter construction. Its hypotenuse is
+  precisely the original sum of squares.
+  -/
+  let A : Int := a.natAbs
+  let B : Int := b.natAbs
+  have hA : 0≤A := by dsimp [A,B]; omega
+  have hB : 0≤B := by dsimp [A,B]; omega
+  have hcop : gcd A B=1 := NumberTheory.DivisibilityTests.coprime_divisors
+    a b A B hab (Int.natAbs_dvd_self) (Int.natAbs_dvd_self)
+  have hn : A*A+B*B=c := by
+    simpa only [A,B,Int.natAbs_mul_self'] using he
+  have pos (u v : Int) (hu : 0≤u) (hv : 0≤v) (hcop : gcd u v=1)
+      (hn : u*u+v*v=c) : 0<u := by
+    apply Classical.byContradiction
+    intro h
+    have hz : u=0 := by omega
+    obtain ⟨r,s,hrs⟩ := coprime_bezout u v hcop
+    have hd : v∣1 := ⟨s, by simpa [hz] using hrs.symm⟩
+    have hle := divisor_le_positive v 1 (by decide) hd
+    have hv01 : v=0 ∨ v=1 := by omega
+    rcases hv01 with hv0 | hv1
+    · simp [hz,hv0] at hn; omega
+    · simp [hz,hv1] at hn; omega
+  have hAp := pos A B hA hB hcop hn
+  have hBp := pos B A hB hA (coprime_swap A B hcop) (by omega)
+  have hpar : A%2≠B%2 := by
+    have ha0 := Int.emod_nonneg A (by decide : (2:Int)≠0)
+    have hb0 := Int.emod_nonneg B (by decide : (2:Int)≠0)
+    have hrem : (A%2*(A%2)+B%2*(B%2))%2=1 := by
+      have hh : (A*A+B*B)%2=1 := by omega
+      rw [Int.add_emod,Int.mul_emod A A 2,Int.mul_emod B B 2] at hh
+      simpa only [← Int.add_emod] using hh
+    have ha : A%2=0 ∨ A%2=1 := by omega
+    have hb : B%2=0 ∨ B%2=1 := by omega
+    rcases ha with ha | ha <;> rcases hb with hb | hb <;> simp [ha,hb] at *
+  by_cases hlt : B<A
+  · refine ⟨2*A*B,A*A-B*B,?_⟩
+    simpa only [hn] using NumberTheory.RightTriangles.parameters_primitive A B hBp hlt hcop hpar
+  · have hlt' : A<B := by
+      have hne : A≠B := fun h => hpar (congrArg (fun z : Int => z%2) h)
+      omega
+    refine ⟨2*B*A,B*B-A*A,?_⟩
+    have hn' : B*B+A*A=c := by omega
+    simpa only [hn'] using NumberTheory.RightTriangles.parameters_primitive B A hAp hlt'
+      (coprime_swap A B hcop) (Ne.symm hpar)
+
 end NumberTheory.Hypotenuses
