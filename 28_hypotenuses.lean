@@ -154,4 +154,42 @@ theorem multiply_coprime_pair (a b s t : Int) (p : Nat) (hp : Prime p)
     · simpa only [Int.neg_mul_neg] using he
     · simpa only [Int.mul_neg,Int.sub_eq_add_neg] using hminus
 
+theorem coprime_square_product (ps : List Nat) (hps : PrimeFactors ps)
+    (hm : ∀ p ∈ ps, p%4=1) :
+    ∃ a b : Int, gcd a b=1 ∧ a*a+b*b=(product ps:Int) := by
+  /-
+  Theorem: A product of primes with remainder one modulo four is a
+  sum of two coprime integer squares. Proof: The empty product is
+  1 squared plus 0 squared. For each additional prime choose its two
+  positive square roots. Both roots are smaller than the prime, so
+  neither is divisible by it. The preceding multiplication argument
+  extends the representation while preserving coprimality. Induction
+  includes repeated prime factors.
+  -/
+  induction ps with
+  | nil =>
+    refine ⟨1,0,coprime_of_bezout 1 0 1 0 (by decide), ?_⟩
+    rfl
+  | cons p ps ih =>
+    have hp := hps p (by simp)
+    have hfour := hm p (by simp)
+    obtain ⟨a,b,hc,he⟩ := ih (fun q hq => hps q (by simp [hq]))
+      (fun q hq => hm q (by simp [hq]))
+    obtain ⟨s,t,hs,ht,hst⟩ := NumberTheory.SquarePairs.prime_one_square_pair p hp hfour
+    have small (u v : Nat) (hu : 0<u) (hv : 0<v) (heq : u*u+v*v=p) :
+        ¬ (p:Int) ∣ (u:Int) := by
+      have hu1 : 1≤u := by omega
+      have hmul := Nat.mul_le_mul_left u hu1
+      have hvv := Nat.mul_pos hv hv
+      have hup : u<p := by simpa using (show u<p by omega)
+      intro hd
+      have hle := divisor_le_positive (p:Int) (u:Int) (by omega) hd
+      omega
+    obtain ⟨x,y,hxy,hn⟩ := multiply_coprime_pair a b s t p hp (by omega) hc
+      (by exact_mod_cast hst) (small s t hs ht hst)
+      (small t s ht hs (by omega))
+    refine ⟨x,y,hxy,?_⟩
+    rw [he] at hn
+    simpa [product,Int.mul_comm] using hn
+
 end NumberTheory.Hypotenuses
