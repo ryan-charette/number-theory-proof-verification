@@ -42,4 +42,43 @@ theorem coprime_prime_test (a b : Int) :
         have hdi : (p:Int) ∣ gcd a b := Int.ofNat_dvd_left.mpr hd
         exact False.elim (hn p hp ⟨Int.dvd_trans hdi hg.2.1,Int.dvd_trans hdi hg.2.2.1⟩)
 
+theorem primitive_hypotenuse_factors (a b c : Int) (h : Primitive a b c) :
+    ∃ ps : List Nat, PrimeFactors ps ∧ product ps=c.natAbs ∧
+      ∀ p ∈ ps, p%4=1 := by
+  /-
+  Theorem: A primitive triangle's hypotenuse is a product of primes
+  congruent to one modulo four.
+  Proof: Factor the positive hypotenuse. It is odd, so two is absent.
+  If a prime factor had remainder three modulo four, its divisibility
+  into c*c=a*a+b*b would force it to divide both legs. It would then
+  be a common divisor of all three sides, contradicting primitivity.
+  Every remaining prime has remainder one. QED
+  -/
+  have hc := h.1.2.2.1
+  have hcast : (c.natAbs:Int)=c := Int.natAbs_of_nonneg (by omega)
+  rcases NumberTheory.DivisibilityTests.positive_factorization c.natAbs (by omega) with ⟨ps,hps,he⟩
+  refine ⟨ps,hps,he,?_⟩
+  intro p hp
+  have hprime := hps p hp
+  have hperm := List.perm_cons_erase hp
+  have hf := NumberTheory.Factorization.product_perm _ _ hperm
+  rw [he] at hf
+  have hdn : p ∣ c.natAbs := ⟨_,hf⟩
+  have hd : (p:Int) ∣ c := Int.ofNat_dvd_left.mpr hdn
+  have hp2 : p≠2 := by
+    intro hh
+    subst p
+    have hodd := (NumberTheory.RightTriangles.primitive_parity a b c h).2
+    omega
+  rcases NumberTheory.PrimeBounds.prime_residue_mod_four p hprime hp2 with hh | hh
+  · exact hh
+  · have hsum : (p:Int) ∣ a*a+b*b := by
+      rw [h.1.2.2.2]
+      rcases hd with ⟨u,hu⟩
+      exact ⟨u*c,by rw [hu,Int.mul_assoc]⟩
+    have hab := NumberTheory.SquarePairs.prime_three_divides_roots p hprime hh a b hsum
+    have hone := h.2 p (by have := hprime.1; omega) hab.1 hab.2 hd
+    have := hprime.1
+    omega
+
 end NumberTheory.Hypotenuses
