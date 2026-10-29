@@ -247,4 +247,33 @@ theorem coprime_square_hypotenuse (c a b : Int) (hc : 1<c)
     simpa only [hn'] using NumberTheory.RightTriangles.parameters_primitive B A hAp hlt'
       (coprime_swap A B hcop) (Ne.symm hpar)
 
+theorem prime_product_hypotenuse (ps : List Nat) (hne : ps≠[])
+    (hps : PrimeFactors ps) (hm : ∀ p ∈ ps, p%4=1) :
+    ∃ a b : Int, Primitive a b (product ps:Int) := by
+  /-
+  Theorem: Every nonempty product of primes with remainder one modulo
+  four is the hypotenuse of a primitive triangle. Proof: Such a product
+  is greater than one, because its first prime exceeds one and the
+  remaining product is positive. Its remainder modulo four is one,
+  so it is odd. The coprime square representation constructed above
+  therefore supplies positive, distinct parameters of opposite parity
+  and hence a primitive triangle with the required hypotenuse.
+  The nonempty condition excludes one, which cannot be the hypotenuse
+  of a triangle with two positive integer legs.
+  -/
+  have hlarge : 1<product ps := by
+    cases ps with
+    | nil => exact False.elim (hne rfl)
+    | cons p qs =>
+      have hp := hps p (by simp)
+      have hpos := NumberTheory.DivisibilityTests.prime_product_positive qs
+        (fun q hq => hps q (by simp [hq]))
+      have hle := Nat.mul_le_mul_left p (show 1≤product qs by omega)
+      change 1<p*product qs
+      have hp1 := hp.1
+      omega
+  have hfour := NumberTheory.PrimeBounds.product_one_mod_four ps hm
+  obtain ⟨a,b,hcop,he⟩ := coprime_square_product ps hps hm
+  exact coprime_square_hypotenuse (product ps) a b (by omega) (by omega) hcop he
+
 end NumberTheory.Hypotenuses
