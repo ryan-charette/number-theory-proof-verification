@@ -81,4 +81,77 @@ theorem primitive_hypotenuse_factors (a b c : Int) (h : Primitive a b c) :
     have := hprime.1
     omega
 
+theorem multiply_coprime_pair (a b s t : Int) (p : Nat) (hp : Prime p)
+    (ho : p%2=1) (hc : gcd a b=1) (he : s*s+t*t=(p:Int))
+    (hs : ¬ (p:Int) ∣ s) (ht : ¬ (p:Int) ∣ t) :
+    ∃ x y : Int, gcd x y=1 ∧ x*x+y*y=(a*a+b*b)*(p:Int) := by
+  /-
+  Lemma: Multiplication by an odd prime represented by s*s+t*t can
+  preserve coprimality of the roots, provided p divides neither s nor t.
+  Proof: Try the two first coordinates a*s+b*t and a*s-b*t. They cannot
+  both be divisible by p: adding and subtracting would force p to divide
+  a and b, since p divides neither two nor s nor t. Choose the sign
+  whose first coordinate is not divisible by p. Put A=a*s+b*t and
+  B=b*s-a*t with that choice. If a prime q divided A and B, the identities
+  A*s-B*t=a*p and A*t+B*s=b*p show that q divides both a,b unless q=p.
+  Coprimality rules out the first case, and the sign choice rules out
+  the second. The square-pair multiplication identity gives the norm. QED
+  -/
+  have build (S T : Int) (hST : S*S+T*T=(p:Int))
+      (hA : ¬ (p:Int) ∣ a*S+b*T) :
+      ∃ x y : Int, gcd x y=1 ∧ x*x+y*y=(a*a+b*b)*(p:Int) := by
+    refine ⟨a*S+b*T,b*S-a*T,?_,?_⟩
+    · apply (coprime_prime_test _ _).mpr
+      intro q hq hd
+      have hqp : q≠p := by intro hh; subst q; exact hA hd.1
+      have hnotp : ¬ (q:Int) ∣ (p:Int) := by
+        intro hh
+        rcases hp.2 q (Int.ofNat_dvd.mp hh) with hh | hh
+        · have := hq.1; omega
+        · exact hqp hh
+      have hda : (q:Int) ∣ a*(p:Int) := by
+        have hh := dvd_linear q (a*S+b*T) (b*S-a*T) S (-T) hd.1 hd.2
+        have hid : (a*S+b*T)*S+(b*S-a*T)*(-T)=a*(S*S+T*T) := by
+          simp only [Int.mul_add,Int.add_mul,Int.mul_sub,Int.sub_mul,Int.mul_neg,
+            Int.neg_mul,Int.mul_assoc,Int.mul_comm,Int.mul_left_comm]
+          omega
+        rwa [hid,hST] at hh
+      have hdb : (q:Int) ∣ b*(p:Int) := by
+        have hh := dvd_linear q (a*S+b*T) (b*S-a*T) T S hd.1 hd.2
+        have hid : (a*S+b*T)*T+(b*S-a*T)*S=b*(S*S+T*T) := by
+          simp only [Int.mul_add,Int.add_mul,Int.mul_sub,Int.sub_mul,
+            Int.mul_assoc,Int.mul_comm,Int.mul_left_comm]
+          omega
+        rwa [hid,hST] at hh
+      have hqa : (q:Int) ∣ a := (prime_dvd_integer_product q hq a p hda).resolve_right hnotp
+      have hqb : (q:Int) ∣ b := (prime_dvd_integer_product q hq b p hdb).resolve_right hnotp
+      exact (coprime_prime_test a b).mp hc q hq ⟨hqa,hqb⟩
+    · rw [← NumberTheory.SquarePairs.square_pair_product_identity,hST]
+  by_cases hplus : ¬ (p:Int) ∣ a*s+b*t
+  · exact build s t he hplus
+  · have hplus' : (p:Int) ∣ a*s+b*t := Classical.not_not.mp hplus
+    have hminus : ¬ (p:Int) ∣ a*s-b*t := by
+      intro hminus
+      have htwo : ¬ (p:Int) ∣ 2 := by
+        intro hh
+        have := divisor_le_positive p 2 (by decide) hh
+        have := hp.1
+        omega
+      have hpa : (p:Int) ∣ a := by
+        have hh := dvd_linear p (a*s+b*t) (a*s-b*t) 1 1 hplus' hminus
+        have hid : (a*s+b*t)*1+(a*s-b*t)*1=2*(a*s) := by omega
+        rw [hid] at hh
+        have hh' := (prime_dvd_integer_product p hp 2 (a*s) hh).resolve_left htwo
+        exact (prime_dvd_integer_product p hp a s hh').resolve_right hs
+      have hpb : (p:Int) ∣ b := by
+        have hh := dvd_linear p (a*s+b*t) (a*s-b*t) 1 (-1) hplus' hminus
+        have hid : (a*s+b*t)*1+(a*s-b*t)*(-1)=2*(b*t) := by omega
+        rw [hid] at hh
+        have hh' := (prime_dvd_integer_product p hp 2 (b*t) hh).resolve_left htwo
+        exact (prime_dvd_integer_product p hp b t hh').resolve_right ht
+      exact (coprime_prime_test a b).mp hc p hp ⟨hpa,hpb⟩
+    apply build s (-t)
+    · simpa only [Int.neg_mul_neg] using he
+    · simpa only [Int.mul_neg,Int.sub_eq_add_neg] using hminus
+
 end NumberTheory.Hypotenuses
