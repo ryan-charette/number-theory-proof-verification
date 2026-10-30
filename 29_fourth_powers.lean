@@ -106,4 +106,64 @@ theorem primitive_fourth_descent (x y z : Int) (hx : 0<x) (hy : 0<y)
   refine ⟨d,e,f,hd,he,hf,by omega,?_⟩
   rw [← hud,← hve,← hsuv,← hsf]
 
+theorem common_prime_fourth_descent (x y z : Int) (hx : 0<x) (hy : 0<y)
+    (hz : 0<z) (he : (x*x)*(x*x)+(y*y)*(y*y)=z*z)
+    (p : Nat) (hp : Prime p) (hpx : (p:Int)∣x) (hpy : (p:Int)∣y) :
+    ∃ a b c : Int, 0<a ∧ 0<b ∧ 0<c ∧ c<z ∧
+      (a*a)*(a*a)+(b*b)*(b*b)=c*c := by
+  /-
+  Lemma: A common prime factor of the two fourth-power bases yields
+  a smaller positive solution. Proof: Write x=p*a and y=p*b. The
+  equation implies p divides z*z, so p divides z; write z=p*w.
+  Cancel p*p. The resulting equation shows p divides w*w, so w=p*c.
+  Cancelling p*p again gives a^4+b^4=c*c. All quotients are positive.
+  Since z=p*p*c and p>1, the new last entry c is smaller than z. QED
+  -/
+  have hp1 : (1:Int)<p := by have := hp.1; omega
+  have hpne : (p:Int)≠0 := by omega
+  obtain ⟨a,ha⟩ := hpx
+  obtain ⟨b,hb⟩ := hpy
+  have pos (q r : Int) (hq : 0<q) (hr : q=(p:Int)*r) : 0<r := by
+    apply Classical.byContradiction
+    intro hh
+    have hle := Int.mul_le_mul_of_nonneg_left (show r≤0 by omega) (show (0:Int)≤p by omega)
+    simp only [Int.mul_zero] at hle
+    omega
+  have hapos := pos x a hx ha
+  have hbpos := pos y b hy hb
+  have norm : (x*x)*(x*x)+(y*y)*(y*y)=
+      ((p:Int)*p)*(((p:Int)*p)*((a*a)*(a*a)+(b*b)*(b*b))) := by
+    rw [ha,hb,Int.mul_add,Int.mul_add]
+    congr 1 <;> ac_rfl
+  have hdz : (p:Int)∣z*z := by
+    rw [← he,norm]
+    exact ⟨(p:Int)*((p:Int)*p)*((a*a)*(a*a)+(b*b)*(b*b)),by ac_rfl⟩
+  obtain ⟨w,hw⟩ := (prime_dvd_integer_product p hp z z hdz).elim id id
+  have hwpos := pos z w hz hw
+  have cancel : ((p:Int)*p)*((a*a)*(a*a)+(b*b)*(b*b))=w*w := by
+    apply Int.eq_of_mul_eq_mul_left (a := (p:Int)*p) (Int.mul_ne_zero hpne hpne)
+    calc
+      ((p:Int)*p)*(((p:Int)*p)*((a*a)*(a*a)+(b*b)*(b*b)))
+          = z*z := by rw [← norm]; exact he
+      _ = ((p:Int)*p)*(w*w) := by rw [hw]; ac_rfl
+  have hdw : (p:Int)∣w*w := by
+    rw [← cancel]
+    exact ⟨(p:Int)*((a*a)*(a*a)+(b*b)*(b*b)),by ac_rfl⟩
+  obtain ⟨c,hc⟩ := (prime_dvd_integer_product p hp w w hdw).elim id id
+  have hcpos := pos w c hwpos hc
+  have hn : (a*a)*(a*a)+(b*b)*(b*b)=c*c := by
+    apply Int.eq_of_mul_eq_mul_left (a := (p:Int)*p) (Int.mul_ne_zero hpne hpne)
+    calc
+      ((p:Int)*p)*((a*a)*(a*a)+(b*b)*(b*b)) = w*w := cancel
+      _ = ((p:Int)*p)*(c*c) := by rw [hc]; ac_rfl
+  have hcsmall : c<w := by
+    have hh := Int.mul_lt_mul_of_pos_right hp1 hcpos
+    simp only [Int.one_mul] at hh
+    omega
+  have hwsmall : w<z := by
+    have hh := Int.mul_lt_mul_of_pos_right hp1 hwpos
+    simp only [Int.one_mul] at hh
+    omega
+  exact ⟨a,b,c,hapos,hbpos,hcpos,by omega,hn⟩
+
 end NumberTheory.FourthPowers
