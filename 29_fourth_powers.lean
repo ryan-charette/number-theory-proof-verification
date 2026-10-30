@@ -166,4 +166,60 @@ theorem common_prime_fourth_descent (x y z : Int) (hx : 0<x) (hy : 0<y)
     omega
   exact ⟨a,b,c,hapos,hbpos,hcpos,by omega,hn⟩
 
+theorem no_fourth_power_square (x y z : Int) (hx : 0<x) (hy : 0<y)
+    (hz : 0<z) : ¬ (x^4+y^4=z^2) := by
+  /-
+  Theorem: The sum of two positive integer fourth powers is not a square.
+  Proof: Suppose a solution exists and choose one with least positive
+  last entry z. If the bases have a common prime divisor, removing it
+  gives a smaller positive solution by the common-prime reduction.
+  Otherwise the bases, and therefore their squares, are coprime. The
+  square legs form a primitive triangle. Put its even leg first and
+  apply the primitive descent to obtain another smaller solution.
+  Both alternatives contradict the choice of z. Strong induction on
+  the nonnegative integer z expresses this least-counterexample argument.
+  Positivity is essential: allowing a zero base would give solutions.
+  QED
+  -/
+  have descent (a b c : Int) (ha : 0<a) (hb : 0<b) (hc : 0<c)
+      (he : (a*a)*(a*a)+(b*b)*(b*b)=c*c) :
+      ∃ d e f : Int, 0<d ∧ 0<e ∧ 0<f ∧ f<c ∧
+        (d*d)*(d*d)+(e*e)*(e*e)=f*f := by
+    by_cases hcop : gcd a b=1
+    · have hsqcop : gcd (a*a) (b*b)=1 := by
+        have hh := coprime_right_product a b b hcop hcop
+        exact coprime_product a a (b*b) hh hh
+      have htri : Primitive (a*a) (b*b) c := coprime_legs_primitive _ _ _
+        ⟨Int.mul_pos ha ha,Int.mul_pos hb hb,hc,he⟩ hsqcop
+      rcases even_leg _ _ _ htri.1 with heven | heven
+      · exact primitive_fourth_descent a b c ha hb htri heven
+      · have hswap : Primitive (b*b) (a*a) c := coprime_legs_primitive _ _ _
+          ⟨Int.mul_pos hb hb,Int.mul_pos ha ha,hc,by omega⟩
+          (coprime_swap _ _ hsqcop)
+        exact primitive_fourth_descent b a c hb ha hswap heven
+    · have hex : ∃ p : Nat, Prime p ∧ (p:Int)∣a ∧ (p:Int)∣b := by
+        apply Classical.byContradiction
+        intro hh
+        apply hcop
+        apply (coprime_prime_test a b).mpr
+        intro p hp hd
+        exact hh ⟨p,hp,hd.1,hd.2⟩
+      obtain ⟨p,hp,hpa,hpb⟩ := hex
+      exact common_prime_fourth_descent a b c ha hb hc he p hp hpa hpb
+  have impossible : ∀ n : Nat, ∀ a b c : Int, 0<a → 0<b → 0<c →
+      c.natAbs=n → (a*a)*(a*a)+(b*b)*(b*b)=c*c → False := by
+    intro n
+    induction n using Nat.strongRecOn with
+    | ind n ih =>
+      intro a b c ha hb hc hn he
+      obtain ⟨d,e,f,hd,he',hf,hfc,hnorm⟩ := descent a b c ha hb hc he
+      have hfcabs : f.natAbs<n := by
+        have hca := Int.natAbs_of_nonneg (show 0≤c by omega)
+        have hfa := Int.natAbs_of_nonneg (show 0≤f by omega)
+        omega
+      exact ih f.natAbs hfcabs d e f hd he' hf rfl hnorm
+  intro he
+  apply impossible z.natAbs x y z hx hy hz rfl
+  simpa only [Int.pow_succ,Int.pow_zero,Int.one_mul,Int.mul_one,Int.mul_assoc] using he
+
 end NumberTheory.FourthPowers
