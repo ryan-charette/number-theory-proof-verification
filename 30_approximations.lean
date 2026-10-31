@@ -302,4 +302,53 @@ theorem rational_approximations_unbounded (α : ℝ) (hi : Irrational α) (B : �
   rw [abs_sub_comm]
   exact he.le
 
+theorem avoid_finite_approximations (α : ℝ) (hi : Irrational α) (xs : List ℚ) :
+    ∃ p : ℤ, ∃ q : ℕ, 0<q ∧ (p:ℚ)/(q:ℚ) ∉ xs ∧
+      |(p:ℝ)/(q:ℝ)-α| ≤ 1/(q:ℝ)^2 := by
+  /-
+  Theorem: Infinitely many distinct rational values satisfy the quadratic
+  approximation bound. Proof: Start with any finite list of fractions.
+  Irrationality makes every distance from alpha to a listed value
+  positive, so the finite list has a positive common lower bound on
+  those distances. Take an approximation with denominator so large
+  that 1/q^2 is smaller than this bound. It cannot be in the list.
+  The empty list has lower bound one. QED
+  -/
+  have separation : ∃ ε : ℝ, 0<ε ∧ ∀ r ∈ xs, ε≤|(r:ℝ)-α| := by
+    induction xs with
+    | nil => exact ⟨1,by norm_num,by simp⟩
+    | cons r rs ih =>
+      obtain ⟨ε,hε,hrs⟩ := ih
+      have hr : (r:ℝ)≠α := by
+        intro hh
+        apply hi r.num r.den r.pos
+        rw [← hh]
+        exact Rat.cast_def r
+      have hd : 0 < |(r:ℝ)-α| := abs_pos.mpr (sub_ne_zero.mpr hr)
+      refine ⟨min ε |(r:ℝ)-α|,lt_min hε hd,?_⟩
+      intro s hs
+      rcases List.mem_cons.mp hs with hs|hs
+      · subst s; exact min_le_right _ _
+      · exact le_trans (min_le_left _ _) (hrs s hs)
+  obtain ⟨ε,hε,hsep⟩ := separation
+  obtain ⟨B,hB⟩ := exists_nat_gt (1/ε)
+  obtain ⟨p,q,hq,he⟩ := rational_approximations_unbounded α hi B
+  have hq0 : 0<q := by omega
+  have hqR : (0:ℝ)<q := by exact_mod_cast hq0
+  have hBq : (B:ℝ)<q := by exact_mod_cast hq
+  have hsmall : 1/(q:ℝ)<ε := by
+    apply (div_lt_iff hqR).mpr
+    have hh := (div_lt_iff hε).mp (lt_trans hB hBq)
+    nlinarith
+  have hsq : (q:ℝ)≤(q:ℝ)^2 := by
+    have h1 : (1:ℝ)≤q := by exact_mod_cast hq0
+    nlinarith
+  have herr : |(p:ℝ)/(q:ℝ)-α|<ε := lt_of_le_of_lt
+    (le_trans he (one_div_le_one_div_of_le hqR hsq)) hsmall
+  refine ⟨p,q,hq0,?_,he⟩
+  intro hmem
+  have hh := hsep ((p:ℚ)/(q:ℚ)) hmem
+  push_cast at hh
+  linarith
+
 end NumberTheory.RationalApproximations
