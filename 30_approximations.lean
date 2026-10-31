@@ -381,4 +381,37 @@ theorem nonsquare_root_irrational (N : ℕ) (hN : 0<N)
   rw [hk,mul_pow] at heA
   nlinarith [heA]
 
+theorem positive_square_root_approximations (N : ℕ) (hN : 0<N)
+    (hns : ∀ k : ℕ, N≠k*k) (B : ℕ) :
+    ∃ a b : ℕ, 0<a ∧ B<b ∧ |(a:ℝ)-(b:ℝ)*Real.sqrt (N:ℝ)| ≤ 1/(b:ℝ) := by
+  /-
+  Theorem: The square root of a positive nonsquare has approximations
+  with positive integer numerators and unbounded positive denominators
+  in the multiple-error form. Proof: Apply the irrational approximation
+  theorem to sqrt(N). Since sqrt(N)>=1 and b>=1, an error strictly
+  less than 1/b<=1 forces its integer numerator to be positive. Its
+  natural absolute value is therefore the same numerator. QED
+  -/
+  obtain ⟨p,b,hb,he⟩ := unbounded_denominators (Real.sqrt (N:ℝ))
+    (nonsquare_root_irrational N hN hns) B
+  have hbpos : 0<b := by omega
+  have hbR : (1:ℝ)≤b := by exact_mod_cast hbpos
+  have hN1 : (1:ℝ)≤N := by exact_mod_cast hN
+  have hs0 := Real.sqrt_nonneg (N:ℝ)
+  have hs2 := Real.sq_sqrt (show (0:ℝ)≤N by positivity)
+  have hs1 : 1≤Real.sqrt (N:ℝ) := by nlinarith
+  have hinv : 1/(b:ℝ)≤1 := by
+    simpa using one_div_le_one_div_of_le (by norm_num : (0:ℝ)<1) hbR
+  have hpR : (0:ℝ)<p := by
+    have hh := (abs_lt.mp he).2
+    have hh' : (b:ℝ)*Real.sqrt (N:ℝ)≥1 := by nlinarith
+    linarith
+  have hp : (0:ℤ)<p := by exact_mod_cast hpR
+  have hcast : (p.natAbs:ℤ)=p := Int.natAbs_of_nonneg hp.le
+  refine ⟨p.natAbs,b,Int.natAbs_pos.mpr (ne_of_gt hp),hb,?_⟩
+  have hcastR : (p.natAbs:ℝ)=(p:ℝ) := by
+    simpa only [Int.cast_natCast] using congrArg (fun z : ℤ => (z:ℝ)) hcast
+  rw [hcastR,abs_sub_comm]
+  exact he.le
+
 end NumberTheory.RationalApproximations
