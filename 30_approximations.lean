@@ -196,4 +196,23 @@ theorem scaled_approximation_iff (α : ℝ) (p : ℤ) (q : ℕ) (hq : 0<q) :
   have hb : 1/(q:ℝ)^2*(q:ℝ)=1/(q:ℝ) := by field_simp; ring
   rw [hid,abs_div,abs_of_pos hqR,div_le_iff₀ hqR,hb]
 
+theorem finite_multiple_approximation (α : ℝ) (hα : 0<α) (K : ℕ) (hK : 0<K) :
+    ∃ a b : ℕ, ∃ c : ℤ, a<b ∧ b≤K ∧ 0≤c ∧ (c:ℝ)≤(K:ℝ)*α ∧
+      |(c:ℝ)/((b-a:ℕ):ℝ)-α| ≤ 1/((b-a:ℕ):ℝ)^2 := by
+  /-
+  Theorem: A positive input has a finite multiple approximation with
+  0<=a<b<=K and 0<=c<=K*alpha and the quadratic error bound.
+  Proof: The pigeonhole construction gives q<=K and an integer c
+  between zero and K*alpha with |q*alpha-c|<1/K<=1/q. Divide by q
+  and take a=0,b=q. Zero is explicitly allowed for a and c, as the
+  displayed bounds require; demanding positivity would fail for small
+  K and alpha. The construction also works for rational inputs. QED
+  -/
+  obtain ⟨c,q,hq,hqK,he,hc⟩ := bounded_denominator α K hK
+  refine ⟨0,q,c,hq,hqK,(hc hα.le).1,(hc hα.le).2,?_⟩
+  simp only [Nat.sub_zero]
+  apply (scaled_approximation_iff α c q hq).mpr
+  rw [abs_sub_comm]
+  exact le_trans he.le (one_div_le_one_div_of_le (by exact_mod_cast hq) (by exact_mod_cast hqK))
+
 end NumberTheory.RationalApproximations
