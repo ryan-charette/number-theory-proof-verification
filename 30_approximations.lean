@@ -64,4 +64,78 @@ theorem fractional_collision (K : ℕ) (hK : 0<K) (x : Fin (K+1) → ℝ) :
   · apply (lt_div_iff hKR).mpr
     nlinarith
 
+theorem finite_integer_difference (K : ℕ) (hK : 2≤K) (x : Fin K → ℝ) :
+    ∃ i j, i≠j ∧ ∃ n : ℤ, |x i-x j-(n:ℝ)| ≤ 1/(K:ℝ) := by
+  /-
+  Theorem: Among K real numbers, with K>=2, two differ from an integer
+  by at most 1/K. Proof: Suppose all pairs were farther apart modulo
+  integers. Subtract the smallest fractional part from every fractional
+  part, so the new points start at zero. No point can reach 1-1/K:
+  its distance around the end of the unit interval to zero would then
+  be at most 1/K. The K points therefore lie in only K-1 half-open
+  intervals of length 1/K. Two occupy the same interval, contradicting
+  the assumed separation. The restriction K>=2 is necessary for a pair
+  of distinct entries to exist. QED
+  -/
+  classical
+  by_contra hn
+  have hKR : (0:ℝ)<K := by exact_mod_cast (show 0<K by omega)
+  have avoid (i j : Fin K) (hij : i≠j) (n : ℤ) :
+      1/(K:ℝ)< |x i-x j-(n:ℝ)| := by
+    apply lt_of_not_ge
+    intro hh
+    exact hn ⟨i,j,hij,n,hh⟩
+  let i0 : Fin K := ⟨0,by omega⟩
+  obtain ⟨m,_hm,hmin⟩ := Finset.exists_min_image Finset.univ (fun i => Int.fract (x i))
+    ⟨i0,by simp⟩
+  let d (i : Fin K) := Int.fract (x i)-Int.fract (x m)
+  have dnon (i : Fin K) : 0≤d i := sub_nonneg.mpr (hmin i (by simp))
+  have dlt (i : Fin K) : d i<1-1/(K:ℝ) := by
+    by_cases him : i=m
+    · subst i
+      have htwo : (2:ℝ)≤K := by exact_mod_cast hK
+      have hinv := one_div_le_one_div_of_le (by norm_num : (0:ℝ)<2) htwo
+      dsimp only [d]
+      linarith
+    · have hh := avoid i m him (⌊x i⌋-⌊x m⌋+1)
+      have hid : x i-x m-((⌊x i⌋-⌊x m⌋+1:ℤ):ℝ)=d i-1 := by
+        simp only [d,Int.fract,Int.cast_add,Int.cast_sub,Int.cast_one]
+        ring
+      rw [hid] at hh
+      have hdi : d i<1 := by
+        have := Int.fract_lt_one (x i)
+        have := Int.fract_nonneg (x m)
+        dsimp only [d]
+        linarith
+      rw [abs_of_neg (by linarith : d i-1<0)] at hh
+      linarith
+  have hmul (i : Fin K) : (K:ℝ)*d i<(K-1:ℕ) := by
+    have hh := mul_lt_mul_of_pos_left (dlt i) hKR
+    have hid : (K:ℝ)*(1-1/(K:ℝ))=(K:ℝ)-1 := by field_simp
+    rw [hid] at hh
+    rw [Nat.cast_sub (by omega : 1≤K),Nat.cast_one]
+    exact hh
+  let box (i : Fin K) : Fin (K-1) := ⟨⌊(K:ℝ)*d i⌋₊,
+    (Nat.floor_lt (mul_nonneg hKR.le (dnon i))).mpr (hmul i)⟩
+  obtain ⟨i,j,hij,hbox⟩ := Fintype.exists_ne_map_eq_of_card_lt box (by simp; omega)
+  have hf : ⌊(K:ℝ)*d i⌋₊=⌊(K:ℝ)*d j⌋₊ := congrArg Fin.val hbox
+  have hi := Nat.floor_le (mul_nonneg hKR.le (dnon i))
+  have hj := Nat.floor_le (mul_nonneg hKR.le (dnon j))
+  have hi' := Nat.lt_floor_add_one ((K:ℝ)*d i)
+  have hj' := Nat.lt_floor_add_one ((K:ℝ)*d j)
+  rw [hf] at hi hi'
+  have hd : |d i-d j|<1/(K:ℝ) := by
+    apply abs_lt.mpr
+    constructor
+    · have hh : -(1:ℝ)<(d i-d j)*(K:ℝ) := by nlinarith
+      simpa only [neg_div] using (div_lt_iff hKR).mpr hh
+    · apply (lt_div_iff hKR).mpr
+      nlinarith
+  have hid : x i-x j-((⌊x i⌋-⌊x j⌋:ℤ):ℝ)=d i-d j := by
+    simp only [d,Int.fract,Int.cast_sub]
+    ring
+  have hh := avoid i j hij (⌊x i⌋-⌊x j⌋)
+  rw [hid] at hh
+  linarith
+
 end NumberTheory.RationalApproximations
