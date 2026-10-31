@@ -8,7 +8,7 @@ Each textbook subsection will have one Lean file. `01_divisibility.lean` develop
 
 Results presented only for context, which the reader is not expected to prove, are omitted.
 
-Each proof includes a statement in words, a step-by-step mathematical argument, and the corresponding Lean proof. Each subsection imports earlier project files for previously established definitions and results. Shared proofs appear once, in the earliest subsection that needs them. Lean's bundled arithmetic and tactics support the elementary arguments; library versions of the target theorems are not used as shortcuts, and no external packages are required. The tactic `omega` checks linear arithmetic after explicit mathematical arguments. The common-divisor file constructs its own gcd by Euclidean induction and back-substitution, then proves that it is greatest. Its lcm expression is proved to be the least positive common multiple; no library gcd, lcm, or Bezout theorem is used.
+Each proof includes a statement in words, a step-by-step mathematical argument, and the corresponding Lean proof. Each subsection imports earlier project files for previously established definitions and results. Shared proofs appear once, in the earliest subsection that needs them. Lean's bundled arithmetic and tactics support the elementary arguments; library versions of the target theorems are not used as shortcuts, and the real-number subsection uses a pinned Mathlib dependency for real numbers, floors, square roots, finite counting, and arithmetic tactics. The tactic `omega` checks linear arithmetic after explicit mathematical arguments. The common-divisor file constructs its own gcd by Euclidean induction and back-substitution, then proves that it is greatest. Its lcm expression is proved to be the least positive common multiple; no library gcd, lcm, or Bezout theorem is used.
 
 ## Main Features
 
@@ -25,6 +25,7 @@ Lean's natural numbers include zero. The power theorem therefore includes expone
 Install Lean through [elan](https://github.com/leanprover/elan), then run:
 
 ```sh
+lake exe cache get
 lake build
 ```
 
