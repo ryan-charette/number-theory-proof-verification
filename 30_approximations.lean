@@ -183,4 +183,17 @@ theorem bounded_denominator (α : ℝ) (K : ℕ) (hK : 0<K) :
     apply ordered j i hji
     rwa [abs_sub_comm]
 
+theorem scaled_approximation_iff (α : ℝ) (p : ℤ) (q : ℕ) (hq : 0<q) :
+    |(p:ℝ)/(q:ℝ)-α| ≤ 1/(q:ℝ)^2 ↔ |(p:ℝ)-(q:ℝ)*α| ≤ 1/(q:ℝ) := by
+  /-
+  Lemma: The fraction-error and multiple-error bounds are equivalent.
+  Proof: Subtract alpha from p/q over the common denominator q.
+  Absolute values divide by q since it is positive. Multiplication
+  by q changes 1/q^2 into 1/q and preserves the inequality. QED
+  -/
+  have hqR : (0:ℝ)<q := by exact_mod_cast hq
+  have hid : (p:ℝ)/(q:ℝ)-α=((p:ℝ)-(q:ℝ)*α)/(q:ℝ) := by field_simp
+  have hb : 1/(q:ℝ)^2*(q:ℝ)=1/(q:ℝ) := by field_simp; ring
+  rw [hid,abs_div,abs_of_pos hqR,div_le_iff₀ hqR,hb]
+
 end NumberTheory.RationalApproximations
