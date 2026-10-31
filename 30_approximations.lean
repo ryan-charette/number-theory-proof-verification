@@ -215,4 +215,40 @@ theorem finite_multiple_approximation (α : ℝ) (hα : 0<α) (K : ℕ) (hK : 0<
   rw [abs_sub_comm]
   exact le_trans he.le (one_div_le_one_div_of_le (by exact_mod_cast hq) (by exact_mod_cast hqK))
 
+/-- Irrationality means inequality with every fraction having positive denominator. -/
+def Irrational (α : ℝ) : Prop :=
+  ∀ a : ℤ, ∀ b : ℕ, 0<b → α ≠ (a:ℝ)/(b:ℝ)
+
+theorem multiple_separation (α : ℝ) (hi : Irrational α) (q : ℕ) (hq : 0<q) :
+    ∃ ε : ℝ, 0<ε ∧ ∀ p : ℤ, ε ≤ |(q:ℝ)*α-(p:ℝ)| := by
+  /-
+  Lemma: A fixed positive multiple of an irrational number stays a
+  positive distance from every integer. Proof: Its fractional part t
+  is strictly between zero and one; equality with zero would express
+  alpha as a fraction. Take epsilon=min(t,1-t). An integer at or below
+  the floor is at least t away; an integer above the floor is at least
+  1-t away. QED
+  -/
+  let t := Int.fract ((q:ℝ)*α)
+  have hqR : (0:ℝ)<q := by exact_mod_cast hq
+  have ht0 : 0<t := by
+    have hnon := Int.fract_nonneg ((q:ℝ)*α)
+    have hne : t≠0 := by
+      intro hh
+      apply hi ⌊(q:ℝ)*α⌋ q hq
+      apply (eq_div_iff (ne_of_gt hqR)).mpr
+      dsimp only [t,Int.fract] at hh
+      nlinarith
+    exact lt_of_le_of_ne hnon (Ne.symm hne)
+  have ht1 : t<1 := Int.fract_lt_one _
+  refine ⟨min t (1-t),lt_min ht0 (by linarith),?_⟩
+  intro p
+  by_cases hp : p≤⌊(q:ℝ)*α⌋
+  · have hpR : (p:ℝ)≤(⌊(q:ℝ)*α⌋:ℝ) := by exact_mod_cast hp
+    have ht : t≤(q:ℝ)*α-(p:ℝ) := by dsimp only [t,Int.fract]; linarith
+    exact le_trans (min_le_left _ _) (le_trans ht (le_abs_self _))
+  · have hpR : (⌊(q:ℝ)*α⌋:ℝ)+1≤(p:ℝ) := by exact_mod_cast (show ⌊(q:ℝ)*α⌋+1≤p by omega)
+    have ht : 1-t≤-((q:ℝ)*α-(p:ℝ)) := by dsimp only [t,Int.fract]; linarith
+    exact le_trans (min_le_right _ _) (le_trans ht (neg_le_abs _))
+
 end NumberTheory.RationalApproximations
