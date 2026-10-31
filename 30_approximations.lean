@@ -138,4 +138,49 @@ theorem finite_integer_difference (K : ℕ) (hK : 2≤K) (x : Fin K → ℝ) :
   rw [hid] at hh
   linarith
 
+theorem bounded_denominator (α : ℝ) (K : ℕ) (hK : 0<K) :
+    ∃ p : ℤ, ∃ q : ℕ, 0<q ∧ q≤K ∧ |(q:ℝ)*α-(p:ℝ)| < 1/(K:ℝ) ∧
+      (0≤α → 0≤p ∧ (p:ℝ)≤(K:ℝ)*α) := by
+  /-
+  Lemma: There are integers p and 1<=q<=K for which |q*alpha-p|<1/K.
+  Proof: Apply the fractional-part pigeonhole lemma to the multiples
+  0,alpha,...,K*alpha. Order the two selected indices i<j. Put q=j-i
+  and p=floor(j*alpha)-floor(i*alpha). Subtracting the two fractional
+  parts gives q*alpha-p exactly. The indices give the stated bounds
+  on q. For nonnegative alpha, monotonicity of the floor makes p
+  nonnegative, and p<=floor(j*alpha)<=K*alpha. QED
+  -/
+  obtain ⟨i,j,hne,hh⟩ := fractional_collision K hK (fun i => (i.val:ℝ)*α)
+  have ordered (i j : Fin (K+1)) (hlt : i.val<j.val)
+      (hh : |Int.fract ((i.val:ℝ)*α)-Int.fract ((j.val:ℝ)*α)| < 1/(K:ℝ)) :
+      ∃ p : ℤ, ∃ q : ℕ, 0<q ∧ q≤K ∧ |(q:ℝ)*α-(p:ℝ)| < 1/(K:ℝ) ∧
+      (0≤α → 0≤p ∧ (p:ℝ)≤(K:ℝ)*α) := by
+    refine ⟨⌊(j.val:ℝ)*α⌋-⌊(i.val:ℝ)*α⌋, j.val-i.val, by omega, by omega, ?_, ?_⟩
+    · have hid : ((j.val-i.val:ℕ):ℝ)*α-
+          ((⌊(j.val:ℝ)*α⌋-⌊(i.val:ℝ)*α⌋:ℤ):ℝ) =
+          -(Int.fract ((i.val:ℝ)*α)-Int.fract ((j.val:ℝ)*α)) := by
+        rw [Nat.cast_sub (by omega),Int.cast_sub]
+        simp only [Int.fract]
+        ring
+      rw [hid,abs_neg]
+      exact hh
+    · intro hα
+      have hji : (i.val:ℝ)≤j.val := by exact_mod_cast (Nat.le_of_lt hlt)
+      have hp := Int.floor_mono (mul_le_mul_of_nonneg_right hji hα)
+      have hfi : (0:ℤ)≤⌊(i.val:ℝ)*α⌋ := Int.floor_nonneg.mpr (mul_nonneg (Nat.cast_nonneg _) hα)
+      have hfj := Int.floor_le ((j.val:ℝ)*α)
+      have hfiR : (0:ℝ)≤(⌊(i.val:ℝ)*α⌋:ℝ) := by exact_mod_cast hfi
+      have hjK : (j.val:ℝ)≤K := by exact_mod_cast (show j.val≤K by omega)
+      have hbound := mul_le_mul_of_nonneg_right hjK hα
+      refine ⟨sub_nonneg.mpr hp,?_⟩
+      rw [Int.cast_sub]
+      linarith
+  by_cases hij : i.val<j.val
+  · exact ordered i j hij hh
+  · have hji : j.val<i.val := by
+      have hval : i.val≠j.val := fun h => hne (Fin.ext h)
+      omega
+    apply ordered j i hji
+    rwa [abs_sub_comm]
+
 end NumberTheory.RationalApproximations
