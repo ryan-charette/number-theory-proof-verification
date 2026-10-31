@@ -289,4 +289,17 @@ theorem unbounded_denominators (α : ℝ) (hi : Irrational α) (B : ℕ) :
   refine ⟨p,q,hqB,lt_of_lt_of_le herr ?_⟩
   exact one_div_le_one_div_of_le (by exact_mod_cast hq) (by exact_mod_cast hqK)
 
+theorem rational_approximations_unbounded (α : ℝ) (hi : Irrational α) (B : ℕ) :
+    ∃ p : ℤ, ∃ q : ℕ, B<q ∧ |(p:ℝ)/(q:ℝ)-α| ≤ 1/(q:ℝ)^2 := by
+  /-
+  Theorem: For an irrational input, fractions satisfying the quadratic
+  error bound have arbitrarily large denominators. Proof: Use the
+  unbounded-denominator multiple approximation, reverse the difference
+  inside its absolute value, and apply the scaling equivalence. QED
+  -/
+  obtain ⟨p,q,hq,he⟩ := unbounded_denominators α hi B
+  refine ⟨p,q,hq,(scaled_approximation_iff α p q (by omega)).mpr ?_⟩
+  rw [abs_sub_comm]
+  exact he.le
+
 end NumberTheory.RationalApproximations
