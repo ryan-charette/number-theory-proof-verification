@@ -251,4 +251,42 @@ theorem multiple_separation (α : ℝ) (hi : Irrational α) (q : ℕ) (hq : 0<q)
     have ht : 1-t≤-((q:ℝ)*α-(p:ℝ)) := by dsimp only [t,Int.fract]; linarith
     exact le_trans (min_le_right _ _) (le_trans ht (neg_le_abs _))
 
+theorem unbounded_denominators (α : ℝ) (hi : Irrational α) (B : ℕ) :
+    ∃ p : ℤ, ∃ q : ℕ, B<q ∧ |(q:ℝ)*α-(p:ℝ)| < 1/(q:ℝ) := by
+  /-
+  Theorem: Irrational inputs have approximations with arbitrarily large
+  positive denominators and |q*alpha-p|<1/q. Proof: For each positive
+  q<=B choose the positive distance from its multiple to the integers;
+  for q=0 assign distance one. The minimum of this finite collection
+  is positive. Choose K with 1/K below that minimum, and use the
+  bounded-denominator approximation. Its denominator cannot be at
+  most B. Since q<=K, its error is also less than 1/q. QED
+  -/
+  classical
+  have hex (i : Fin (B+1)) : ∃ ε : ℝ, 0<ε ∧
+      (0<i.val → ∀ p : ℤ, ε≤|(i.val:ℝ)*α-(p:ℝ)|) := by
+    by_cases h : 0<i.val
+    · obtain ⟨ε,hε,hbound⟩ := multiple_separation α hi i.val h
+      exact ⟨ε,hε,fun _ => hbound⟩
+    · exact ⟨1,by norm_num,fun hh => False.elim (h hh)⟩
+  choose ε hε using hex
+  obtain ⟨i,_hi,hmin⟩ := Finset.exists_min_image Finset.univ ε (by simp)
+  obtain ⟨K,hK⟩ := exists_nat_gt (1/ε i)
+  have hKR : (0:ℝ)<K := lt_trans (one_div_pos.mpr (hε i).1) hK
+  have hKn : 0<K := by exact_mod_cast hKR
+  have hinv : 1/(K:ℝ)<ε i := by
+    apply (div_lt_iff hKR).mpr
+    have hh := (div_lt_iff (hε i).1).mp hK
+    nlinarith
+  obtain ⟨p,q,hq,hqK,herr,_⟩ := bounded_denominator α K hKn
+  have hqB : B<q := by
+    by_contra h
+    let j : Fin (B+1) := ⟨q,by omega⟩
+    have hlow := (hε j).2 hq p
+    have hmin' := hmin j (by simp)
+    change ε j≤|(q:ℝ)*α-(p:ℝ)| at hlow
+    linarith
+  refine ⟨p,q,hqB,lt_of_lt_of_le herr ?_⟩
+  exact one_div_le_one_div_of_le (by exact_mod_cast hq) (by exact_mod_cast hqK)
+
 end NumberTheory.RationalApproximations
