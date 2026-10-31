@@ -351,4 +351,34 @@ theorem avoid_finite_approximations (α : ℝ) (hi : Irrational α) (xs : List �
   push_cast at hh
   linarith
 
+theorem nonsquare_root_irrational (N : ℕ) (hN : 0<N)
+    (hns : ∀ k : ℕ, N≠k*k) : Irrational (Real.sqrt (N:ℝ)) := by
+  /-
+  Lemma: The positive square root of a nonsquare integer is irrational.
+  Proof: Suppose sqrt(N)=a/b with b>0. Squaring and clearing the
+  denominator gives a*a=N*b*b. The earlier square-divisibility result
+  implies b divides |a|, say |a|=b*k. Substitution and cancellation
+  of b*b give N=k*k, contrary to the nonsquare hypothesis. QED
+  -/
+  intro a b hb he
+  have hbR : (0:ℝ)<b := by exact_mod_cast hb
+  have hNreal : (0:ℝ)<N := by exact_mod_cast hN
+  have hs := Real.sqrt_pos.mpr hNreal
+  have hm : (a:ℝ)=Real.sqrt (N:ℝ)*(b:ℝ) := ((eq_div_iff (ne_of_gt hbR)).mp he).symm
+  have haR : (0:ℝ)<a := by rw [hm]; exact mul_pos hs hbR
+  have ha : (0:ℤ)<a := by exact_mod_cast haR
+  have haabs : 0<a.natAbs := Int.natAbs_pos.mpr (ne_of_gt ha)
+  have heR : (a:ℝ)^2=(N:ℝ)*(b:ℝ)^2 := by
+    rw [hm,mul_pow,Real.sq_sqrt hNreal.le]
+  have heI : a^2=(N:ℤ)*(b:ℤ)^2 := by exact_mod_cast heR
+  have heA : a.natAbs^2=N*b^2 := by
+    have hh := congrArg Int.natAbs heI
+    simpa only [Int.natAbs_pow,Int.natAbs_mul,Int.natAbs_ofNat] using hh
+  have hd : b^2 ∣ a.natAbs^2 := ⟨N,by rw [heA]; ac_rfl⟩
+  obtain ⟨k,hk⟩ := NumberTheory.DivisibilityTests.dvd_of_square_dvd b a.natAbs hb haabs hd
+  apply hns k
+  apply Nat.eq_of_mul_eq_mul_left (Nat.pow_pos hb : 0<b^2)
+  rw [hk,mul_pow] at heA
+  nlinarith [heA]
+
 end NumberTheory.RationalApproximations
