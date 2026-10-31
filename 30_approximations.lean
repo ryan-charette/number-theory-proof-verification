@@ -414,4 +414,38 @@ theorem positive_square_root_approximations (N : ℕ) (hN : 0<N)
   rw [hcastR,abs_sub_comm]
   exact he.le
 
+theorem pell_approximation (N a b : ℕ) (hN : 0<N) (ha : 0<a) (hb : 0<b)
+    (he : (a:ℤ)^2-(N:ℤ)*(b:ℤ)^2=1) :
+    |(a:ℝ)/(b:ℝ)-Real.sqrt (N:ℝ)| < 1/(b:ℝ)^2 := by
+  /-
+  Theorem: A positive Pell solution gives the quadratic approximation
+  bound for the square root of its parameter.
+  Proof: Put s=sqrt(N). Since a*a-N*b*b=1, factoring gives
+  (a-b*s)(a+b*s)=1. Thus a/b-s=1/[b(a+b*s)]>0.
+  Here N>=1, so s>=1, and a>0 makes a+b*s>b. The denominator
+  b(a+b*s) therefore exceeds b*b, proving the strict error bound.
+  The proof does not need the nonsquare restriction; it consequently
+  includes the stated nonsquare case. QED
+  -/
+  have haR : (0:ℝ)<a := by exact_mod_cast ha
+  have hbR : (0:ℝ)<b := by exact_mod_cast hb
+  have hN1 : (1:ℝ)≤N := by exact_mod_cast hN
+  have hsq := Real.sq_sqrt (show (0:ℝ)≤N by positivity)
+  have hs0 := Real.sqrt_nonneg (N:ℝ)
+  have hs1 : 1≤Real.sqrt (N:ℝ) := by nlinarith
+  have heR : (a:ℝ)^2-(N:ℝ)*(b:ℝ)^2=1 := by exact_mod_cast he
+  have hprod : ((a:ℝ)-(b:ℝ)*Real.sqrt N)*((a:ℝ)+(b:ℝ)*Real.sqrt N)=1 := by
+    nlinarith [hsq]
+  have hsum : (b:ℝ)<(a:ℝ)+(b:ℝ)*Real.sqrt N := by nlinarith
+  have hden : (0:ℝ)<(b:ℝ)*((a:ℝ)+(b:ℝ)*Real.sqrt N) := mul_pos hbR (by linarith)
+  have hid : (a:ℝ)/(b:ℝ)-Real.sqrt N =
+      1/((b:ℝ)*((a:ℝ)+(b:ℝ)*Real.sqrt N)) := by
+    apply (eq_div_iff (ne_of_gt hden)).mpr
+    have hbne := ne_of_gt hbR
+    field_simp
+    nlinarith [hprod]
+  rw [hid,abs_of_pos (one_div_pos.mpr hden)]
+  apply one_div_lt_one_div_of_lt (sq_pos_of_pos hbR)
+  nlinarith
+
 end NumberTheory.RationalApproximations
