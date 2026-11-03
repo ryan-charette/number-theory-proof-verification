@@ -50,4 +50,37 @@ theorem approximation_norm_bound (N x y : ℕ) (hN : 0<N) (hx : 0<x) (hy : 0<y)
     _ < (1/(y:ℝ))*(3*(y:ℝ)*Real.sqrt N) :=
       mul_lt_mul_of_pos_left hsum (one_div_pos.mpr hyR)
     _ = 3*Real.sqrt N := by field_simp; ring
+theorem recurring_label {α : Type} (labels : List α) (f : ℕ → α)
+    (hf : ∀ i, f i ∈ labels) :
+    ∃ k ∈ labels, ∀ B : ℕ, ∃ i, B<i ∧ f i=k := by
+  /-
+  Lemma: A sequence taking only finitely many labels has a label that
+  occurs at arbitrarily large indices. Proof: Induct on the list of
+  labels. The empty list cannot contain even the first value. For a
+  nonempty list, either its first label recurs arbitrarily late, or
+  there is a bound after which it never occurs. In the latter case,
+  discard that initial segment and apply induction to the remaining
+  labels. An arbitrarily late index in the shifted sequence is also
+  arbitrarily late in the original one. QED
+  -/
+  classical
+  induction labels generalizing f with
+  | nil => simpa using hf 0
+  | cons k ks ih =>
+    by_cases hk : ∀ B : ℕ, ∃ i, B<i ∧ f i=k
+    · exact ⟨k,by simp,hk⟩
+    · push_neg at hk
+      obtain ⟨B,hB⟩ := hk
+      have ht : ∀ i, f (i+B+1) ∈ ks := by
+        intro i
+        have hh := hf (i+B+1)
+        rcases List.mem_cons.mp hh with hh|hh
+        · exact False.elim (hB (i+B+1) (by omega) hh)
+        · exact hh
+      obtain ⟨l,hl,hi⟩ := ih (fun i => f (i+B+1)) ht
+      refine ⟨l,List.mem_cons_of_mem k hl,?_⟩
+      intro C
+      obtain ⟨i,hi,he⟩ := hi C
+      exact ⟨i+B+1,by omega,he⟩
+
 end NumberTheory.PellExistence
