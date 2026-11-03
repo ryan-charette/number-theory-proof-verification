@@ -251,4 +251,81 @@ theorem quotient_solution (N : ℕ) (K a b c d : ℤ) (hK : K≠0)
   dsimp [PellSolution]
   nlinarith only [hid]
 
+theorem positive_solution_exists (N : ℕ) (hN : 0<N) (hns : ∀ k : ℕ, N≠k*k) :
+    ∃ X Y : ℕ, 0<X ∧ 0<Y ∧ PellSolution N (X:ℤ) (Y:ℤ) := by
+  /-
+  Theorem: Every positive nonsquare parameter has a Pell solution with
+  both coordinates positive. Proof: Choose a nonzero K with positive
+  solutions of norm K having arbitrarily large second coordinates.
+  Repeatedly choose the next pair beyond the preceding denominator;
+  this gives a sequence with strictly increasing second coordinates.
+  Two positions have matching residues modulo |K|. The quotient lemma
+  supplies an integer Pell solution (X,Y).
+
+  Its second coordinate cannot be zero. If it were, the numerator
+  a*d-c*b would vanish. Using the two norm equations, expansion gives
+
+    K*(d*d-b*b) = (a*d-c*b)*(a*d+c*b) = 0.
+
+  Since K is nonzero, d*d=b*b. Positivity gives d=b, contrary to the
+  strictly increasing denominators at distinct positions. The Pell
+  equation also excludes X=0 because N is nonnegative. Taking the
+  absolute values of X and Y therefore gives positive integers with
+  the same squares, hence the desired nontrivial solution. QED
+  -/
+  classical
+  obtain ⟨K,hK,hsol⟩ := fixed_norm_unbounded N hN hns
+  choose a b _ha hb hab using hsol
+  let t : ℕ → ℕ := Nat.rec 0 (fun _ prev => b prev)
+  have htstep (i : ℕ) : t i<t (i+1) := hb (t i)
+  have ht : StrictMono t := strictMono_nat_of_lt_succ htstep
+  obtain ⟨i,j,hij,hac,hbd⟩ := repeated_residue_pair K.natAbs
+    (Int.natAbs_pos.mpr hK) (fun i => (a (t i):ℤ)) (fun i => (b (t i):ℤ))
+  have hbdne : b (t i)≠b (t j) := by
+    intro he
+    have he' : t (i+1)=t (j+1) := he
+    have hinj : Function.Injective t := ht.injective
+    have he'' : i+1=j+1 := hinj he'
+    omega
+  let A : ℤ := a (t i)
+  let B : ℤ := b (t i)
+  let C : ℤ := a (t j)
+  let D : ℤ := b (t j)
+  have hleft : A^2-(N:ℤ)*B^2=K := hab (t i)
+  have hright : C^2-(N:ℤ)*D^2=K := hab (t j)
+  obtain ⟨hX,hY,hpell⟩ := quotient_solution N K A B C D hK hleft hright
+    (Int.natAbs_dvd.mp hac) (Int.natAbs_dvd.mp hbd)
+  let X := (A*C-(N:ℤ)*B*D)/K
+  let Y := (A*D-C*B)/K
+  change X*K=A*C-(N:ℤ)*B*D at hX
+  change Y*K=A*D-C*B at hY
+  change PellSolution N X Y at hpell
+  have hYne : Y≠0 := by
+    intro hz
+    have hzero : A*D-C*B=0 := by rw [hz,zero_mul] at hY; exact hY.symm
+    have hid : K*(D^2-B^2)=0 := by
+      calc
+        K*(D^2-B^2) = (A^2-(N:ℤ)*B^2)*D^2-(C^2-(N:ℤ)*D^2)*B^2 := by
+          rw [hleft,hright]; ring
+        _ = (A*D-C*B)*(A*D+C*B) := by ring
+        _ = 0 := by rw [hzero,zero_mul]
+    have he : D^2=B^2 := by
+      have := (mul_eq_zero.mp hid).resolve_left hK
+      linarith only [this]
+    have hB : (0:ℤ)≤B := by dsimp [B]; positivity
+    have hD : (0:ℤ)≤D := by dsimp [D]; positivity
+    have he' : D=B := (sq_eq_sq hD hB).mp he
+    apply hbdne
+    dsimp [B,D] at he'
+    exact_mod_cast he'.symm
+  have hXne : X≠0 := by
+    intro hz
+    have hh := hpell
+    dsimp [PellSolution] at hh
+    rw [hz] at hh
+    have hn : (0:ℤ)≤(N:ℤ)*(Y*Y) := mul_nonneg (by positivity) (mul_self_nonneg Y)
+    nlinarith only [hh,hn]
+  refine ⟨X.natAbs,Y.natAbs,Int.natAbs_pos.mpr hXne,Int.natAbs_pos.mpr hYne,?_⟩
+  simpa only [PellSolution,Int.natCast_natAbs,← pow_two,sq_abs] using hpell
+
 end NumberTheory.PellExistence
