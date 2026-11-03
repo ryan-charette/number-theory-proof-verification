@@ -204,4 +204,51 @@ theorem repeated_residue_pair (n : ℕ) (hn : 0<n) (x y : ℕ → ℤ) :
     Int.dvd_of_emod_eq_zero (Int.emod_eq_emod_iff_emod_sub_eq_zero.mp hx),
     Int.dvd_of_emod_eq_zero (Int.emod_eq_emod_iff_emod_sub_eq_zero.mp hy)⟩
 
+theorem quotient_solution (N : ℕ) (K a b c d : ℤ) (hK : K≠0)
+    (hab : a^2-(N:ℤ)*b^2=K) (hcd : c^2-(N:ℤ)*d^2=K)
+    (hac : K∣a-c) (hbd : K∣b-d) :
+    ((a*c-(N:ℤ)*b*d)/K)*K=a*c-(N:ℤ)*b*d ∧
+    ((a*d-c*b)/K)*K=a*d-c*b ∧
+    PellSolution N ((a*c-(N:ℤ)*b*d)/K) ((a*d-c*b)/K) := by
+  /-
+  Lemma: Two solutions with the same nonzero norm K and matching
+  coordinates modulo |K| give a Pell solution by the indicated
+  quotients. Proof: Write a-c=K*u and b-d=K*v. Then
+
+    a*c-N*b*d = K*(1+u*c-N*v*d),
+    a*d-c*b   = K*(u*d-c*v).
+
+  Thus both numerators are divisible by K. Call their integer
+  quotients X and Y. Expansion and cancellation give
+
+    (a*c-N*b*d)^2-N*(a*d-c*b)^2
+      = (a^2-N*b^2)*(c^2-N*d^2) = K^2.
+
+  Substituting the numerators K*X and K*Y and cancelling the nonzero
+  factor K^2 yields X^2-N*Y^2=1. Divisibility by K is equivalent to
+  congruence modulo |K|. Distinctness is unnecessary for this identity;
+  it will be used separately to obtain a nontrivial solution. QED
+  -/
+  obtain ⟨u,hu⟩ := hac
+  obtain ⟨v,hv⟩ := hbd
+  have ha : a=c+K*u := by linarith only [hu]
+  have hb : b=d+K*v := by linarith only [hv]
+  have hU : K∣a*c-(N:ℤ)*b*d := by
+    refine ⟨1+u*c-(N:ℤ)*v*d,?_⟩
+    rw [ha,hb]
+    nlinarith only [hcd]
+  have hV : K∣a*d-c*b := by
+    refine ⟨u*d-c*v,?_⟩
+    rw [ha,hb]
+    ring
+  have hX := Int.ediv_mul_cancel hU
+  have hY := Int.ediv_mul_cancel hV
+  have hid : (a*c-(N:ℤ)*b*d)^2-(N:ℤ)*(a*d-c*b)^2 =
+      (a^2-(N:ℤ)*b^2)*(c^2-(N:ℤ)*d^2) := by ring
+  rw [hab,hcd,← hX,← hY] at hid
+  refine ⟨hX,hY,?_⟩
+  apply Int.eq_of_mul_eq_mul_left (mul_ne_zero hK hK)
+  dsimp [PellSolution]
+  nlinarith only [hid]
+
 end NumberTheory.PellExistence
