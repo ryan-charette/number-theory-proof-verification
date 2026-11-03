@@ -163,4 +163,45 @@ theorem fixed_norm_unbounded (N : ℕ) (hN : 0<N) (hns : ∀ k : ℕ, N≠k*k) :
     rw [hx i]
     exact hv i hki
 
+theorem repeated_residue_pair (n : ℕ) (hn : 0<n) (x y : ℕ → ℤ) :
+    ∃ i j : ℕ, i≠j ∧ (n:ℤ)∣x i-x j ∧ (n:ℤ)∣y i-y j := by
+  /-
+  Lemma: In any infinite sequence of integer pairs, two distinct
+  positions have both coordinates congruent modulo a positive n.
+  Proof: Each coordinate has one of n remainders, so a pair has one
+  of n*n remainder labels. Among the first n*n+1 positions two have
+  the same label, by finite pigeonhole counting. Equal remainders
+  say exactly that n divides each coordinate difference. The pairs
+  need not themselves be different; the indices are different. The
+  modulus is explicitly positive, since the assertion fails at zero.
+  QED
+  -/
+  have hnI : (0:ℤ)<n := by exact_mod_cast hn
+  let rem (z : ℤ) : Fin n := ⟨(z%(n:ℤ)).toNat,by
+    have h0 := Int.emod_nonneg z (ne_of_gt hnI)
+    have h1 := Int.emod_lt_of_pos z hnI
+    have hc := Int.toNat_of_nonneg h0
+    omega⟩
+  let f (i : Fin (n*n+1)) := (rem (x i),rem (y i))
+  obtain ⟨i,j,hne,he⟩ := Fintype.exists_ne_map_eq_of_card_lt f (by simp)
+  have hx : x i%(n:ℤ)=x j%(n:ℤ) := by
+    have hh := congrArg (fun z : Fin n × Fin n => z.1.val) he
+    dsimp [f,rem] at hh
+    have hi := Int.emod_nonneg (x i) (ne_of_gt hnI)
+    have hj := Int.emod_nonneg (x j) (ne_of_gt hnI)
+    have hi' := Int.toNat_of_nonneg hi
+    have hj' := Int.toNat_of_nonneg hj
+    omega
+  have hy : y i%(n:ℤ)=y j%(n:ℤ) := by
+    have hh := congrArg (fun z : Fin n × Fin n => z.2.val) he
+    dsimp [f,rem] at hh
+    have hi := Int.emod_nonneg (y i) (ne_of_gt hnI)
+    have hj := Int.emod_nonneg (y j) (ne_of_gt hnI)
+    have hi' := Int.toNat_of_nonneg hi
+    have hj' := Int.toNat_of_nonneg hj
+    omega
+  exact ⟨i,j,(fun h => hne (Fin.ext h)),
+    Int.dvd_of_emod_eq_zero (Int.emod_eq_emod_iff_emod_sub_eq_zero.mp hx),
+    Int.dvd_of_emod_eq_zero (Int.emod_eq_emod_iff_emod_sub_eq_zero.mp hy)⟩
+
 end NumberTheory.PellExistence
