@@ -151,4 +151,65 @@ theorem least_positive_solution (N : ℕ) (hN : 0<N) (hns : ∀ k : ℕ, N≠k*k
   exact add_le_add (by exact_mod_cast hra)
     (mul_le_mul_of_nonneg_right (by exact_mod_cast hsb) (Real.sqrt_nonneg _))
 
+theorem powers_of_least_solution {N : ℕ} (hN : 0<N) {ε : ℝ}
+    (hε : PositiveSolution N ε) (hmin : ∀ z, PositiveSolution N z → ε≤z)
+    (z : ℝ) : PositiveSolution N z ↔ ∃ k : ℕ, 0<k ∧ z=ε^k := by
+  /-
+  Let ε be the least positive solution value, whose existence was
+  proved for every positive nonsquare parameter. It exceeds one.
+  Its powers eventually exceed any given z. Indeed, induction gives
+  ε^n ≥ 1+n(ε-1), and the right side grows beyond every bound.
+  Choose the first n for which z<ε^n. Since z>1, write n=k+1.
+  Then ε^k≤z<ε^(k+1). The quotient z/ε^k represents a solution
+  by the product and reciprocal formulas, and lies in [1,ε).
+  If it exceeded one, it would give a positive solution smaller
+  than ε. Thus it equals one, and z=ε^k. Here k cannot be zero.
+  Conversely every positive power represents a solution and exceeds
+  one, so both its coordinates are positive. QED
+  -/
+  classical
+  obtain ⟨hrep,h1⟩ := (positive_iff hN ε).mp hε
+  have hpos : 0<ε := by linarith
+  have powers (k : ℕ) : Represents N (ε^k) := by
+    simpa using integer_power_represents hrep (k:ℤ)
+  constructor
+  · intro hz
+    obtain ⟨hzrep,hz1⟩ := (positive_iff hN z).mp hz
+    have growth (k : ℕ) : 1+(k:ℝ)*(ε-1)≤ε^k := by
+      induction k with
+      | zero => simp
+      | succ k ih =>
+        rw [pow_succ,Nat.cast_succ]
+        have hh := mul_le_mul_of_nonneg_right ih hpos.le
+        nlinarith only [hh,mul_nonneg (show (0:ℝ)≤k by positivity) (sq_nonneg (ε-1))]
+    obtain ⟨m,hm⟩ := exists_nat_gt ((z-1)/(ε-1))
+    have hg := (div_lt_iff (by linarith : 0<ε-1)).mp hm
+    have hex : ∃ n : ℕ, z<ε^n := ⟨m,by linarith only [hg,growth m]⟩
+    let n := Nat.find hex
+    have hu : z<ε^n := Nat.find_spec hex
+    have hn : n≠0 := by intro he; rw [he,pow_zero] at hu; linarith
+    obtain ⟨k,hk⟩ := Nat.exists_eq_succ_of_ne_zero hn
+    have hl : ε^k≤z := le_of_not_gt (Nat.find_min hex (show k<n by omega))
+    rw [hk,pow_succ] at hu
+    have hkpos := pow_pos hpos k
+    obtain ⟨a,b,hab,he⟩ := powers k
+    obtain ⟨hi,hpair⟩ := inverse_solution hab
+    have hinv : Represents N (ε^k)⁻¹ := ⟨a,-b,hpair,by rw [he,hi]⟩
+    have hquot : Represents N (z/ε^k) := by
+      simpa only [div_eq_mul_inv] using product_represents hzrep hinv
+    have hlow : 1≤z/ε^k := (le_div_iff₀ hkpos).mpr (by simpa using hl)
+    have hupp : z/ε^k<ε := (div_lt_iff hkpos).mpr (by simpa [mul_comm] using hu)
+    have hqe : z/ε^k=1 := by
+      refine le_antisymm ?_ hlow
+      by_contra! hgt
+      exact (not_le_of_gt hupp) (hmin _ ((positive_iff hN _).mpr ⟨hquot,hgt⟩))
+    have heq : z=ε^k := by simpa using (div_eq_iff (ne_of_gt hkpos)).mp hqe
+    refine ⟨k,?_,heq⟩
+    by_contra! hzero
+    have : k=0 := by omega
+    rw [this,pow_zero] at heq
+    linarith
+  · rintro ⟨k,hk,rfl⟩
+    exact (positive_iff hN _).mpr ⟨powers k,one_lt_pow h1 (by omega)⟩
+
 end NumberTheory.PellPowers
