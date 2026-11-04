@@ -27,4 +27,22 @@ theorem product_represents {N : ℕ} {z w : ℝ}
   have hs := Real.sq_sqrt (show (0:ℝ)≤N by positivity)
   nlinarith only [congrArg (fun t : ℝ => (s:ℝ)*(b:ℝ)*t) hs]
 
+theorem inverse_solution {N : ℕ} {r s : ℤ} (h : PellSolution N r s) :
+    (value N r s)⁻¹=value N r (-s) ∧ PellSolution N r (-s) := by
+  /-
+  Change the sign of s. Its square stays the same, so the new pair
+  still solves the Pell equation. Multiplying r+s√N by r-s√N gives
+  r²-Ns²=1. Thus the second value is the reciprocal of the first. QED
+  -/
+  change r*r-(N:ℤ)*(s*s)=1 at h
+  have he : (r:ℝ)*(r:ℝ)-(N:ℝ)*((s:ℝ)*(s:ℝ))=1 := by exact_mod_cast h
+  have hs := Real.sq_sqrt (show (0:ℝ)≤N by positivity)
+  have hp : value N r s * value N r (-s)=1 := by
+    unfold value
+    push_cast
+    nlinarith only [he,congrArg (fun t : ℝ => (s:ℝ)^2*t) hs]
+  constructor
+  · exact inv_eq_of_mul_eq_one_right hp
+  · simpa [PellSolution] using h
+
 end NumberTheory.PellPowers
