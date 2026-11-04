@@ -117,4 +117,38 @@ theorem positive_iff {N : ℕ} (hN : 0<N) (z : ℝ) :
       simp only [Int.toNat_of_nonneg hr.le,Int.toNat_of_nonneg ht.le]
     exact h
 
+theorem least_positive_solution (N : ℕ) (hN : 0<N) (hns : ∀ k : ℕ, N≠k*k) :
+    ∃ ε : ℝ, PositiveSolution N ε ∧ ∀ z, PositiveSolution N z → ε≤z := by
+  /-
+  There is at least one positive pair by the existence theorem. Among
+  its possible first coordinates choose the least, r, by well-ordering,
+  and let s be a corresponding second coordinate. For any other pair
+  (a,b), r≤a gives r²≤a². Subtract one on both sides to obtain
+  Ns²≤Nb². Since N is positive and both coordinates are nonnegative,
+  s≤b. Adding the coordinate inequalities after multiplying the second
+  by √N shows that r+s√N is the least positive solution value. QED
+  -/
+  classical
+  let P (r : ℕ) := ∃ s : ℕ, 0<r ∧ 0<s ∧ PellSolution N (r:ℤ) (s:ℤ)
+  have hex : ∃ r, P r := positive_solution_exists N hN hns
+  let r := Nat.find hex
+  obtain ⟨s,hr,hs,hpair⟩ := Nat.find_spec hex
+  refine ⟨value N r s,⟨r,s,hr,hs,hpair,rfl⟩,?_⟩
+  rintro z ⟨a,b,ha,hb,hab,rfl⟩
+  have hra : r≤a := Nat.find_min' hex (show P a from ⟨b,ha,hb,hab⟩)
+  have hraI : (r:ℤ)≤a := by exact_mod_cast hra
+  have hsq := mul_self_le_mul_self (show (0:ℤ)≤r by positivity) hraI
+  change (r:ℤ)*r-(N:ℤ)*((s:ℤ)*s)=1 at hpair
+  change (a:ℤ)*a-(N:ℤ)*((b:ℤ)*b)=1 at hab
+  have hsb : s≤b := by
+    by_contra! h
+    have hbs : (b:ℤ)<s := by exact_mod_cast h
+    have hlt := mul_self_lt_mul_self (show (0:ℤ)≤b by positivity) hbs
+    have hN' : (0:ℤ)<N := by exact_mod_cast hN
+    linarith only [hsq,hpair,hab,mul_lt_mul_of_pos_left hlt hN']
+  unfold value
+  push_cast
+  exact add_le_add (by exact_mod_cast hra)
+    (mul_le_mul_of_nonneg_right (by exact_mod_cast hsb) (Real.sqrt_nonneg _))
+
 end NumberTheory.PellPowers
