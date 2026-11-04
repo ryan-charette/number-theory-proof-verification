@@ -66,4 +66,16 @@ theorem integer_power_represents {N : ℕ} {z : ℝ} (hz : Represents N z)
     refine ⟨r,-s,hpair,?_⟩
     simpa only [zpow_negSucc,he] using hinv
 
+theorem signed_values {N : ℕ} {r s : ℤ} (h : PellSolution N r s) :
+    Represents N (value N r (-s)) ∧ Represents N (value N (-r) s) ∧
+    Represents N (value N (-r) (-s)) := by
+  /-
+  Each of the three expressions uses the original pair with one or
+  both signs changed. The equation involves each coordinate only
+  through its square. Consequently each indicated pair is itself
+  a witness that the corresponding real value represents a solution. QED
+  -/
+  refine ⟨⟨r,-s,(inverse_solution h).2,rfl⟩,⟨-r,s,?_,rfl⟩,⟨-r,-s,?_,rfl⟩⟩ <;>
+    simpa [PellSolution] using h
+
 end NumberTheory.PellPowers
