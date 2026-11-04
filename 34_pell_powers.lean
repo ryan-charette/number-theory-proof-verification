@@ -78,4 +78,43 @@ theorem signed_values {N : ℕ} {r s : ℤ} (h : PellSolution N r s) :
   refine ⟨⟨r,-s,(inverse_solution h).2,rfl⟩,⟨-r,s,?_,rfl⟩,⟨-r,-s,?_,rfl⟩⟩ <;>
     simpa [PellSolution] using h
 
+def PositiveSolution (N : ℕ) (z : ℝ) : Prop :=
+  ∃ r s : ℕ, 0<r ∧ 0<s ∧ PellSolution N (r:ℤ) (s:ℤ) ∧ z=value N r s
+
+theorem positive_iff {N : ℕ} (hN : 0<N) (z : ℝ) :
+    PositiveSolution N z ↔ Represents N z ∧ 1<z := by
+  /-
+  With positive coordinates, r is at least one and s√N is positive,
+  so their sum exceeds one. Conversely suppose z=r+s√N exceeds one.
+  Its reciprocal r-s√N is positive and less than one. Adding these
+  values gives 2r>0. Subtracting gives 2s√N>0, so s>0 as well.
+  The two positive integers therefore give positive natural coordinates. QED
+  -/
+  have hs : 0<Real.sqrt (N:ℝ) := Real.sqrt_pos.mpr (by exact_mod_cast hN)
+  constructor
+  · rintro ⟨r,s,hr,ht,h, rfl⟩
+    refine ⟨⟨r,s,h,rfl⟩,?_⟩
+    have hr1 : (1:ℝ)≤r := by exact_mod_cast hr
+    have ht0 : (0:ℝ)<s := by exact_mod_cast ht
+    unfold value
+    push_cast
+    linarith only [hr1,mul_pos ht0 hs]
+  · rintro ⟨⟨r,s,h,rfl⟩,hz⟩
+    have hi := (inverse_solution h).1
+    have hp : 0<value N r (-s) := hi ▸ inv_pos.mpr (by linarith : 0<value N r s)
+    have hl : value N r (-s)<1 := by
+      rw [← hi,inv_eq_one_div]
+      apply (div_lt_iff (by linarith : 0<value N r s)).mpr
+      simpa using hz
+    simp only [value,Int.cast_neg] at hp hl hz
+    have hrR : (0:ℝ)<r := by linarith
+    have hsR : (0:ℝ)<s := by by_contra! hn; nlinarith only [hl,hz,mul_nonpos_of_nonpos_of_nonneg hn hs.le]
+    have hr : 0<r := by exact_mod_cast hrR
+    have ht : 0<s := by exact_mod_cast hsR
+    have hrc := Int.toNat_of_nonneg hr.le
+    have hsc := Int.toNat_of_nonneg ht.le
+    refine ⟨r.toNat,s.toNat,by omega,by omega,?_,?_⟩ <;>
+      simp only [Int.toNat_of_nonneg hr.le,Int.toNat_of_nonneg ht.le]
+    exact h
+
 end NumberTheory.PellPowers
