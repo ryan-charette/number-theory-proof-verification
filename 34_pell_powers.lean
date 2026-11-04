@@ -45,4 +45,25 @@ theorem inverse_solution {N : ℕ} {r s : ℤ} (h : PellSolution N r s) :
   · exact inv_eq_of_mul_eq_one_right hp
   · simpa [PellSolution] using h
 
+theorem integer_power_represents {N : ℕ} {z : ℝ} (hz : Represents N z)
+    (k : ℤ) : Represents N (z^k) := by
+  /-
+  The zeroth power is one, represented by (1,0). For a natural
+  exponent, each next power is the previous one times z, so induction
+  and the product formula supply integer coordinates. A negative power
+  is the reciprocal of the corresponding positive power, for which
+  the reciprocal formula supplies coordinates. QED
+  -/
+  have powers (n : ℕ) : Represents N (z^n) := by
+    induction n with
+    | zero => exact ⟨1,0,by simp [PellSolution],by simp [value]⟩
+    | succ n ih => simpa only [pow_succ] using product_represents ih hz
+  cases k with
+  | ofNat n => simpa using powers n
+  | negSucc n =>
+    obtain ⟨r,s,hrs,he⟩ := powers (n+1)
+    obtain ⟨hinv,hpair⟩ := inverse_solution hrs
+    refine ⟨r,-s,hpair,?_⟩
+    simpa only [zpow_negSucc,he] using hinv
+
 end NumberTheory.PellPowers
