@@ -1,4 +1,5 @@
 import «35_test_costs»
+import Mathlib.Tactic.NormNum
 
 namespace NumberTheory.PowerTests
 
@@ -64,4 +65,15 @@ theorem failed_power_not_prime (n a : Nat) (ha : 0<a) (han : a<n)
   -/
   intro hp
   exact hfail (fermat_coprime a n hp (small_prime_coprime n a hp ha han))
+theorem composite_737 : ¬ Prime 737 := by
+  /-
+  Theorem: The integer 737 is composite. Proof: The base two lies
+  strictly between zero and 737. Repeated squaring and reduction
+  give 2^736 congruent to 86 modulo 737, rather than one. The
+  contrapositive of Fermat's theorem therefore excludes primality.
+  Lean checks the finite integer calculation, while the earlier
+  theorem supplies the implication from failed congruence. QED
+  -/
+  apply failed_power_not_prime 737 2 (by decide) (by decide)
+  norm_num [Congruent]
 end NumberTheory.PowerTests
