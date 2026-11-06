@@ -76,4 +76,43 @@ theorem composite_737 : ¬ Prime 737 := by
   -/
   apply failed_power_not_prime 737 2 (by decide) (by decide)
   norm_num [Congruent]
+theorem prime_iff_all_bases (n : Nat) (hn : 1<n) :
+    Prime n ↔ ∀ a : Nat, 0<a → a<n → Congruent ((a:Int)^(n-1)) 1 n := by
+  /-
+  Theorem: For n>1, primality is equivalent to every positive base
+  below n having its (n-1)st power congruent to one modulo n.
+  Proof: The forward direction is Fermat's theorem, using the earlier
+  coprimality result. Conversely, suppose n is composite and write
+  n=a*b with 1<a<n. The proposed test applies to a. Since n-1>0,
+  a divides a^(n-1). Also a divides n, and the congruence implies
+  n divides a^(n-1)-1. Hence a divides both that power and that power
+  minus one, so it divides their difference, one. A positive divisor
+  of one is at most one, contradicting a>1. QED
+
+  The base range is explicitly 1<=a<n. Including a=0 would make
+  the statement false for every prime. The exponent is positive
+  because n>1. The argument tests all bases, including noncoprime ones.
+  -/
+  constructor
+  · intro hp a ha han
+    exact fermat_coprime a n hp (small_prime_coprime n a hp ha han)
+  · intro hall
+    apply Classical.byContradiction
+    intro hnp
+    obtain ⟨a,b,ha,han,_,_,hab⟩ := nonprime_factors n hn hnp
+    have htest := hall a (by omega) han
+    have hdiv : (a:Int)∣(n:Int) := ⟨b,by rw [hab,Int.natCast_mul]⟩
+    have he : n-1=(n-2)+1 := by omega
+    have hpower : (a:Int)∣(a:Int)^(n-1) := by
+      refine ⟨(a:Int)^(n-2),?_⟩
+      rw [he,Int.pow_succ,Int.mul_comm]
+    have hminus : (a:Int)∣(a:Int)^(n-1)-1 :=
+      NumberTheory.dvd_trans _ _ _ hdiv htest.2
+    have hone := NumberTheory.dvd_sub (a:Int) ((a:Int)^(n-1))
+      ((a:Int)^(n-1)-1) hpower hminus
+    have hid : (a:Int)^(n-1)-((a:Int)^(n-1)-1)=1 := by omega
+    rw [hid] at hone
+    have hle := NumberTheory.CommonDivisors.divisor_le_positive (a:Int) 1 (by decide) hone
+    omega
+
 end NumberTheory.PowerTests
