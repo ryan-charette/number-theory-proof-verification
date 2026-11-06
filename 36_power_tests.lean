@@ -52,4 +52,16 @@ theorem decimal_power_count (r d : Nat) (hd : DecimalDigits r d) :
     exact Nat.lt_of_lt_of_le hd.2.2 hten
   have hh := binary_count_bound (4*d) r hr
   omega
+theorem failed_power_not_prime (n a : Nat) (ha : 0<a) (han : a<n)
+    (hfail : ¬ Congruent ((a:Int)^(n-1)) 1 n) : ¬ Prime n := by
+  /-
+  Theorem: A positive base below n whose predecessor power is not
+  congruent to one proves that n is not prime. Proof: If n were prime,
+  the earlier coprimality lemma would make a coprime to n. Fermat's
+  theorem would then give exactly the congruence assumed to fail.
+  This contradiction proves the contrapositive. The positive-base
+  condition excludes zero, which fails the test even for primes. QED
+  -/
+  intro hp
+  exact hfail (fermat_coprime a n hp (small_prime_coprime n a hp ha han))
 end NumberTheory.PowerTests
