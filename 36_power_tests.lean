@@ -35,4 +35,21 @@ theorem binary_count_bound (k r : Nat) (hr : r<2^k) : powerCount r≤2*k := by
       rw [powerCount,dif_neg hz]
       omega
 
+theorem decimal_power_count (r d : Nat) (hd : DecimalDigits r d) :
+    powerCount r≤8*d := by
+  /-
+  Theorem: Binary powering of a d-digit exponent takes at most 8d
+  multiplications, so its multiplication count is polynomial in d.
+  Proof: A d-digit exponent is below 10^d. Since 10<=16=2^4,
+  it is also below 2^(4d). Apply the binary bound with k=4d.
+  This counts multiplications for a fixed modulus. Bit costs depend
+  additionally on the modulus size. QED
+  -/
+  have hten : 10^d≤16^d := Nat.pow_le_pow_left (by decide) d
+  have hpow : 16^d=2^(4*d) := by rw [Nat.pow_mul]
+  have hr : r<2^(4*d) := by
+    rw [← hpow]
+    exact Nat.lt_of_lt_of_le hd.2.2 hten
+  have hh := binary_count_bound (4*d) r hr
+  omega
 end NumberTheory.PowerTests
