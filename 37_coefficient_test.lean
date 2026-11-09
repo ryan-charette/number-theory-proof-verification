@@ -71,4 +71,50 @@ theorem prime_of_interior_divisibility (n : Nat) (hn : 1<n)
   have hNpos : (0:Int)<N := by dsimp [N]; omega
   exact avoids j (by omega) ⟨q,Int.eq_of_mul_eq_mul_left (ne_of_gt hNpos) heq⟩
 
+/-- At degree i, compare the binomial expansion of (X+a)^n with X^n+a.
+The test is used for n greater than one, so the two terms on the right
+have distinct degrees. -/
+def CoefficientsAgree (n a : Nat) : Prop :=
+  ∀ i : Nat, Congruent (coefficient n i * (a:Int)^(n-i))
+    (if i=0 then (a:Int) else if i=n then 1 else 0) n
+
+theorem prime_iff_coefficients_agree (n a : Nat) (hn : 1<n)
+    (hcop : gcd (a:Int) n=1) : Prime n ↔ CoefficientsAgree n a := by
+  /-
+  If n is prime, Fermat's theorem gives the constant-term congruence.
+  At every interior degree the binomial coefficient is divisible by n,
+  so multiplying it by a power of a preserves divisibility. The leading
+  coefficients are both one, and all higher coefficients vanish.
+
+  Conversely, suppose the coefficients agree. At each interior degree
+  i the right side has coefficient zero. The power of a in the left
+  coefficient is relatively prime to n, so we can cancel it. Thus n
+  divides every interior binomial coefficient, which forces n to be
+  prime by the preceding result. QED
+  -/
+  have hpos : (0:Int)<n := by omega
+  constructor
+  · intro hp i
+    by_cases hz : i=0
+    · subst i
+      simpa [(coefficient_edges n).1] using fermat_natural a n hp
+    by_cases he : i=n
+    · subst i
+      simp [hz, (coefficient_edges n).2, Congruent, hpos]
+    by_cases hi : i<n
+    · obtain ⟨k,hk⟩ := prime_divides_coefficient n i hp (by omega) hi
+      simp only [if_neg hz, if_neg he, Congruent, Int.sub_zero]
+      exact ⟨hpos,k*(a:Int)^(n-i),by rw [hk]; ring⟩
+    · simp [hz, he, coefficient_outside n i (by omega), Congruent, hpos]
+  · intro hall
+    apply prime_of_interior_divisibility n hn
+    intro i hi hin
+    have h := hall i
+    simp only [if_neg (by omega : i≠0), if_neg (by omega : i≠n)] at h
+    have hpower := coprime_power (a:Int) n hpos hcop (n-i)
+    have hcancel := cancel_coprime (coefficient n i) 0 ((a:Int)^(n-i)) n
+      hpower (by simpa using h)
+    simpa using hcancel.2
+
+
 end NumberTheory.CoefficientTest
