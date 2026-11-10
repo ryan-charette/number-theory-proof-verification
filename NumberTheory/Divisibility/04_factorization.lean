@@ -1,0 +1,398 @@
+import NumberTheory.Divisibility.«03_common_divisors»
+import Init.Data.Int.Lemmas
+import Init.Data.Int.Order
+import Init.Data.Int.DivModLemmas
+import Init.Data.List.Perm
+import Lean.Elab.Tactic.Omega
+
+/-
+We work with natural numbers, treating primes as numbers greater than one.
+A factorization is a finite list of primes. Repeated entries record powers:
+the number of occurrences of a prime is its exponent. We prove existence
+by strong induction and uniqueness by matching and cancelling one prime
+at a time. The supporting Euclidean argument is included in this file.
+-/
+
+namespace NumberTheory.Factorization
+
+open NumberTheory.CommonDivisors (dvd_linear dvd_refl euclid_natural)
+
+
+def Prime (p : Nat) : Prop := 1 < p ∧ ∀ d : Nat, d ∣ p → d = 1 ∨ d = p
+
+def Composite (n : Nat) : Prop := ∃ a b : Nat, a < n ∧ b < n ∧ n = a * b
+
+theorem nonprime_factors (n : Nat) (hn : 1 < n) (hp : ¬ Prime n) :
+    ∃ a b : Nat, 1 < a ∧ a < n ∧ 1 < b ∧ b < n ∧ n = a * b := by
+  /-
+  Theorem: A nonprime number greater than one is a product of two
+  numbers strictly between one and itself.
+  Proof: Since n is not prime, it has a divisor a other than one and n.
+  Write n=a*b. Neither factor is zero. The factor b cannot be one,
+  since that would give a=n. Both factors are therefore at least two.
+  Each divides n and is at most n; equality would force the other
+  factor to be one. Thus both factors are strictly smaller than n. QED
+  -/
+  have hex : ∃ a : Nat, a ∣ n ∧ a ≠ 1 ∧ a ≠ n := by
+    apply Classical.byContradiction
+    intro he
+    apply hp
+    constructor
+    · exact hn
+    · intro a ha
+      by_cases h₁ : a = 1
+      · exact Or.inl h₁
+      · by_cases h₂ : a = n
+        · exact Or.inr h₂
+        · exact False.elim (he ⟨a, ha, h₁, h₂⟩)
+  rcases hex with ⟨a, ha, ha₁, han⟩
+  rcases ha with ⟨b, heq⟩
+  have ha₀ : a ≠ 0 := by intro hz; rw [hz, Nat.zero_mul] at heq; omega
+  have hb₀ : b ≠ 0 := by intro hz; rw [hz, Nat.mul_zero] at heq; omega
+  have hb₁ : b ≠ 1 := by intro ho; rw [ho, Nat.mul_one] at heq; omega
+  have hal := Nat.le_of_dvd (by omega : 0 < n) (show a ∣ n from ⟨b, heq⟩)
+  have hbl := Nat.le_of_dvd (by omega : 0 < n) (show b ∣ n from ⟨a, by rw [Nat.mul_comm]; exact heq⟩)
+  have hbn : b ≠ n := by
+    intro hbn
+    have ht : b * a = b * 1 := by rw [Nat.mul_one, Nat.mul_comm]; omega
+    have haeq := Nat.eq_of_mul_eq_mul_left (by omega : 0 < b) ht
+    exact ha₁ haeq
+  exists a, b
+  exact ⟨by omega, by omega, by omega, by omega, heq⟩
+
+theorem prime_iff_no_smaller_factors (p : Nat) :
+    Prime p ↔ 1 < p ∧ ¬ Composite p := by
+  /-
+  Theorem: A number is prime exactly when it is greater than one and
+  is not a product of two smaller natural numbers.
+  Proof: For a prime p, a factor a of p must be one or p. In a smaller
+  factorization, a cannot be p; if a=1 the other factor would be p,
+  also impossible. Conversely, a nonprime number greater than one
+  has the smaller factorization provided by the preceding theorem.
+  QED
+  -/
+  constructor
+  · intro hp
+    refine ⟨hp.1, ?_⟩
+    intro hc
+    rcases hc with ⟨a, b, ha, hb, heq⟩
+    rcases hp.2 a ⟨b, heq⟩ with h₁ | h₂
+    · rw [h₁, Nat.one_mul] at heq
+      omega
+    · omega
+  · intro h
+    apply Classical.byContradiction
+    intro hp
+    rcases nonprime_factors p h.1 hp with ⟨a, b, _, ha, _, hb, heq⟩
+    exact h.2 ⟨a, b, ha, hb, heq⟩
+
+theorem prime_divisor (n : Nat) (hn : 1 < n) :
+    ∃ p : Nat, Prime p ∧ p ∣ n := by
+  /-
+  Theorem: Every natural number greater than one has a prime divisor.
+  Proof: Use strong induction on n. If n is prime, take n itself.
+  Otherwise n=a*b with 1<a<n. By induction a has a prime divisor p.
+  If a=p*t, then n=p*(t*b), so p also divides n. QED
+  -/
+  induction n using Nat.strongRecOn with
+  | ind n ih =>
+    by_cases hp : Prime n
+    · exact ⟨n, hp, ⟨1, by rw [Nat.mul_one]⟩⟩
+    · rcases nonprime_factors n hn hp with ⟨a, b, ha, han, _, _, heq⟩
+      rcases ih a han ha with ⟨p, hpp, t, ht⟩
+      exists p
+      constructor
+      · exact hpp
+      · exists t * b
+        rw [heq, ht, Nat.mul_assoc]
+
+theorem composite_small_prime (n : Nat) (hn : 1 < n) (hp : ¬ Prime n) :
+    ∃ p : Nat, Prime p ∧ p ∣ n ∧ p * p ≤ n := by
+  /-
+  Theorem: A nonprime number greater than one has a prime divisor
+  whose square is at most the number.
+  Proof: Write n=a*b with both factors greater than one. The smaller
+  factor has a prime divisor p. Then p is at most both factors, so
+  p*p≤a*b=n. It divides n because it divides one of the factors. QED
+  -/
+  rcases nonprime_factors n hn hp with ⟨a, b, ha, _, hb, _, heq⟩
+  by_cases hab : a ≤ b
+  · rcases prime_divisor a ha with ⟨p, hpp, hd⟩
+    have hpa := Nat.le_of_dvd (by omega : 0 < a) hd
+    rcases hd with ⟨t, ht⟩
+    exists p
+    refine ⟨hpp, ⟨t * b, by rw [heq, ht, Nat.mul_assoc]⟩, ?_⟩
+    rw [heq]
+    exact Nat.mul_le_mul hpa (by omega)
+  · rcases prime_divisor b hb with ⟨p, hpp, hd⟩
+    have hpb := Nat.le_of_dvd (by omega : 0 < b) hd
+    rcases hd with ⟨t, ht⟩
+    exists p
+    refine ⟨hpp, ⟨t * a, ?_⟩, ?_⟩
+    · calc
+        n = b * a := by rw [heq, Nat.mul_comm]
+        _ = p * (t * a) := by rw [ht, Nat.mul_assoc]
+    · rw [heq]
+      exact Nat.mul_le_mul (by omega) hpb
+
+theorem prime_trial_bound (n : Nat) (hn : 1 < n) :
+    Prime n ↔ ∀ p : Nat, Prime p → p * p ≤ n → ¬ p ∣ n := by
+  /-
+  Theorem: A number greater than one is prime exactly when no prime
+  whose square is at most n divides n. The condition p*p≤n expresses
+  p≤sqrt(n) without introducing real square roots.
+  Proof: If n is prime, a prime divisor p must equal n. But p>1
+  implies p*p>p=n, contradicting the bound. Conversely, a nonprime
+  number has a prime divisor meeting the bound by the previous theorem.
+  QED
+  -/
+  constructor
+  · intro h p hp hbound hd
+    rcases h.2 p hd with h₁ | h₂
+    · have hpos := hp.1
+      omega
+    · have hlarge := Nat.mul_lt_mul_of_pos_left hp.1 (by omega : 0 < p)
+      rw [Nat.mul_one] at hlarge
+      omega
+  · intro h
+    apply Classical.byContradiction
+    intro hnot
+    rcases composite_small_prime n hn hnot with ⟨p, hp, hd, hbound⟩
+    exact h p hp hbound hd
+
+theorem prime_dvd_mul (p a b : Nat) (hp : Prime p) (h : p ∣ a * b) :
+    p ∣ a ∨ p ∣ b := by
+  /-
+  Theorem: A prime dividing a product divides at least one factor.
+  Proof: The Euclidean construction for p and a supplies a common
+  divisor d and integers x,y with p*x+a*y=d. Since d divides prime p,
+  it equals one or p. If d=p, then p divides a. If d=1, multiply by b:
+
+    b = p*(x*b) + (a*b)*y.
+
+  Each term on the right is divisible by p, so p divides b. QED
+  -/
+  rcases euclid_natural p a with ⟨d, hdp, hda, x, y, hxy⟩
+  rcases hp.2 d (Int.ofNat_dvd.mp hdp) with hd₁ | hdp'
+  · right
+    rw [hd₁] at hxy
+    have hab : (p : Int) ∣ (a : Int) * (b : Int) := Int.ofNat_dvd.mpr h
+    have hd := dvd_linear p p ((a : Int) * b) (x * b) y (dvd_refl p) hab
+    have heq := congrArg (fun t : Int => t * (b : Int)) hxy
+    change ((p : Int) * x + (a : Int) * y) * b = 1 * (b : Int) at heq
+    rw [Int.add_mul, Int.one_mul, Int.mul_assoc (p : Int),
+      Int.mul_right_comm (a : Int) y (b : Int)] at heq
+    rw [heq] at hd
+    exact Int.ofNat_dvd.mp hd
+  · left
+    rw [hdp'] at hda
+    exact Int.ofNat_dvd.mp hda
+
+def product : List Nat → Nat
+  | [] => 1
+  | p :: ps => p * product ps
+
+def PrimeFactors (ps : List Nat) : Prop := ∀ p ∈ ps, Prime p
+
+theorem product_append (xs ys : List Nat) : product (xs ++ ys) = product xs * product ys := by
+  /-
+  Lemma: Joining two lists multiplies their products.
+  Proof: Induct on the first list. An empty list contributes one.
+  For a first entry p, use the induction hypothesis for the remaining
+  list and reassociate p*(product(xs)*product(ys)). QED
+  -/
+  induction xs with
+  | nil => rw [List.nil_append, product, Nat.one_mul]
+  | cons p ps ih => rw [List.cons_append, product, product, ih, Nat.mul_assoc]
+
+theorem factorization_exists (n : Nat) (hn : 1 < n) :
+    ∃ ps : List Nat, PrimeFactors ps ∧ product ps = n := by
+  /-
+  Theorem: Every natural number greater than one is a finite product
+  of primes. Proof: Use strong induction. A prime n has the one-entry
+  factorization [n]. Otherwise write n=a*b with 1<a,b<n. Induction
+  gives prime lists for a and b. Concatenate them: all entries remain
+  prime and their product is a*b=n. QED
+  -/
+  induction n using Nat.strongRecOn with
+  | ind n ih =>
+    by_cases hp : Prime n
+    · exists [n]
+      constructor
+      · intro p hmem
+        have heq : p = n := by simpa using hmem
+        rw [heq]
+        exact hp
+      · rw [product, product, Nat.mul_one]
+    · rcases nonprime_factors n hn hp with ⟨a, b, ha, han, hb, hbn, heq⟩
+      rcases ih a han ha with ⟨xs, hxs, hx⟩
+      rcases ih b hbn hb with ⟨ys, hys, hy⟩
+      exists xs ++ ys
+      constructor
+      · intro p hm
+        rcases List.mem_append.mp hm with hleft | hright
+        · exact hxs p hleft
+        · exact hys p hright
+      · rw [product_append, hx, hy, ← heq]
+
+theorem prime_divides_prime_list (p : Nat) (ps : List Nat) (hp : Prime p)
+    (hps : PrimeFactors ps) (hd : p ∣ product ps) : p ∈ ps := by
+  /-
+  Lemma: A prime dividing a product of primes occurs among those primes.
+  Proof: Induct on the list. The empty product is one, which no prime
+  divides. For a first prime q, the product lemma says p divides q
+  or the remaining product. In the first case primality of q forces
+  p=q; in the second case use the induction hypothesis. QED
+  -/
+  induction ps with
+  | nil =>
+    have hle := Nat.le_of_dvd (by decide : 0 < 1) hd
+    have hp₁ := hp.1
+    omega
+  | cons q qs ih =>
+    rcases prime_dvd_mul p q (product qs) hp hd with hq | htail
+    · rcases (hps q (by simp)).2 p hq with hp₁ | hpq
+      · have hpos := hp.1
+        omega
+      · simp [hpq]
+    · exact List.mem_cons_of_mem q (ih (fun t ht => hps t (List.mem_cons_of_mem q ht)) htail)
+
+theorem prime_multiple_match (p k : Nat) (qs : List Nat) (hp : Prime p)
+    (hqs : PrimeFactors qs) (h : p * k = product qs) : p ∈ qs := by
+  /-
+  Lemma: If a multiple of a prime is a product of primes, that prime
+  equals an entry of the product. Proof: The displayed equation gives
+  the divisibility witness k. Apply the preceding matching lemma. QED
+  -/
+  exact prime_divides_prime_list p qs hp hqs ⟨k, h.symm⟩
+
+theorem product_perm (xs ys : List Nat) (h : List.Perm xs ys) : product xs = product ys := by
+  /-
+  Lemma: Reordering factors does not change their product.
+  Proof: A permutation is built from keeping a first entry, exchanging
+  adjacent entries, and composing reorderings. Keeping an entry uses
+  the equality for the tails; exchange uses commutativity and
+  associativity of multiplication; composition uses equality transitivity.
+  QED
+  -/
+  induction h with
+  | nil => rfl
+  | cons a h ih => rw [product, product, ih]
+  | swap a b xs => simp only [product, Nat.mul_left_comm]
+  | trans _ _ ih₁ ih₂ => exact ih₁.trans ih₂
+
+theorem factorization_unique (xs ys : List Nat)
+    (hxs : PrimeFactors xs) (hys : PrimeFactors ys) (h : product xs = product ys) :
+    List.Perm xs ys := by
+  /-
+  Theorem: Two prime factorizations of the same number agree up to order.
+  Proof: Induct on the first list. If it is empty, its product is one.
+  A nonempty prime list on the other side would have a prime divisor
+  of one, so that list must also be empty.
+
+  Otherwise let p be the first prime. The matching lemma finds p in
+  the second list. Move this occurrence to the front and remove it
+  from both lists. Cancelling positive p leaves equal products for
+  the shorter lists. Induction matches their entries. Restoring p and
+  undoing the reordering proves the result. QED
+  -/
+  letI : BEq Nat := instBEqOfDecidableEq
+  induction xs generalizing ys with
+  | nil =>
+    cases ys with
+    | nil => exact List.Perm.nil
+    | cons q qs =>
+      have hq := (hys q (by simp)).1
+      have hd : q ∣ 1 := ⟨product qs, h⟩
+      have hle := Nat.le_of_dvd (by decide : 0 < 1) hd
+      omega
+  | cons p ps ih =>
+    have hp := hxs p (by simp)
+    have hp₁ := hp.1
+    have hps : PrimeFactors ps := fun q hq => hxs q (List.mem_cons_of_mem p hq)
+    have hmem := prime_multiple_match p (product ps) ys hp hys h
+    have hperm := List.perm_cons_erase hmem
+    have heq := product_perm ys (p :: ys.erase p) hperm
+    change p * product ps = product ys at h
+    change product ys = p * product (ys.erase p) at heq
+    have hcancel := Nat.eq_of_mul_eq_mul_left (by omega : 0 < p) (h.trans heq)
+    have htail : PrimeFactors (ys.erase p) := fun q hq => hys q (List.mem_of_mem_erase hq)
+    exact (List.Perm.cons p (ih (ys.erase p) hps htail hcancel)).trans hperm.symm
+
+theorem factorization_multiplicities (xs ys : List Nat)
+    (hxs : PrimeFactors xs) (hys : PrimeFactors ys) (h : product xs = product ys) :
+    xs.length = ys.length ∧ ∀ p : Nat, (p ∈ xs ↔ p ∈ ys) ∧ xs.count p = ys.count p := by
+  /-
+  Corollary: Equal prime products have exactly the same primes with
+  exactly the same multiplicities. Proof: Uniqueness gives a reordering
+  between the lists. Reordering preserves length, membership, and the
+  number of times each prime occurs. These occurrence counts are the
+  exponents when repeated factors are collected into prime powers. QED
+  -/
+  have hp := factorization_unique xs ys hxs hys h
+  refine ⟨hp.length_eq, ?_⟩
+  intro p
+  exact ⟨hp.mem_iff, hp.countP_eq (fun q => q == p)⟩
+
+theorem prime_sieve_criterion (n : Nat) (hn : 1 < n) :
+    Prime n ↔ ∀ p : Nat, Prime p → p < n → ¬ p ∣ n := by
+  /-
+  Theorem: A number greater than one survives removal of all proper
+  multiples of smaller primes exactly when it is prime.
+  Proof: A smaller prime cannot divide a prime n, whose only positive
+  divisors are one and n. Conversely, a nonprime n has a smaller
+  nontrivial factor a. A prime divisor of a is smaller than n and
+  divides n, so n would already have been removed.
+
+  This explains the sieve: the smallest unremoved number is prime,
+  and removing its larger multiples never removes another prime.
+  The argument applies to any finite cutoff. QED
+  -/
+  constructor
+  · intro h p hp hsmall hd
+    rcases h.2 p hd with h₁ | h₂
+    · have hpos := hp.1
+      omega
+    · omega
+  · intro h
+    apply Classical.byContradiction
+    intro hnot
+    rcases nonprime_factors n hn hnot with ⟨a, b, ha, han, _, _, heq⟩
+    rcases prime_divisor a ha with ⟨p, hp, hd⟩
+    have hpa := Nat.le_of_dvd (by omega : 0 < a) hd
+    rcases hd with ⟨t, ht⟩
+    apply h p hp (by omega)
+    exists t * b
+    rw [heq, ht, Nat.mul_assoc]
+
+theorem product_replicate (p r : Nat) : product (List.replicate r p) = p ^ r := by
+  /-
+  Lemma: Repeating the factor p exactly r times gives p to the power r.
+  Proof: Induct on r. With no factors, both sides equal one. Adding
+  another p multiplies the previous product by p, giving the next
+  power. Thus repeated entries in a factor list represent powers,
+  with the occurrence count as exponent. QED
+  -/
+  induction r with
+  | zero => rfl
+  | succ r ih =>
+    rw [List.replicate_succ, product, ih, Nat.pow_succ, Nat.mul_comm]
+
+theorem factorization_exists_unique (n : Nat) (hn : 1 < n) :
+    ∃ ps : List Nat, PrimeFactors ps ∧ product ps = n ∧
+      ∀ qs : List Nat, PrimeFactors qs → product qs = n → List.Perm ps qs := by
+  /-
+  Theorem: Every natural number greater than one has a prime
+  factorization, and every other prime factorization differs only
+  in the order of its factors.
+  Proof: Existence supplies a prime list with product n. Any other
+  prime list with product n has the same product as this one, so
+  uniqueness supplies a reordering between them. QED
+  -/
+  rcases factorization_exists n hn with ⟨ps, hps, hp⟩
+  exists ps
+  refine ⟨hps, hp, ?_⟩
+  intro qs hqs hq
+  exact factorization_unique ps qs hps hqs (hp.trans hq.symm)
+
+end NumberTheory.Factorization

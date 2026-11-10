@@ -1,144 +1,90 @@
-# Number Theory Library
+# A Lean companion to *Number Theory Through Inquiry*
 
-This project formalizes elementary number theory in Lean, following *Number Theory Through Inquiry* by David C. Marshall, Edward Odell, and Michael Starbird (2007). The explanations are written for an introductory course in proofs.
+This project follows the 2007 textbook by David C. Marshall, Edward Odell, and Michael Starbird. Each file covers one subsection. Alongside each Lean proof is a mathematical argument written for a reader taking a first course in proofs. Later subsections import the elementary results they use from earlier ones.
 
-## Overview
+## Reading the proofs
 
-Each textbook subsection will have one Lean file. `01_divisibility.lean` develops integer divisibility, congruence, powers, and decimal digit-sum tests. `02_remainders.lean` proves quotient-and-remainder existence by well-ordering, uniqueness, and the equivalence between congruence and equal remainders. `03_common_divisors.lean` develops the Euclidean procedure and greatest common divisors, Bezout identities, coprimality, all solutions of integer linear equations, gcd scaling, and least common multiples. `04_factorization.lean` develops prime divisors, the trial-division bound, the sieve criterion, and existence and uniqueness of prime factorization. `05_divisibility_tests.lean` completes the next subsection: prime-exponent divisibility tests, divisibility of squares, impossible power equations, irrationality through integer-fraction equations, coprime gcd identities, and a divisibility pair among any n+1 positive inputs bounded by 2n. `06_prime_bounds.lean` develops coprimality of consecutive numbers, constructions avoiding small divisors, primes beyond every bound, preservation of remainder one modulo four under products, and infinitely many primes with remainder three modulo four. `07_power_factors.lean` proves geometric and odd-power factorization identities, then proves that primality of `2^n - 1` forces n to be prime and primality of `2^n + 1` for positive n forces n to be a power of two. `08_composite_runs.lean` constructs arbitrarily long runs of consecutive composite numbers using a product of initial integers and explicit factors for each entry. `09_polynomial_residues.lean` develops polynomial congruence, power-divisibility proofs, digit-sum tests, eventual polynomial growth, infinitely many composite absolute values, and existence, uniqueness, and counting of residue representatives. `10_modular_solutions.lean` develops the integer-equation and gcd criteria for solvability of a linear congruence, describes all its solution classes, and counts its canonical solutions. `11_simultaneous_congruences.lean` proves compatibility of two congruences, uniqueness modulo the product for coprime moduli, and existence and uniqueness for any finite system with pairwise coprime positive moduli. `12_modular_powers.lean` develops coprimality of powers and congruent integers, cancellation, repeated power residues, positive powers congruent to one, and the least positive exponent defining order. `13_power_cycles.lean` proves the structure and size of power cycles, completeness of multiplied residues, the residue-product identity, both forms of Fermat’s theorem and their equivalence, the order divisibility consequence, and combination of congruences over coprime moduli. `14_binomial_powers.lean` constructs binomial coefficients, identifies their factorial quotient, proves the binomial expansion and prime divisibility of interior coefficients, and gives the binomial-induction proof of Fermat’s theorem. `15_reduced_residues.lean` proves Euler’s theorem by rearranging reduced residues, derives Fermat’s theorem as a corollary, constructs unique inverses, pairs the interior representatives, and proves Wilson’s theorem and its converse for n>1. `16_power_recovery.lean` develops the power congruences for a product of distinct primes, positive decoding exponents from Bezout identities, and exact recovery of every bounded message by successive powering and reduction. `17_polynomial_roots.lean` proves synthetic division, the integer root-factor criterion, factorization after a congruent change to the constant coefficient, and the corrected bound on root classes modulo a prime. `18_order_counts.lean` proves preservation of order by coprime exponents, the bound phi(d) on classes of order d, and completeness of zero together with the powers of a primitive root. `19_divisor_counts.lean` proves the totient divisor-sum identity by counting reduced fractions, its prime and product cases, exact counts for every order dividing p-1, and existence of primitive roots modulo every prime. `20_totient_products.lean` computes phi for primes and prime powers, counts coprime entries in arbitrary complete residue systems, proves the arithmetic-progression criterion, and establishes multiplicativity of phi for coprime inputs. `21_modular_roots.lean` constructs inverse exponents, proves unique root classes for coprime inputs and square-free moduli, and counts prime-modulus roots with the zero-residue case separated. `22_primitive_tests.lean` proves the corrected divisor test for primitive roots modulo a prime. `23_square_classes.lean` reduces quadratic equations, counts square classes, proves Euler’s criterion and the sign multiplication rule, identifies squares of minus one, and constructs arbitrarily large primes congruent to one modulo four.
+Start with divisibility and congruence, or choose a topic below. The files are listed in textbook order. Open a file to read the argument, or use Lean in an editor to inspect the hypotheses and goal at each step.
 
-Results presented only for context, which the reader is not expected to prove, are omitted.
+### Divisibility and factorization
 
-Each proof includes a statement in words, a step-by-step mathematical argument, and the corresponding Lean proof. Each subsection imports earlier project files for previously established definitions and results. Shared proofs appear once, in the earliest subsection that needs them. Lean's bundled arithmetic and tactics support the elementary arguments; library versions of the target theorems are not used as shortcuts, and the real-number subsection uses a pinned Mathlib dependency for real numbers, floors, square roots, finite counting, and arithmetic tactics. The tactic `omega` checks linear arithmetic after explicit mathematical arguments. The common-divisor file constructs its own gcd by Euclidean induction and back-substitution, then proves that it is greatest. Its lcm expression is proved to be the least positive common multiple; no library gcd, lcm, or Bezout theorem is used.
+- [Divisibility and congruence](NumberTheory/Divisibility/01_divisibility.lean)
+- [Quotients and remainders](NumberTheory/Divisibility/02_remainders.lean)
+- [Common divisors and Bézout identities](NumberTheory/Divisibility/03_common_divisors.lean)
+- [Prime factorizations](NumberTheory/Divisibility/04_factorization.lean)
+- [Divisibility tests and prime exponents](NumberTheory/Divisibility/05_divisibility_tests.lean)
 
-## Main Features
+### Prime and composite numbers
 
-- Divisibility proofs construct an integer that gives the required multiple.
-- Congruence is defined by a positive modulus dividing a difference.
-- Arithmetic properties follow by substitution and ordinary arithmetic laws.
-- Powers and digit-sum tests use induction, with the base case and induction step explained.
-- The file contains proofs rather than computational exercises or textbook cross-references.
+- [Primes beyond any bound](NumberTheory/Primes/06_prime_bounds.lean)
+- [Factors of powers plus or minus one](NumberTheory/Primes/07_power_factors.lean)
+- [Runs of composite numbers](NumberTheory/Primes/08_composite_runs.lean)
 
-Lean's natural numbers include zero. The power theorem therefore includes exponent zero. Decimal expansions are finite lists of digits from 0 to 9, stored with the units digit first. The digit-sum tests apply to a supplied decimal representation, including zero and leading zeroes.
+### Congruences and modular powers
 
-## Usage
+- [Polynomial values and residues](NumberTheory/Congruences/09_polynomial_residues.lean)
+- [Solving linear congruences](NumberTheory/Congruences/10_modular_solutions.lean)
+- [Simultaneous congruences](NumberTheory/Congruences/11_simultaneous_congruences.lean)
+- [Cancellation and multiplicative order](NumberTheory/Congruences/12_modular_powers.lean)
+- [Power cycles and Fermat’s theorem](NumberTheory/Congruences/13_power_cycles.lean)
+- [Binomial coefficients and Fermat’s theorem](NumberTheory/Congruences/14_binomial_powers.lean)
+- [Reduced residues and Euler’s theorem](NumberTheory/Congruences/15_reduced_residues.lean)
+- [The arithmetic behind RSA](NumberTheory/Congruences/16_power_recovery.lean)
 
-Install Lean through [elan](https://github.com/leanprover/elan), then run:
+### Roots and residues
+
+- [Roots of polynomials modulo a prime](NumberTheory/Residues/17_polynomial_roots.lean)
+- [Counting elements by order](NumberTheory/Residues/18_order_counts.lean)
+- [Totient sums and the number of primitive roots](NumberTheory/Residues/19_divisor_counts.lean)
+- [Products and Euler’s totient](NumberTheory/Residues/20_totient_products.lean)
+- [Roots of power congruences](NumberTheory/Residues/21_modular_roots.lean)
+- [Testing primitive roots](NumberTheory/Residues/22_primitive_tests.lean)
+- [Quadratic residues](NumberTheory/Residues/23_square_classes.lean)
+- [Signs of quadratic residues](NumberTheory/Residues/24_residue_signs.lean)
+- [Squares and primitive roots for primes of the form 2q + 1](NumberTheory/Residues/25_double_primes.lean)
+
+### Integer right triangles
+
+- [Primitive right triangles](NumberTheory/Triangles/26_right_triangles.lean) · 2026-10-25
+- [Representations by two squares](NumberTheory/Triangles/27_square_pairs.lean) · 2026-10-27
+- [Possible hypotenuses](NumberTheory/Triangles/28_hypotenuses.lean) · 2026-10-28
+- [Fourth powers and infinite descent](NumberTheory/Triangles/29_fourth_powers.lean) · 2026-10-29
+
+### Rational approximation and Pell equations
+
+- [Approximating real numbers by fractions](NumberTheory/Approximation/30_approximations.lean) · 2026-10-30
+- [Square parameters in Pell equations](NumberTheory/Approximation/31_square_parameters.lean) · 2026-10-31
+- [Multiplying Pell solutions](NumberTheory/Approximation/32_pell_products.lean) · 2026-11-01
+- [Existence of Pell solutions](NumberTheory/Approximation/33_pell_existence.lean) · 2026-11-02
+- [Generating solutions by powers](NumberTheory/Approximation/34_pell_powers.lean) · 2026-11-03
+
+### Testing for primality
+
+- [Counting operations in primality tests](NumberTheory/Primality/35_test_costs.lean) · 2026-11-04
+- [Power tests for compositeness](NumberTheory/Primality/36_power_tests.lean) · 2026-11-05
+- [The binomial coefficient test](NumberTheory/Primality/37_coefficient_test.lean) · 2026-11-09
+
+## Formalization choices
+
+Congruence uses a positive modulus. The gcd is constructed by Euclidean division and back-substitution. A prime factorization is a list, so the exponent of a prime is its number of occurrences. The final binomial test compares coefficients of formal polynomials.
+
+## Adding a subsection
+
+Keep one numbered file per subsection and import earlier results where needed. Add the new module to [NumberTheory.lean](NumberTheory.lean) and link its source above. Make one commit per genuinely new theorem or supporting lemma. Explain any boundary corrections alongside the proof. Use Mathlib for foundational definitions and routine arithmetic, and give the elementary argument for each target theorem.
+
+## Building the project
+
+From the repository root, with Lean installed through elan, run:
 
 ```sh
 lake exe cache get
 lake build
 ```
 
-The project pins Lean 4.12.0. To check the file directly with that version:
+The project pins Lean 4.12.0 and its Mathlib dependency. To check one subsection after building its imports, run:
 
 ```sh
-lake env lean 01_divisibility.lean
-lake env lean 02_remainders.lean
-lake env lean 03_common_divisors.lean
-lake env lean 04_factorization.lean
-lake env lean 05_divisibility_tests.lean
-lake env lean 06_prime_bounds.lean
-lake env lean 07_power_factors.lean
-lake env lean 08_composite_runs.lean
-lake env lean 09_polynomial_residues.lean
-lake env lean 10_modular_solutions.lean
-lake env lean 11_simultaneous_congruences.lean
-lake env lean 12_modular_powers.lean
-lake env lean 13_power_cycles.lean
-lake env lean 14_binomial_powers.lean
-lake env lean 15_reduced_residues.lean
-lake env lean 16_power_recovery.lean
-lake env lean 17_polynomial_roots.lean
-lake env lean 18_order_counts.lean
-lake env lean 19_divisor_counts.lean
-lake env lean 20_totient_products.lean
-lake env lean 21_modular_roots.lean
-lake env lean 22_primitive_tests.lean
-lake env lean 23_square_classes.lean
-lake env lean 24_residue_signs.lean
-lake env lean 25_double_primes.lean
-lake env lean 26_right_triangles.lean
-lake env lean 27_square_pairs.lean
-lake env lean 28_hypotenuses.lean
-lake env lean 29_fourth_powers.lean
-lake env lean 30_approximations.lean
-lake env lean 31_square_parameters.lean
-lake env lean 32_pell_products.lean
-lake env lean 33_pell_existence.lean
-lake env lean 34_pell_powers.lean
-lake env lean 35_test_costs.lean
-lake env lean 36_power_tests.lean
-lake env lean 37_coefficient_test.lean
+lake env lean NumberTheory/Primality/37_coefficient_test.lean
 ```
 
-Each file can be compiled individually within the project after running `lake build` to build its imported dependencies. To use a file in another Lean 4.12.0 project, copy its earlier project dependencies as well. Import a file with its quoted filename, such as `import «03_common_divisors»`. The namespaces are `NumberTheory`, `NumberTheory.Remainders`, `NumberTheory.CommonDivisors`, `NumberTheory.Factorization`, `NumberTheory.DivisibilityTests`, `NumberTheory.PrimeBounds`, `NumberTheory.PowerFactors`, `NumberTheory.CompositeRuns`, `NumberTheory.PolynomialResidues`, `NumberTheory.ModularSolutions`, `NumberTheory.SimultaneousCongruences`, `NumberTheory.ModularPowers`, `NumberTheory.PowerCycles`, `NumberTheory.BinomialPowers`, `NumberTheory.ReducedResidues`, `NumberTheory.PowerRecovery`, `NumberTheory.PolynomialRoots`, `NumberTheory.OrderCounts`, `NumberTheory.DivisorCounts`, `NumberTheory.TotientProducts`, `NumberTheory.ModularRoots`, `NumberTheory.PrimitiveTests`, `NumberTheory.SquareClasses`, `NumberTheory.ResidueSigns`, `NumberTheory.DoublePrimes`, `NumberTheory.RightTriangles`, `NumberTheory.SquarePairs`, `NumberTheory.Hypotenuses`, `NumberTheory.FourthPowers`, `NumberTheory.RationalApproximations`, `NumberTheory.SquareParameters`, `NumberTheory.PellProducts`, `NumberTheory.PellExistence`, `NumberTheory.PellPowers`, `NumberTheory.TestCosts`, `NumberTheory.PowerTests`, and `NumberTheory.CoefficientTest`, respectively. In the common-divisor file, positive integer hypotheses express the textbook convention that natural-number factors and lcm inputs are positive; solution formulas use exact integer quotients by the gcd.
-
-Prime factorizations are represented as finite lists of primes. Repeated entries represent powers, as verified by `product_replicate`; occurrence counts record exponents. Uniqueness proves that any two factorizations are permutations and have the same primes and multiplicities. The trial-division bound uses `p * p ≤ n`, the integer equivalent of `p ≤ sqrt(n)`. The file proves its own primality and factorization results using elementary induction, Euclidean back-substitution, and cancellation.
-
-The divisibility-tests file uses positive natural-number hypotheses to match the textbook convention. Prime exponents are occurrence counts in a chosen factor list; uniqueness makes these counts independent of the choice. Its irrationality statements rule out the equivalent equations `c * b ^ k = a ^ k` for integers `a`, `b` with `b ≠ 0`, including both signs, without requiring a real-number library. The general exponent obstruction also gives a family of further irrationality results. The finite counting proof explicitly removes factors of two, counts the possible odd parts, and retains distinct input positions even when values repeat. Gcd product identities include zero inputs; dividing both inputs by their gcd requires that they are not both zero.
-
-The prime-bounds file expresses coprimality directly: every common natural divisor is one. It expresses infinitude by proving that every finite list omits a prime, and also omits a prime with remainder three modulo four. Both follow from explicit constructions of primes beyond any specified bound. A recursively defined product of initial integers supplies the construction; no library primality, factorization, or infinitude theorem is used.
-
-The power-factors file uses explicit finite-sum and odd-power quotient witnesses. Integer arithmetic permits subtraction in these identities, and their natural-number consequences use the equivalence of integer and natural divisibility for nonnegative inputs. In the result for `2^n + 1`, n must be positive: zero would give the prime two but is not a power of two. The exponent in `n = 2^k` may be zero.
-
-The composite-runs file describes a run by its positive starting number and its length. For any requested bound n, it constructs a run of length n+1 and proves every entry is a product of two smaller natural numbers. The construction includes n=0 and uses no library factorial or prime-distribution theorem.
-
-The polynomial-residues file represents integer polynomials by coefficient lists in increasing power order. A nonconstant polynomial has at least two coefficients and a nonzero final coefficient. Growth is stated for arbitrary integer bounds; these are cofinal among real bounds. For the composite-value theorem, the approved sign correction uses the absolute value of the polynomial: the unrestricted original statement cannot hold with positive composite values for a polynomial such as `-x^2 - 1`. Infinitely many qualifying inputs are expressed by finding one above every integer bound. Residue systems are finite lists of distinct integers, and completeness means coverage with uniqueness modulo a positive modulus; their size is proved by elementary finite counting.
-
-The modular-solutions file allows arbitrary integer coefficients and a positive modulus n. It reconstructs the gcd and Bezout coefficients by Euclidean induction so that the file stands alone. Given one solution, all integer solutions differ from it by a multiple of n/gcd(a,n). Reducing the parameter gives the finite family of solution classes. The exact count is expressed by a list with no repeated entries, of length gcd(a,n), whose members are precisely the solutions between zero and n-1. This includes zero coefficients and modulus one.
-
-The simultaneous-congruences file represents a finite system as a list of (remainder, modulus) pairs. Its final theorem gives a solution and proves that satisfying the system is equivalent to congruence to that solution modulo the product. The proof combines two congruences at a time by induction, with explicit Bezout identities establishing coprimality with each remaining product. The empty system is included using the empty product one.
-
-The modular-powers file uses explicit Bezout identities and finite counting of canonical remainders. It permits arbitrary integer bases, extending the positive-base statements. Moduli are positive, and the repeating exponents and the exponent returning to one are explicitly positive. Coprimality of powers also includes exponent zero. Order is the least positive exponent returning to one; its definition uses zero outside the positive, coprime case solely to be total. No group-theoretic or library order theorem is used.
-
-The power-cycles file proves Fermat’s theorem by explicitly rearranging the nonzero residue labels, comparing products, and cancelling a coprime product. The two forms are also proved to imply each other. The approved correction to the strict order bound requires n>1: modulo one the least positive returning exponent is one, so the unrestricted strict bound is false. Other cycle results retain positive moduli, including one. Completeness of multiplied residues is proved for every positive modulus coprime to the multiplier, which includes the prime case.
-
-The binomial-powers file uses integer bases and explicitly defined finite sums and factorials. Pascal’s recurrence constructs the coefficients; a proved factorial identity identifies them with n!/(i!(n-i)!). The prime-divisibility lemma requires 0<i<p, excluding the two endpoint coefficients equal to one and expressing the textbook’s positive-natural convention. The resulting power-of-a-sum congruence proves Fermat’s theorem by induction on natural inputs; reduction to a nonnegative remainder extends the proof to every integer. It does not use the earlier Fermat proof or a library binomial theorem.
-
-The reduced-residues file counts positive representatives at most n, including phi(1)=1. Moduli and bounded representatives use natural numbers, with explicit positivity hypotheses; bases and congruence arithmetic use integers. These natural-number bounds express the same positive integer intervals as the textbook. The proof of Euler’s theorem compares products of two rearranged lists and cancels their coprime product. Wilson’s theorem uses a finite induction that removes distinct inverse pairs, including the empty interior product at p=3 and a separate p=2 case. Its converse uses the approved hypothesis n>1, since the congruence also holds for the nonprime modulus one. The file constructs its own gcd, residue representatives, counting function, products, and factorials; it uses no library Euler, Fermat, Wilson, or inverse theorem.
-
-The power-recovery file proves the arithmetic behind RSA by combining elementary congruences for two distinct primes. It proves Fermat’s theorem within the file by rearranging residue products, then handles messages divisible by either prime separately from the coprime case. The congruence results allow arbitrary integer messages; the final recovery statement uses natural messages below pq, including zero. Encoding exponents are explicitly positive, matching the textbook’s positive-natural convention. The Bezout construction supplies both a positive decoding exponent and a positive integer in the exponent identity. Canonical representatives express encoding and decoding, and the final theorem verifies recovery from the known factors for all messages in range. Numerical examples, exploratory questions, and contextual security claims are omitted.
-
-The polynomial-roots file represents coefficients in increasing power order. A list of length n+1 with nonzero final coefficient has degree n. Synthetic division by x-r constructs an integer quotient with one fewer coefficient and the same leading coefficient. Polynomial identities are stated for every integer input; the modular factorization preserves the higher coefficients explicitly and changes only the constant coefficient. The root bound uses the approved correction that the prime does not divide the leading coefficient: a merely nonzero integer leading coefficient is insufficient, as p*x demonstrates. The bound applies to every finite list of pairwise incongruent roots, including the constant-polynomial case. Its elementary induction removes one root and uses prime divisibility of a product to transfer all remaining roots to the quotient.
-
-The order-counts file treats order on coprime inputs to a positive modulus. It proves that an exponent preserves the full order exactly when it is coprime to that order. For a prime modulus, the polynomial root bound shows that a full power cycle exhausts the solutions of x^d congruent to one. Choosing a coprime exponent for each class of order d gives an injection into the representatives counted by phi(d). The final result gives pairwise incongruence and coverage for zero together with a primitive root’s powers, including the prime two. Primitive-root existence is proved in the divisor-counts file by the divisor-sum argument.
-
-The divisor-counts file follows the reduced-fraction counting proof: each fraction k/n reduces to a coprime pair with denominator dividing n, and expansion gives a bijection back to the n original numerators. This proves the totient divisor-sum formula and its prime, prime-power, two-prime, and multiplicative cases without using a later formula for phi. Positive natural-number hypotheses express the textbook convention. The multiplicative identity for the divisor sum holds even without coprimality, as the counting proof shows. For a prime p, sorting the nonzero representatives by their orders gives p-1 entries in total. Since each order count is at most phi(d), equality of the total sums forces equality in every count. Primitive roots are counted as residue classes using the representatives from one to p-1; their positive count proves existence, including p=2.
-
-The totient-products file uses the rectangular-array argument. It first shows that replacing the representatives in a complete residue system preserves the number of coprime entries, and that an arithmetic progression with step coprime to the modulus is complete. In an m-wide, n-high array, every column has constant coprimality status modulo m. For prime powers, this counts the p-1 qualifying columns and excludes the column of multiples of p. For coprime m,n, each qualifying column contains exactly phi(n) entries coprime to mn, giving phi(mn)=phi(m)*phi(n). Positive moduli express the textbook convention, arbitrary integer starts and steps are allowed in progressions, and the prime-power formula uses exponent k+1 to make positivity explicit; phi(1)=1 handles exponent zero. The proofs use elementary counting, Bezout identities, and cancellation, without a library totient or multiplicativity theorem.
-
-The modular-roots file uses Euler’s theorem and positive Bezout exponents to identify every solution of a power congruence with one explicit residue class. For square-free moduli, represented by lists of distinct primes, the proof applies the shifted-power identity at each prime and combines the congruences over their product. The empty product covers modulus one. For a prime modulus, a primitive root turns the power equation into a linear congruence on exponents, whose canonical solutions are put in bijection with the canonical roots. The approved corrected count treats a right-hand side divisible by p separately: for positive k it has exactly one root class, while a nonzero right-hand side has zero or gcd(k,p-1) classes. Exponents k and moduli are positive, auxiliary shifted-power multipliers may be zero, and right-hand sides may be any integers. Supporting proofs are imported from earlier subsections.
-
-The primitive-tests file proves that a base not divisible by a prime p is a primitive root exactly when none of the exponents (p-1)/f, for divisors f>1 of p-1, gives a power congruent to one. The approved correction excludes the factor one and requires a base coprime to p. The proof uses the least positive returning exponent and its divisibility into p-1, with Fermat’s theorem proved by rearranging residue products. The prime two is included, with an empty collection of divisors to test. The subsection’s contextual conjecture and the theorem whose proof is deferred to later material are omitted.
-
-The square-classes file normalizes a quadratic by inverting its leading coefficient and completes the square by inverting two. The approved odd-prime hypotheses are used for the translation and equal-count statements. Euler’s criterion is proved from Fermat’s theorem and primitive-root exponents. Polynomial root bounds then show that squares and nonsquares each occupy exactly half the nonzero entries in any complete residue system; this includes the equivalent perfect-square and quadratic-residue formulations. The product rules give multiplicativity of the Legendre sign, which is defined on all integers but used on nonzero classes. Minus one is a square exactly for primes congruent to one modulo four. Reflecting factorial factors and applying Wilson’s theorem supplies its two factorial roots. A prime divisor of (2M)^2+1, with M the product of integers up to an arbitrary bound, yields a larger prime congruent to one modulo four. Integer inputs extend the natural-input statements, and earlier supporting arguments are imported.
-
-`24_residue_signs.lean` proves the centered-product formula and Gauss’s lemma for odd primes, the residue-sign criterion for two modulo eight, and quadratic reciprocity for distinct odd primes. Its elementary proof counts centered representatives, compares parity with floor sums, and partitions a rectangle of lattice points. The odd-prime and distinct-prime restrictions are explicit. The file imports earlier supporting proofs and proves the combined rules for minus one, two, and interchanging primes.
-
-`25_double_primes.lean` classifies square and primitive classes for primes p=2q+1 with q prime. It proves the reflection rule, distinctness of lower-half squares, and the complete descriptions of nonprimitive and primitive nonzero residue classes. For odd q, the primitive classes are the negatives of the squares from 2 through q. The square-not-primitive statement explicitly requires an odd modulus prime; modulo two, one is a primitive square. Integer lists are interpreted as residue classes, and the classification explicitly excludes the zero class. Supporting arguments are proved here or imported from earlier subsections.
-
-Development keeps one file per textbook subsection and one commit per genuinely new theorem or supporting lemma. Existing results are reused through project imports rather than copied or re-proved. Foundational imports and routine arithmetic tactics are allowed; importing a library proof of the target theorem, such as a ready-made Wilson theorem, is not. Trivial boundary corrections are documented explicitly.
-
-Completed 2026-10-25: `26_right_triangles.lean`. It proves the parity rules, scaling and parameter construction, the coprime half-square lemma, the primitive parametrization in both directions, and the exact restrictions and existence statements for primitive legs. Arbitrarily large primitive legs express infinitude. Entries are integers with explicit positivity hypotheses; the scaling factor and smaller parameter must be positive. Primitivity means that the three entries have no positive common divisor except one. The characterization derives positivity and oddness from the parameter conditions rather than assuming them separately. Earlier gcd and square-divisibility proofs are imported.
-
-Completed 2026-10-27: `27_square_pairs.lean`. It proves the prime residue restriction, constructs a small congruent pair by pigeonhole counting, represents primes with remainder one modulo four by two positive squares, proves the multiplication identity and closure, and establishes the prime-exponent criterion for every positive integer. Square pairs allow nonnegative roots, including zero: this convention is needed for multiplication closure and the general criterion. Integer witnesses are converted to nonnegative roots by absolute values. The small-pair bounds are written as nonzero roots with squares less than the prime, avoiding real square roots. Earlier congruence, pigeonhole, and factorization proofs are imported.
-
-Completed 2026-10-28: `28_hypotenuses.lean`. It proves that primitive hypotenuses are precisely the nonempty products of primes congruent to one modulo four. The converse builds coprime square representations by choosing a sign in the square-pair multiplication identity, including repeated prime factors, then applies the earlier primitive-triangle construction. The nonempty-product restriction excludes one, which cannot be a hypotenuse with positive integer legs. Earlier factorization, square-pair, and parametrization proofs are imported.
-
-Completed 2026-10-29: `29_fourth_powers.lean`. It proves that the sum of two positive integer fourth powers cannot be a square. The proof uses infinite descent: common prime factors yield smaller solutions, and coprime bases yield primitive triangles to which the earlier parametrization applies twice. The positive hypotheses express the textbook convention and exclude zero-base solutions. Three supporting lemmas supply primitivity and the two descent steps; earlier coprimality, factorization, and triangle proofs are imported. The general last theorem and other contextual results are omitted.
-
-Completed 2026-10-30: `30_approximations.lean`. It proves fixed-denominator rounding, finite integer-distance and multiple-approximation bounds, unbounded-denominator approximations, infinitely many distinct rational approximations, equivalence of the fraction and multiple error inequalities, the positive nonsquare-root specialization, and the approximation bound from a positive Pell solution. The two infinite approximation statements require an irrational input, as approved. Distinct rational values are expressed by finding an approximation outside every finite list. The finite-pair statement requires at least two entries, and the multiple-index statement explicitly allows zero for the lower index and numerator. Some finite bounds and the Pell implication are proved in stronger forms without unnecessary irrationality or nonsquare assumptions. The proofs use rounding, finite pigeonhole counting, positive separation, and explicit arithmetic identities. Nonsquare-root irrationality reuses the earlier square-divisibility proof. The Mathlib revision is pinned for Lean 4.12.0; no library Diophantine-approximation or Pell theorem is imported.
-
-Completed 2026-10-31: `31_square_parameters.lean`. It defines integer Pell solutions and the two trivial solutions, and proves that a positive square parameter permits only those trivial solutions. Factoring the equation gives two integer factors with product one; elementary divisor bounds force them both to be one or both to be minus one. The positivity restriction is explicit: for parameter zero, either first coordinate one or minus one works with any second coordinate. The proof imports earlier elementary divisibility results. Exploratory questions and the numerical trial-and-error exercise are omitted.
-
-Completed 2026-11-01: `32_pell_products.lean`. It proves that two integer Pell solutions for the same natural parameter combine to give another solution, with coordinates ac+Nbd and ad+bc. The proof expands the product of the two original equations and cancels the mixed terms. It imports the existing Pell definition; no positivity or nonsquare assumptions are needed. The exploratory sign question is omitted.
-
-Completed 2026-11-02: `33_pell_existence.lean`. It proves the two square-root approximation bounds, existence of a nonzero fixed norm with unbounded positive solutions, repetition of coordinate residues, the exact integer quotient construction, and existence of positive Pell solutions for every positive nonsquare parameter. One supporting finite-label recurrence lemma is proved by list induction. The argument reuses the earlier rational approximations, applies finite pigeonhole counting, and expands and cancels elementary identities. Infinitely many pairs are expressed through unbounded second coordinates; a strictly increasing sequence ensures the final quotient is nontrivial. Positivity of the modulus and the standing positive nonsquare parameter assumptions are explicit. The numerical exercise is omitted.
-
-Completed 2026-11-03 in `34_pell_powers.lean`. Products, reciprocals, integer powers, and coordinate sign changes preserve real values representing Pell solutions. For each positive nonsquare parameter, well-ordering the first coordinate gives the least positive solution value. Its positive powers give exactly the solutions with two positive coordinates.
-
-Completed 2026-11-04 in `35_test_costs.lean`. The two operation-count exercises are expressed as exact decimal bounds. For a full scan of integer trial divisors with count T, the bounds are 10^(d-1)<(T+2)^2 and (T+1)^2<10^d. For direct factorial evaluation with multiplication count M, they are 10^(d-1)<=M+2<10^d. These make the approximate exponential estimates precise under explicit counting models. The trial cutoff is supplied with its defining square inequalities. Earlier primality criteria are reused through imports. The historical cattle discussion and the numerical timing question are omitted.
-
-Completed 2026-11-05 in `36_power_tests.lean`. Binary powering takes at most twice the exponent bit count and at most eight times its decimal digit count in multiplications for a fixed modulus. Fermat's contrapositive gives a compositeness test, applied to 737. Testing every positive base below n characterizes primality for n>1. The positive-base restriction corrects the zero-base boundary in the printed statements. Earlier Fermat and factorization proofs are imported, and the converse uses a proper factor to force a divisor of one. Numerical surveys, exploratory questions, and contextual probability claims are omitted.
-
-Completed 2026-11-09 in `37_coefficient_test.lean`. For n > 1 and a natural number a relatively prime to n, primality is equivalent to agreement modulo n of every coefficient of (X+a)^n and X^n+a. Comparing formal coefficients distinguishes this test from comparing values at integer inputs.
+Use `import NumberTheory` for the whole library, or import one module, for example `import NumberTheory.Divisibility.«02_remainders»`. The [library entry point](NumberTheory.lean) lists every subsection in reading order.
